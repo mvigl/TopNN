@@ -65,8 +65,6 @@ def get_data(branches,vars=['pT','eta','phi','M'],dataset='train'):
                    
     return out_data,output['label']
 
-filelist = 'train_list.txt'
-
 class CustomDataset(Dataset):
     def __init__(self,filelist,device,dataset='train'):
         self.device = device
@@ -172,6 +170,8 @@ def train_loop(model,filelist,device,experiment):
 model = make_mlp(in_features=12,out_features=64,nlayer=4,for_inference=False,binary=True)
 
 print(model)
+
+filelist = '../../TopNN/train_list.txt'
 
 hyper_params = {
    "learning_rate": 0.001,
