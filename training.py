@@ -209,7 +209,7 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params):
 
 hyper_params = {
     "nodes": args.nodes,
-    "nlayer": args.nlayer,
+    "nlayer": args.nlayers,
     "learning_rate": args.lr,
     "epochs": args.ep,
     "batch_size": args.bs,
