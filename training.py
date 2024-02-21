@@ -201,7 +201,7 @@ model = make_mlp(in_features=12,out_features=64,nlayer=4,for_inference=False,bin
 print(model)
 model.to(device)
 
-filelist = '../../TopNN/train_list.txt'
+filelist = '../../TopNN/train_list_testing.txt'
 
 hyper_params = {
    "learning_rate": 0.001,
