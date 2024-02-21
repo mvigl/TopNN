@@ -153,8 +153,8 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
                 data = data.cpu().numpy()
                 target = target.cpu().numpy()
             else: 
-                data = torch.cat((data,train_batch[0].cpu().numpy()),axis=0)
-                target = torch.cat((target,train_batch[1].cpu().numpy()),axis=0)
+                data = torch.cat((data,train_batch[0]),axis=0)
+                target = torch.cat((target,train_batch[1]),axis=0)
             if (i > 100): break 
         for i, val_batch in enumerate( val_loader ):
             if i==0:
@@ -162,8 +162,8 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
                 data_val = data_val.cpu().numpy()
                 target_val = target_val.cpu().numpy()
             else: 
-                data_val = torch.cat((data_val,val_batch[0].cpu().numpy()),axis=0)
-                target_val = torch.cat((target_val,val_batch[1].cpu().numpy()),axis=0)           
+                data_val = torch.cat((data_val,val_batch[0]),axis=0)
+                target_val = torch.cat((target_val,val_batch[1]),axis=0)           
 
         train_loss = loss_fn(model( torch.from_numpy(data).float().to(device) ).reshape(len(data)),torch.from_numpy(target.reshape(-1)).float().to(device))
         test_loss = loss_fn(model( torch.from_numpy(data_val).float().to(device) ).reshape(len(data_val)),torch.from_numpy(target_val.reshape(-1)).float().to(device))    
