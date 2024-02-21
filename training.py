@@ -158,7 +158,7 @@ def train_step(model,data,target,opt,loss_fn):
     opt.zero_grad()
     return {'loss': float(loss)}
 
-def eval_fn(model, loss_fn,train_loader,val_loader,device,path):
+def eval_fn(model, loss_fn,train_loader,val_loader):
     with torch.no_grad():
         model.eval()
         for i, train_batch in enumerate( train_loader ): 
@@ -197,7 +197,7 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
         for i, train_batch in enumerate( train_loader ):
             data, target = train_batch
             report = train_step(model, data, target, opt, loss_fn )
-        evals.append(eval_fn(model, loss_fn,train_loader,val_loader,device) )         
+        evals.append(eval_fn(model, loss_fn,train_loader,val_loader) )         
         val_loss = evals[epoch]['test_loss']
         if val_loss < best_val_loss:
             best_val_loss = val_loss
