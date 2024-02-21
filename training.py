@@ -65,8 +65,38 @@ def get_data(branches,vars=['pT','eta','phi','M'],dataset='train'):
                    
     return out_data,output['label']
 
+
+Features = ['multiplets',
+            'bjetIdxs_saved',
+            'ljetIdxs_saved',
+            'bjet1pT',
+            'bjet2pT',
+            'ljet1pT',
+            'ljet2pT',
+            'ljet3pT',
+            'ljet4pT',
+            'bjet1eta',
+            'bjet2eta',
+            'ljet1eta',
+            'ljet2eta',
+            'ljet3eta',
+            'ljet4eta',
+            'bjet1phi',
+            'bjet2phi',
+            'ljet1phi',
+            'ljet2phi',
+            'ljet3phi',
+            'ljet4phi',
+            'bjet1M',
+            'bjet2M',
+            'ljet1M',
+            'ljet2M',
+            'ljet3M',
+            'ljet4M',
+            ]
+
 class CustomDataset(Dataset):
-    def __init__(self,filelist,device,dataset='train'):
+    def __init__(self,filelist,device,Features,dataset='train'):
         self.device = device
         self.x=[]
         self.y=[]
@@ -76,7 +106,7 @@ class CustomDataset(Dataset):
                 filename = line.strip()
                 print('reading : ',filename)
                 with uproot.open({filename: "stop1L_NONE;1"}) as tree:
-                    branches = tree.arrays()
+                    branches = tree.arrays(Features)
                     if i ==0:
                         data,target = get_data(branches,dataset=dataset)
                     else:
@@ -123,8 +153,8 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
                 data = data.cpu().numpy()
                 target = target.cpu().numpy()
             else: 
-                data = np.concatenate((data,train_batch[0].cpu().numpy()),axis=0)
-                target = np.concatenate((target,train_batch[1].cpu().numpy()),axis=0)
+                data = torch.cat((data,train_batch[0].cpu().numpy()),axis=0)
+                target = torch.cat((target,train_batch[1].cpu().numpy()),axis=0)
             if (i > 100): break 
         for i, val_batch in enumerate( val_loader ):
             if i==0:
@@ -132,8 +162,8 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
                 data_val = data_val.cpu().numpy()
                 target_val = target_val.cpu().numpy()
             else: 
-                data_val = np.concatenate((data_val,val_batch[0].cpu().numpy()),axis=0)
-                target_val = np.concatenate((target_val,val_batch[1].cpu().numpy()),axis=0)           
+                data_val = torch.cat((data_val,val_batch[0].cpu().numpy()),axis=0)
+                target_val = torch.cat((target_val,val_batch[1].cpu().numpy()),axis=0)           
 
         train_loss = loss_fn(model( torch.from_numpy(data).float().to(device) ).reshape(len(data)),torch.from_numpy(target.reshape(-1)).float().to(device))
         test_loss = loss_fn(model( torch.from_numpy(data_val).float().to(device) ).reshape(len(data_val)),torch.from_numpy(target_val.reshape(-1)).float().to(device))    
@@ -141,13 +171,13 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
         return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
-def train_loop(model,filelist,device,experiment,hyper_params):
+def train_loop(model,filelist,device,experiment,Features,hyper_params):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([14.157]).to(device))
     evals = []
     best_val_loss = float('inf')
-    Dataset = CustomDataset(filelist,device,dataset='train')
-    Dataset_val = CustomDataset(filelist,device,dataset='val')
+    Dataset = CustomDataset(filelist,device,Features,dataset='train')
+    Dataset_val = CustomDataset(filelist,device,Features,dataset='val')
 
     best_model_params_path = 'test.pt'
     val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
@@ -168,8 +198,8 @@ def train_loop(model,filelist,device,experiment,hyper_params):
     return evals, model    
 
 model = make_mlp(in_features=12,out_features=64,nlayer=4,for_inference=False,binary=True)
-
 print(model)
+model.to(device)
 
 filelist = '../../TopNN/train_list.txt'
 
@@ -191,4 +221,4 @@ print(experiment.get_key())
 experiment.log_parameter("exp_key", experiment.get_key())
 experiment.log_parameters(hyper_params)
 
-E,M = train_loop(model,filelist,device,experiment,hyper_params)
+E,M = train_loop(model,filelist,device,experiment,Features,hyper_params)
