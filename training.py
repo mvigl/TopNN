@@ -2,11 +2,25 @@ from comet_ml import Experiment,ExistingExperiment
 from comet_ml.integration.pytorch import log_model
 import numpy as np
 import uproot
-import matplotlib.pyplot as plt
 import awkward as ak
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
+import argparse
+import yaml
+
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('--lr', type=float,  help='learning rate',default='0.001')
+parser.add_argument('--bs', type=int,  help='batch size',default='512')
+parser.add_argument('--ep', type=int,  help='epochs',default='200')
+parser.add_argument('--nodes', type=int,  help='epochs',default='64')
+parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
+parser.add_argument('--data', help='data',default='../../TopNN/train_list.txt')
+parser.add_argument('--project_name', help='project_name',default='Stop')
+parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
+parser.add_argument('--ws', help='workspace',default='mvigl')
+
+args = parser.parse_args()
 
 def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -144,7 +158,7 @@ def train_step(model,data,target,opt,loss_fn):
     opt.zero_grad()
     return {'loss': float(loss)}
 
-def eval_fn(model, loss_fn,train_loader,val_loader,device):
+def eval_fn(model, loss_fn,train_loader,val_loader,device,path):
     with torch.no_grad():
         model.eval()
         for i, train_batch in enumerate( train_loader ): 
@@ -175,7 +189,7 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params):
     Dataset = CustomDataset(filelist,device,Features,dataset='train')
     Dataset_val = CustomDataset(filelist,device,Features,dataset='val')
 
-    best_model_params_path = 'test.pt'
+    best_model_params_path = path
     val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
@@ -193,22 +207,20 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params):
     experiment.end()
     return evals, model    
 
-model = make_mlp(in_features=12,out_features=64,nlayer=4,for_inference=False,binary=True)
-print(model)
-model.to(device)
-
-filelist = '../../TopNN/train_list_testing.txt'
-
 hyper_params = {
-   "learning_rate": 0.001,
-   "epochs": 100,
-   "batch_size": 512,
+    "nodes": args.nodes,
+    "nlayer": args.nlayer,
+    "learning_rate": args.lr,
+    "epochs": args.ep,
+    "batch_size": args.bs,
 }
-experiment_name = f'test_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
+
+experiment_name = f'nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
+path = f'nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
 experiment = Experiment(
-    api_key = 'r1SBLyPzovxoWBPDLx3TAE02O',
-    project_name = 'Stop',
-    workspace='mvigl',
+    api_key = args.api_key,
+    project_name = args.project_name,
+    workspace = args.workspace,
     log_graph=True, # Can be True or False.
     auto_metric_logging=True # Can be True or False
     )
@@ -217,4 +229,10 @@ print(experiment.get_key())
 experiment.log_parameter("exp_key", experiment.get_key())
 experiment.log_parameters(hyper_params)
 
-E,M = train_loop(model,filelist,device,experiment,Features,hyper_params)
+model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_params["nlayer"],for_inference=False,binary=True)
+print(model)
+model.to(device)
+
+E,M = train_loop(model,args.data,device,experiment,Features,hyper_params,path)
+
+log_model(experiment, model, model_name = experiment_name )
