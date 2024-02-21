@@ -7,16 +7,17 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 import argparse
-import yaml
+from sklearn.preprocessing import StandardScaler
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--lr', type=float,  help='learning rate',default='0.001')
 parser.add_argument('--bs', type=int,  help='batch size',default='512')
-parser.add_argument('--ep', type=int,  help='epochs',default='200')
+parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
 parser.add_argument('--data', help='data',default='../../TopNN/train_list.txt')
-parser.add_argument('--project_name', help='project_name',default='Stop')
+parser.add_argument('--scaler',  action='store_true', help='use scaler', default=True)
+parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
 parser.add_argument('--ws', help='workspace',default='mvigl')
 
@@ -28,8 +29,8 @@ def get_device():
 device = get_device()
 
 def split_data(length,array,dataset='train'):
-    idx_train = int(length*0.8)
-    idx_val = int(length*0.9)
+    idx_train = int(length*0.9)
+    idx_val = int(length*0.95)
     if dataset=='train': return array[:idx_train]
     if dataset=='val': return array[idx_train:idx_val]    
     if dataset=='test': return array[idx_val:]    
@@ -110,7 +111,7 @@ Features = ['multiplets',
             ]
 
 class CustomDataset(Dataset):
-    def __init__(self,filelist,device,Features,dataset='train'):
+    def __init__(self,filelist,device,Features,scaler_path='',dataset='train'):
         self.device = device
         self.x=[]
         self.y=[]
@@ -128,6 +129,16 @@ class CustomDataset(Dataset):
                         data = np.concatenate((data,data_i),axis=0)
                         target = np.concatenate((target,target_1),axis=0)
                     i+=1 
+        if scaler_path != '':
+            self.scaler = StandardScaler()      
+            if dataset=='train': 
+                data = self.scaler.fit_transform(data)
+                with open(scaler_path,'wb') as f:
+                    pickle.dump(self.scaler, f)
+            else: 
+                with open(scaler_path,'rb') as f:
+                    self.scaler = pickle.load(f)
+                data = self.scaler.transform(data)
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
@@ -186,10 +197,10 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([14.157]).to(device))
     evals = []
     best_val_loss = float('inf')
-    Dataset = CustomDataset(filelist,device,Features,dataset='train')
-    Dataset_val = CustomDataset(filelist,device,Features,dataset='val')
-
     best_model_params_path = path
+    Dataset = CustomDataset(filelist,device,Features,hyper_params["scaler"],dataset='train')
+    Dataset_val = CustomDataset(filelist,device,Features,hyper_params["scaler"],dataset='val')
+
     val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
@@ -208,6 +219,7 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
     return evals, model    
 
 hyper_params = {
+    "scaler": '',
     "nodes": args.nodes,
     "nlayer": args.nlayers,
     "learning_rate": args.lr,
@@ -217,6 +229,11 @@ hyper_params = {
 
 experiment_name = f'nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
 path = f'nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
+if args.scaler:
+    experiment_name = f'Scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
+    path = f'Scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
+    hyper_params["scaler"] = f'Scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pkl'
+
 experiment = Experiment(
     api_key = args.api_key,
     project_name = args.project_name,
