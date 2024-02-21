@@ -13,70 +13,62 @@ def get_device():
     return device
 device = get_device()
 
-def idxs_to_var(train,val,branches,var,split):
+def split_data(length,array,dataset='train'):
+    idx_train = int(length*0.8)
+    idx_val = int(length*0.9)
+    if dataset=='train': return array[:idx_train]
+    if dataset=='val': return array[idx_train:idx_val]    
+    if dataset=='test': return array[idx_val:]    
+    else:       
+        print('choose: train, val, test')
+        return 0       
 
-    train['label'] = (ak.flatten(ak.Array(branches['multiplets'][:split]))[:,-1].to_numpy()+1)/2
-    val['label'] = (ak.flatten(ak.Array(branches['multiplets'][split:]))[:,-1].to_numpy()+1)/2
+def idxs_to_var(out,branches,var,dataset):
+    length = len(ak.Array(branches['ljetIdxs_saved'][:]))
 
+    out['label'] = (ak.flatten(  split_data(length,ak.Array(branches['multiplets']),dataset=dataset)  )[:,-1].to_numpy()+1)/2
     bj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['bjetIdxs_saved'][:,0]))[:,:,0]*(ak.Array(branches['bjet1'+var]))
     bj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['bjetIdxs_saved'][:,1]))[:,:,0]*(ak.Array(branches['bjet2'+var]))
-    train['bjet_'+var] = ak.flatten( (bj1 + bj2)[:split] ).to_numpy()
-    val['bjet_'+var] = ak.flatten( (bj1 + bj2)[split:] ).to_numpy()
-
+    out['bjet_'+var] = ak.flatten(   split_data(length,(bj1 + bj2),dataset=dataset)   ).to_numpy()
     lj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,0]))[:,:,1]*(ak.Array(branches['ljet1'+var]))
     lj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,1]))[:,:,1]*(ak.Array(branches['ljet2'+var]))
     lj3 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,2]))[:,:,1]*(ak.Array(branches['ljet3'+var]))
     lj4 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,3]))[:,:,1]*(ak.Array(branches['ljet4'+var]))
-    train['jet1_'+var] = ak.flatten( (lj1 + lj2 + lj3 + lj4)[:split] ).to_numpy()
-    val['jet1_'+var] = ak.flatten( (lj1 + lj2 + lj3 + lj4)[split:] ).to_numpy()
+    out['jet1_'+var] = ak.flatten(   split_data(length,(lj1 + lj2 + lj3 + lj4),dataset=dataset)   ).to_numpy()
     lj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,0]))[:,:,2]*(ak.Array(branches['ljet1'+var]))
     lj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,1]))[:,:,2]*(ak.Array(branches['ljet2'+var]))
     lj3 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,2]))[:,:,2]*(ak.Array(branches['ljet3'+var]))
     lj4 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,3]))[:,:,2]*(ak.Array(branches['ljet4'+var]))
-    train['jet2_'+var] = ak.flatten( (lj1 + lj2 + lj3 + lj4)[:split] ).to_numpy()
-    val['jet2_'+var] = ak.flatten( (lj1 + lj2 + lj3 + lj4)[split:] ).to_numpy()
+    out['jet2_'+var] = ak.flatten(   split_data(length,(lj1 + lj2 + lj3 + lj4),dataset=dataset)   ).to_numpy()
 
-    return train, val
+    return out
 
-def get_data(branches,frac=0.8,vars=['pT','eta','phi','M'],training=True):
-    split = int(len(ak.Array(branches['ljetIdxs_saved'][:]))*frac)
-    train = {}
-    val = {}
+def get_data(branches,vars=['pT','eta','phi','M'],dataset='train'):
+    output = {}
     for var in vars:
-        train, val = idxs_to_var(train,val,branches,var,split)
+        output = idxs_to_var(output,branches,var,dataset)
         
-    train_data = np.hstack( (   train['bjet_pT'][:,np.newaxis],
-                                train['jet1_pT'][:,np.newaxis],
-                                train['jet2_pT'][:,np.newaxis],
-                                train['bjet_eta'][:,np.newaxis],
-                                train['jet1_eta'][:,np.newaxis],
-                                train['jet2_eta'][:,np.newaxis],
-                                train['bjet_phi'][:,np.newaxis],
-                                train['jet1_phi'][:,np.newaxis],
-                                train['jet2_phi'][:,np.newaxis],
-                                train['bjet_M'][:,np.newaxis],
-                                train['jet1_M'][:,np.newaxis],
-                                train['jet2_M'][:,np.newaxis]) )
+    out_data = np.hstack(   (   output['bjet_pT'][:,np.newaxis],
+                                output['jet1_pT'][:,np.newaxis],
+                                output['jet2_pT'][:,np.newaxis],
+                                output['bjet_eta'][:,np.newaxis],
+                                output['jet1_eta'][:,np.newaxis],
+                                output['jet2_eta'][:,np.newaxis],
+                                output['bjet_phi'][:,np.newaxis],
+                                output['jet1_phi'][:,np.newaxis],
+                                output['jet2_phi'][:,np.newaxis],
+                                output['bjet_M'][:,np.newaxis],
+                                output['jet1_M'][:,np.newaxis],
+                                output['jet2_M'][:,np.newaxis]
+                            ) 
+                        )
                    
-    val_data = np.hstack( (     val['bjet_pT'][:,np.newaxis],
-                                val['jet1_pT'][:,np.newaxis],
-                                val['jet2_pT'][:,np.newaxis],
-                                val['bjet_eta'][:,np.newaxis],
-                                val['jet1_eta'][:,np.newaxis],
-                                val['jet2_eta'][:,np.newaxis],
-                                val['bjet_phi'][:,np.newaxis],
-                                val['jet1_phi'][:,np.newaxis],
-                                val['jet2_phi'][:,np.newaxis],
-                                val['bjet_M'][:,np.newaxis],
-                                val['jet1_M'][:,np.newaxis],
-                                val['jet2_M'][:,np.newaxis]) )
-    if training: return train_data, train['label']
-    else: return val_data,val['label']
+    return out_data,output['label']
 
-filelist = 'data/train_list.txt'
+filelist = 'train_list.txt'
 
 class CustomDataset(Dataset):
-    def __init__(self,filelist,device,training=True):
+    def __init__(self,filelist,device,dataset='train'):
         self.device = device
         self.x=[]
         self.y=[]
@@ -85,12 +77,12 @@ class CustomDataset(Dataset):
             for line in f:
                 filename = line.strip()
                 print('reading : ',filename)
-                with uproot.open({fname_mc: "stop1L_NONE;1"}) as tree_mc:
-                    branches = tree_mc.arrays()
+                with uproot.open({filename: "stop1L_NONE;1"}) as tree:
+                    branches = tree.arrays()
                     if i ==0:
-                        data,target = get_data(branches,training=training)
+                        data,target = get_data(branches,dataset=dataset)
                     else:
-                        data_i,target_1 = get_data(branches,training=training)
+                        data_i,target_1 = get_data(branches,dataset=dataset)
                         data = np.concatenate((data,data_i),axis=0)
                         target = np.concatenate((target,target_1),axis=0)
                     i+=1 
@@ -152,18 +144,18 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
     
 
 def train_loop(model,filelist,device,experiment):
-    opt = optim.Adam(model.parameters(), 0.001)
+    opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([14.157]).to(device))
     evals = []
     best_val_loss = float('inf')
-    Dataset = CustomDataset(filelist,device,training=True)
-    Dataset_val = CustomDataset(filelist,device,training=False)
+    Dataset = CustomDataset(filelist,device,dataset='train')
+    Dataset_val = CustomDataset(filelist,device,dataset='val')
 
     best_model_params_path = 'test.pt'
-    val_loader = DataLoader(Dataset_val, batch_size=512, shuffle=True)
-    for epoch in range (0,100):
+    val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
+    for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
-        train_loader = DataLoader(Dataset, batch_size=512, shuffle=True)
+        train_loader = DataLoader(Dataset, batch_size=hyper_params["batch_size"], shuffle=True)
         for i, train_batch in enumerate( train_loader ):
             data, target = train_batch
             report = train_step(model, data, target, opt, loss_fn )
@@ -183,7 +175,7 @@ print(model)
 
 hyper_params = {
    "learning_rate": 0.001,
-   "epochs": 10,
+   "epochs": 100,
    "batch_size": 512,
 }
 experiment_name = f'test_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
@@ -199,4 +191,4 @@ print(experiment.get_key())
 experiment.log_parameter("exp_key", experiment.get_key())
 experiment.log_parameters(hyper_params)
 
-E,M = train_loop(model,filelist,device,experiment)
+E,M = train_loop(model,filelist,device,experiment,hyper_params)
