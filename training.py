@@ -181,7 +181,7 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device,path):
         return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
-def train_loop(model,filelist,device,experiment,Features,hyper_params):
+def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([14.157]).to(device))
     evals = []
