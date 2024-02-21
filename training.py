@@ -220,7 +220,7 @@ path = f'nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_pa
 experiment = Experiment(
     api_key = args.api_key,
     project_name = args.project_name,
-    workspace = args.workspace,
+    workspace = args.ws,
     log_graph=True, # Can be True or False.
     auto_metric_logging=True # Can be True or False
     )
