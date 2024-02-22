@@ -220,6 +220,7 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
     return evals, model    
 
 hyper_params = {
+    "data": args.data,
     "scaler": '',
     "nodes": args.nodes,
     "nlayer": args.nlayers,
