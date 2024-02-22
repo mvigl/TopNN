@@ -16,7 +16,7 @@ parser.add_argument('--bs', type=int,  help='batch size',default='512')
 parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
-parser.add_argument('--data', help='data',default='../../TopNN/train_list.txt')
+parser.add_argument('--data', help='data',default='../../TopNN/data/list_all.txt')
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=True)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
@@ -195,7 +195,7 @@ def eval_fn(model, loss_fn,train_loader,val_loader):
 
 def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
-    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([14.157]).to(device))
+    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([15.]).to(device)) #16.4 in stop
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
