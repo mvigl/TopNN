@@ -7,7 +7,7 @@ import h5py
 import os
 
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('--filelist', help='data',default='data/list_all.txt')
+parser.add_argument('--filelist', help='data',default='/raven/u/mvigl/Stop/TopNN/data/list_all.txt')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='train'):
@@ -100,8 +100,11 @@ with open(args.filelist) as f:
         with uproot.open({filename: "stop1L_NONE;1"}) as tree:
             branches = tree.arrays(Features)
             multiplets,labels = get_data(branches,dataset='full')
-            out_dir = '/raven/u/mvigl/Stop/data/H5_full/'
+            out_dir = '/raven/u/mvigl/Stop/data/H5_full'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+            print('reading : ',filename)
+            data_index = filename.index("/mc")
+            out_dir_i = out_dir + (filename[data_index:]).replace(".root",".h5")
             with h5py.File(out_dir+(filename).replace(".root",".h5"), 'w') as out_file: 
                 out_file.create_dataset('multiplets', data=multiplets)
                 out_file.create_dataset('labels', data=labels.reshape(-1),dtype='i4')
