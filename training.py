@@ -223,7 +223,7 @@ model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_
 print(model)
 model.to(device)
 print(device)
-with h5py.File(self.args.data, 'r') as f:
+with h5py.File(args.data, 'r') as f:
     samples = list(f.keys())
 E,M = train_loop(model,args.data,samples,device,experiment,hyper_params,path)
 
