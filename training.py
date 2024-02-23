@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 import argparse
 from sklearn.preprocessing import StandardScaler
-import pickle
+import random
 import h5py
 
 parser = argparse.ArgumentParser(description='')
@@ -18,7 +18,7 @@ parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5')
-parser.add_argument('--filelist', help='filelist',default='/raven/u/mvigl/Stop/TopNN/data/H5/list_sig_FS.txt')
+parser.add_argument('--filelist', help='filelist',default='/raven/u/mvigl/Stop/TopNN/data/H5/list_all.txt')
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
@@ -135,49 +135,54 @@ def train_step(model,data,target,opt,loss_fn):
     opt.zero_grad()
     return {'loss': float(loss)}
 
-def eval_fn(model, loss_fn,train_loader,val_loader,device):
-    with torch.no_grad():
-        model.eval()
-        for i, train_batch in enumerate( train_loader ):
-            if i==0:
-                data,target = train_batch
-            else: 
-                data = torch.cat((data,train_batch[0]),axis=0)
-                target = torch.cat((target,train_batch[1]),axis=0)
-            if (i > 100): break 
-        for i, val_batch in enumerate( val_loader ):
-            if i==0:
-                data_val, target_val = val_batch
-            else: 
-                data_val = torch.cat((data_val,val_batch[0]),axis=0)
-                target_val = torch.cat((target_val,val_batch[1]),axis=0)           
+def eval_fn(model, loss_fn,file):
+    samples = list(file.keys())
+    for name in samples:
+        Dataset_val = CustomDataset(file,name,dataset='val')
+        Dataset_train = CustomDataset(file,name,dataset='train')
+        val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
+        train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
+        with torch.no_grad():
+            model.eval()
+            for i, train_batch in enumerate( train_loader ):
+                if i==0:
+                    data,target = train_batch
+                else: 
+                    data = torch.cat((data,train_batch[0]),axis=0)
+                    target = torch.cat((target,train_batch[1]),axis=0)
+                if (i > 10): break 
+            for i, val_batch in enumerate( val_loader ):
+                if i==0:
+                    data_val, target_val = val_batch
+                else: 
+                    data_val = torch.cat((data_val,val_batch[0]),axis=0)
+                    target_val = torch.cat((target_val,val_batch[1]),axis=0)           
+                if (i > 10): break 
 
-        train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
-        test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
-        print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
-        return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
+            train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
+            test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
+            print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
+            return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
-def train_loop(model,filelist,file,device,experiment,hyper_params,path):
+def train_loop(model,file,device,experiment,hyper_params,path):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([15.]).to(device)) #16.4 in stop
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
 
-    idxmap = get_idxmap(filelist,dataset='train')
-    idxmap_val = get_idxmap(filelist,dataset='val')
-    Dataset = CustomDataset(idxmap,file,dataset='train')
-    Dataset_val = CustomDataset(idxmap_val,file,dataset='val')
-
-    val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
-        train_loader = DataLoader(Dataset, batch_size=hyper_params["batch_size"], shuffle=True)
-        for i, train_batch in enumerate( train_loader ):
-            data, target = train_batch
-            report = train_step(model, data, target, opt, loss_fn )
-        evals.append(eval_fn(model, loss_fn,train_loader,val_loader,device) )         
+        samples = list(file.keys())
+        random.shuffle(samples)
+        for name in samples:
+            Dataset_train = CustomDataset(file,name,dataset='train')
+            train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
+            for i, train_batch in enumerate( train_loader ):
+                data, target = train_batch
+                report = train_step(model, data, target, opt, loss_fn )
+        evals.append(eval_fn(model, loss_fn,file,device) )         
         val_loss = evals[epoch]['test_loss']
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -220,6 +225,6 @@ model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_
 print(model)
 model.to(device)
 print(device)
-E,M = train_loop(model,args.filelist,args.data,device,experiment,hyper_params,path)
+E,M = train_loop(model,args.data,device,experiment,hyper_params,path)
 
 log_model(experiment, model, model_name = experiment_name )
