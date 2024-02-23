@@ -9,6 +9,7 @@ import torch.optim as optim
 import argparse
 from sklearn.preprocessing import StandardScaler
 import pickle
+import h5py
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--lr', type=float,  help='learning rate',default='0.001')
@@ -39,116 +40,56 @@ def split_data(length,array,dataset='train'):
         print('choose: train, val, test')
         return 0       
 
-def idxs_to_var(out,branches,var,dataset):
-    length = len(ak.Array(branches['ljetIdxs_saved'][:]))
+def get_idxmap(filelist,dataset='train'):
+    idxmap = {}
+    offset = 0 
+    with open(filelist) as f:
+        for line in f:
+            filename = line.strip()
+            with h5py.File(filename, 'r') as Data:
+                length = len(Data['labels'][:])
+                if dataset=='train': length = int(length*0.9)
+                if dataset=='val': length = int(length*0.05)
+                idxmap[filename] = np.arange(offset,offset+int(length))
+                offset += int(length)
+    return idxmap
 
-    out['label'] = (ak.flatten(  split_data(length,ak.Array(branches['multiplets']),dataset=dataset)  )[:,-1].to_numpy()+1)/2
-    bj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['bjetIdxs_saved'][:,0]))[:,:,0]*(ak.Array(branches['bjet1'+var]))
-    bj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['bjetIdxs_saved'][:,1]))[:,:,0]*(ak.Array(branches['bjet2'+var]))
-    out['bjet_'+var] = ak.flatten(   split_data(length,(bj1 + bj2),dataset=dataset)   ).to_numpy()
-    lj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,0]))[:,:,1]*(ak.Array(branches['ljet1'+var]))
-    lj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,1]))[:,:,1]*(ak.Array(branches['ljet2'+var]))
-    lj3 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,2]))[:,:,1]*(ak.Array(branches['ljet3'+var]))
-    lj4 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,3]))[:,:,1]*(ak.Array(branches['ljet4'+var]))
-    out['jet1_'+var] = ak.flatten(   split_data(length,(lj1 + lj2 + lj3 + lj4),dataset=dataset)   ).to_numpy()
-    lj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,0]))[:,:,2]*(ak.Array(branches['ljet1'+var]))
-    lj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,1]))[:,:,2]*(ak.Array(branches['ljet2'+var]))
-    lj3 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,2]))[:,:,2]*(ak.Array(branches['ljet3'+var]))
-    lj4 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,3]))[:,:,2]*(ak.Array(branches['ljet4'+var]))
-    out['jet2_'+var] = ak.flatten(   split_data(length,(lj1 + lj2 + lj3 + lj4),dataset=dataset)   ).to_numpy()
+def create_integer_file_map(idxmap):
+    integer_file_map = {}
+    file_names = list(idxmap.keys())
+    file_vectors = list(idxmap.values())
+    for i, file in enumerate(file_names):
+        vector = file_vectors[i]
+        for integer in vector:
+            if integer in integer_file_map:
+                integer_file_map[integer].append(file)
+            else:
+                integer_file_map[integer] = [file]
 
-    return out
-
-def get_data(branches,vars=['pT','eta','phi','M'],dataset='train'):
-    output = {}
-    for var in vars:
-        output = idxs_to_var(output,branches,var,dataset)
-        
-    out_data = np.hstack(   (   output['bjet_pT'][:,np.newaxis],
-                                output['jet1_pT'][:,np.newaxis],
-                                output['jet2_pT'][:,np.newaxis],
-                                output['bjet_eta'][:,np.newaxis],
-                                output['jet1_eta'][:,np.newaxis],
-                                output['jet2_eta'][:,np.newaxis],
-                                output['bjet_phi'][:,np.newaxis],
-                                output['jet1_phi'][:,np.newaxis],
-                                output['jet2_phi'][:,np.newaxis],
-                                output['bjet_M'][:,np.newaxis],
-                                output['jet1_M'][:,np.newaxis],
-                                output['jet2_M'][:,np.newaxis]
-                            ) 
-                        )
-                   
-    return out_data,output['label']
-
-
-Features = ['multiplets',
-            'bjetIdxs_saved',
-            'ljetIdxs_saved',
-            'bjet1pT',
-            'bjet2pT',
-            'ljet1pT',
-            'ljet2pT',
-            'ljet3pT',
-            'ljet4pT',
-            'bjet1eta',
-            'bjet2eta',
-            'ljet1eta',
-            'ljet2eta',
-            'ljet3eta',
-            'ljet4eta',
-            'bjet1phi',
-            'bjet2phi',
-            'ljet1phi',
-            'ljet2phi',
-            'ljet3phi',
-            'ljet4phi',
-            'bjet1M',
-            'bjet2M',
-            'ljet1M',
-            'ljet2M',
-            'ljet3M',
-            'ljet4M',
-            ]
+    return integer_file_map
 
 class CustomDataset(Dataset):
-    def __init__(self,filelist,device,Features,scaler_path='',dataset='train'):
-        self.device = device
-        self.x=[]
-        self.y=[]
-        i=0
-        with open(filelist) as f:
-            for line in f:
-                filename = line.strip()
-                print('reading : ',filename)
-                with uproot.open({filename: "stop1L_NONE;1"}) as tree:
-                    branches = tree.arrays(Features)
-                    if i ==0:
-                        data,target = get_data(branches,dataset=dataset)
-                    else:
-                        data_i,target_1 = get_data(branches,dataset=dataset)
-                        data = np.concatenate((data,data_i),axis=0)
-                        target = np.concatenate((target,target_1),axis=0)
-                    i+=1 
-        if scaler_path != '':
-            self.scaler = StandardScaler()      
-            if dataset=='train': 
-                data = self.scaler.fit_transform(data)
-                with open(scaler_path,'wb') as f:
-                    pickle.dump(self.scaler, f)
-            else: 
-                with open(scaler_path,'rb') as f:
-                    self.scaler = pickle.load(f)
-                data = self.scaler.transform(data)
-        self.x = torch.from_numpy(data).float().to(device)    
-        self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
-        self.length = len(target)
-        print('N data : ',self.length)
+    def __init__(self, idxmap,integer_file_map,dataset='train'):
+        self.integer_file_map = integer_file_map
+        self.length = len(integer_file_map)
+        self.idxmap = idxmap
+        self.dataset = dataset
+        print("N data : ", self.length)
         
+    def __getitem__(self, index):
+        file_path = self.integer_file_map[index][0]
+        offset = np.min(self.idxmap[file_path])
+        x = []
+        with h5py.File(file_path, 'r') as f:
+            if self.dataset == 'val': 
+                index += int(len(f['labels'][:])*0.9)
+            x = f['multiplets'][index-offset]
+            y = f['labels'][index-offset]
+        return x,y
+    
     def __len__(self):
-        return self.length
-    def __getitem__(self, idx):
-        return self.x[idx], self.y[idx]
+        return self.length    
+
 
 def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
     layers = []
@@ -170,10 +111,11 @@ def train_step(model,data,target,opt,loss_fn):
     opt.zero_grad()
     return {'loss': float(loss)}
 
-def eval_fn(model, loss_fn,train_loader,val_loader):
+def eval_fn(model, loss_fn,train_loader,val_loader,device):
     with torch.no_grad():
         model.eval()
-        for i, train_batch in enumerate( train_loader ): 
+        for i, train_batch in enumerate( train_loader ):
+            train_batch.to(device) 
             if i==0:
                 data, target = train_batch
             else: 
@@ -181,6 +123,7 @@ def eval_fn(model, loss_fn,train_loader,val_loader):
                 target = torch.cat((target,train_batch[1]),axis=0)
             if (i > 100): break 
         for i, val_batch in enumerate( val_loader ):
+            val_batch.to(device)
             if i==0:
                 data_val, target_val = val_batch
             else: 
@@ -207,9 +150,10 @@ def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
         print(f'epoch: {epoch+1}') 
         train_loader = DataLoader(Dataset, batch_size=hyper_params["batch_size"], shuffle=True)
         for i, train_batch in enumerate( train_loader ):
+            train_batch.to(device)
             data, target = train_batch
             report = train_step(model, data, target, opt, loss_fn )
-        evals.append(eval_fn(model, loss_fn,train_loader,val_loader) )         
+        evals.append(eval_fn(model, loss_fn,train_loader,val_loader,device) )         
         val_loss = evals[epoch]['test_loss']
         if val_loss < best_val_loss:
             best_val_loss = val_loss
