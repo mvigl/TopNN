@@ -88,7 +88,7 @@ class CustomDataset(Dataset):
                 index += int(len(f['labels'][:])*0.9)
             x = f['multiplets'][index-offset]
             y = f['labels'][index-offset]
-        return torch.tensor(x).float(),torch.tensor(y.reshape(-1,1)).float()
+        return torch.tensor(x).float(),torch.tensor(y).float()
     
     def __len__(self):
         return self.length    
@@ -108,7 +108,7 @@ def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
 def train_step(model,data,target,opt,loss_fn):
     model.train()
     preds =  model(data)
-    loss = loss_fn(preds,target)
+    loss = loss_fn(preds.reshape(-1),target.reshape(-1))
     loss.backward()
     opt.step()
     opt.zero_grad()
@@ -137,8 +137,8 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
                 data_val = torch.cat((data_val,val_batch[0].to(device) ),axis=0)
                 target_val = torch.cat((target_val,val_batch[1].to(device) ),axis=0)           
 
-        train_loss = loss_fn(model(data).reshape(len(data)),target.reshape(-1))
-        test_loss = loss_fn(model(data_val).reshape(len(data_val)),target_val.reshape(-1))    
+        train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
+        test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
         print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
         return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
