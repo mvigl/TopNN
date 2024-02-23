@@ -135,8 +135,7 @@ def train_step(model,data,target,opt,loss_fn):
     opt.zero_grad()
     return {'loss': float(loss)}
 
-def eval_fn(model, loss_fn,file):
-    samples = list(file.keys())
+def eval_fn(model,loss_fn,file,samples):
     for name in samples:
         Dataset_val = CustomDataset(file,name,dataset='val')
         Dataset_train = CustomDataset(file,name,dataset='train')
@@ -165,7 +164,7 @@ def eval_fn(model, loss_fn,file):
             return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
-def train_loop(model,file,device,experiment,hyper_params,path):
+def train_loop(model,file,samples,device,experiment,hyper_params,path):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([15.]).to(device)) #16.4 in stop
     evals = []
@@ -174,7 +173,6 @@ def train_loop(model,file,device,experiment,hyper_params,path):
 
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
-        samples = list(file.keys())
         random.shuffle(samples)
         for name in samples:
             Dataset_train = CustomDataset(file,name,dataset='train')
@@ -182,7 +180,7 @@ def train_loop(model,file,device,experiment,hyper_params,path):
             for i, train_batch in enumerate( train_loader ):
                 data, target = train_batch
                 report = train_step(model, data, target, opt, loss_fn )
-        evals.append(eval_fn(model, loss_fn,file,device) )         
+        evals.append(eval_fn(model, loss_fn,file,samples) )         
         val_loss = evals[epoch]['test_loss']
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -225,6 +223,8 @@ model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_
 print(model)
 model.to(device)
 print(device)
-E,M = train_loop(model,args.data,device,experiment,hyper_params,path)
+with h5py.File(self.args.data, 'r') as f:
+    samples = list(f.keys())
+E,M = train_loop(model,args.data,samples,device,experiment,hyper_params,path)
 
 log_model(experiment, model, model_name = experiment_name )
