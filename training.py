@@ -162,10 +162,8 @@ def train_loop(model,filelist,device,experiment,hyper_params,path):
         print(f'epoch: {epoch+1}') 
         train_loader = DataLoader(Dataset, batch_size=hyper_params["batch_size"], shuffle=True)
         for i, train_batch in enumerate( train_loader ):
-            data = train_batch[0]
-            target = train_batch[1]
-            data.to(device)
-            target.to(device)
+            data = train_batch[0].to(device)
+            target = train_batch[1].to(device)
             report = train_step(model, data, target, opt, loss_fn )
         evals.append(eval_fn(model, loss_fn,train_loader,val_loader,device) )         
         val_loss = evals[epoch]['test_loss']
