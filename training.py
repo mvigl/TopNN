@@ -17,7 +17,7 @@ parser.add_argument('--bs', type=int,  help='batch size',default='512')
 parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
-parser.add_argument('--data', help='data',default='../../TopNN/data/H5/list_all.txt')
+parser.add_argument('--data', help='data',default='../../TopNN/data/H5/list_sig_AF3.txt')
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
@@ -47,11 +47,12 @@ def get_idxmap(filelist,dataset='train'):
     with open(filelist) as f:
         for line in f:
             filename = line.strip()
+            print('idxmap: ',filename)
             with h5py.File(filename, 'r') as Data:
                 length = len(Data['labels'][:])
                 if dataset=='train': length = int(length*0.9)
                 if dataset=='val': length = int(length*0.05)
-                idxmap[filename] = np.arange(offset,offset+int(length))
+                idxmap[filename] = np.arange(offset,offset+int(length),dtype=int)
                 offset += int(length)
     return idxmap
 
@@ -60,6 +61,7 @@ def create_integer_file_map(idxmap):
     file_names = list(idxmap.keys())
     file_vectors = list(idxmap.values())
     for i, file in enumerate(file_names):
+        print('integer_file_map: ',file)
         vector = file_vectors[i]
         for integer in vector:
             if integer in integer_file_map:
