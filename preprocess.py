@@ -102,7 +102,7 @@ with open(args.filelist) as f:
             multiplets,labels = get_data(branches,dataset='full')
             out_dir = '/raven/u/mvigl/Stop/data/H5_full'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-            data_index = filename.index("/mc")
+            data_index = filename.index("/MC")
             out_dir = out_dir + (filename[data_index:]).replace(".root",".h5")
             with h5py.File(out_dir, 'w') as out_file: 
                 out_file.create_dataset('multiplets', data=multiplets,compression="gzip")
