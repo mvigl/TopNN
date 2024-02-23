@@ -88,7 +88,7 @@ class CustomDataset(Dataset):
                 index += int(len(f['labels'][:])*0.9)
             x = f['multiplets'][index-offset]
             y = f['labels'][index-offset]
-        return torch.tensor(x).float(),torch.tensor(y).float()
+        return torch.tensor(x).float(),torch.tensor(y.reshape(-1,1)).float()
     
     def __len__(self):
         return self.length    
