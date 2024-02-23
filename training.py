@@ -61,7 +61,7 @@ def get_idxmap(filelist,dataset='train'):
 
 def range_to_string(index, idxmap):
     for name, range in idxmap.items():
-        if range[0] <= index <= range[1]:
+        if range[0] <= index < range[1]:
             return name, range[0], range[1]-range[0]
     return "No matching range found"  
 
