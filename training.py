@@ -67,7 +67,7 @@ def range_to_string(index, idxmap):
 
 
     
-class CustomDataset(Dataset):
+class CustomDataset_maps(Dataset):
     def __init__(self, idxmap,file,dataset='train'):
         self.idxmap = idxmap
         self.dataset = dataset
@@ -88,6 +88,32 @@ class CustomDataset(Dataset):
     def __len__(self):
         return self.length        
 
+class CustomDataset(Dataset):
+    def __init__(self,file,name,dataset='train'):
+        self.dataset = dataset
+        self.file = file
+        self.x=[]
+        self.y=[]
+        with h5py.File(self.file, 'r') as f:
+            length = len(f[name]['labels'])
+            idx_train = int(length*0.9)
+            idx_val = int(length*0.95)
+            if self.dataset == 'train':
+                data = f[name]['multiplets'][:idx_train]
+                target = f[name]['labels'][:idx_train]
+            else:
+                data = f[name]['multiplets'][idx_train:idx_val]
+                target = f[name]['labels'][idx_train:idx_val]  
+        
+        self.x = torch.from_numpy(data).float().to(device)    
+        self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
+        self.length = len(target)
+        print("N data : ", self.length)
+        
+    def __len__(self):
+        return self.length
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
 
 def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
     layers = []
@@ -114,23 +140,17 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
         model.eval()
         for i, train_batch in enumerate( train_loader ):
             if i==0:
-                data = train_batch[0]
-                target = train_batch[1]
-                data.to(device)
-                target.to(device)
+                data,target = train_batch
             else: 
-                data = torch.cat((data,train_batch[0].to(device) ),axis=0)
-                target = torch.cat((target,train_batch[1].to(device) ),axis=0)
+                data = torch.cat((data,train_batch[0]),axis=0)
+                target = torch.cat((target,train_batch[1]),axis=0)
             if (i > 100): break 
         for i, val_batch in enumerate( val_loader ):
             if i==0:
-                data_val = val_batch[0]
-                target_val = val_batch[1]
-                data_val.to(device)
-                target_val.to(device)
+                data_val, target_val = val_batch
             else: 
-                data_val = torch.cat((data_val,val_batch[0].to(device) ),axis=0)
-                target_val = torch.cat((target_val,val_batch[1].to(device) ),axis=0)           
+                data_val = torch.cat((data_val,val_batch[0]),axis=0)
+                target_val = torch.cat((target_val,val_batch[1]),axis=0)           
 
         train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
         test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
@@ -155,8 +175,7 @@ def train_loop(model,filelist,file,device,experiment,hyper_params,path):
         print(f'epoch: {epoch+1}') 
         train_loader = DataLoader(Dataset, batch_size=hyper_params["batch_size"], shuffle=True)
         for i, train_batch in enumerate( train_loader ):
-            data = train_batch[0].to(device)
-            target = train_batch[1].to(device)
+            data, target = train_batch
             report = train_step(model, data, target, opt, loss_fn )
         evals.append(eval_fn(model, loss_fn,train_loader,val_loader,device) )         
         val_loss = evals[epoch]['test_loss']
@@ -200,7 +219,7 @@ experiment.log_parameters(hyper_params)
 model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_params["nlayer"],for_inference=False,binary=True)
 print(model)
 model.to(device)
-
+print(device)
 E,M = train_loop(model,args.filelist,args.data,device,experiment,hyper_params,path)
 
 log_model(experiment, model, model_name = experiment_name )
