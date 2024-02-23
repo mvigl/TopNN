@@ -18,10 +18,11 @@ parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
 parser.add_argument('--data', help='data',default='../../TopNN/data/list_all.txt')
-parser.add_argument('--scaler',  action='store_true', help='use scaler', default=True)
+parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
 parser.add_argument('--ws', help='workspace',default='mvigl')
+parser.add_argument('--mess', help='message',default='Full')
 
 args = parser.parse_args()
 
@@ -136,14 +137,19 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
         return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
-def train_loop(model,filelist,device,experiment,Features,hyper_params,path):
+def train_loop(model,filelist,device,experiment,hyper_params,path):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([15.]).to(device)) #16.4 in stop
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
-    Dataset = CustomDataset(filelist,device,Features,hyper_params["scaler"],dataset='train')
-    Dataset_val = CustomDataset(filelist,device,Features,hyper_params["scaler"],dataset='val')
+
+    idxmap = get_idxmap(filelist,dataset='train')
+    idxmap_val = get_idxmap(filelist,dataset='val')
+    integer_file_map = create_integer_file_map(idxmap)
+    integer_file_map_val = create_integer_file_map(idxmap_val)
+    Dataset = CustomDataset(idxmap,integer_file_map,dataset='train')
+    Dataset_val = CustomDataset(idxmap_val,integer_file_map_val,dataset='val')
 
     val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
     for epoch in range (0,hyper_params["epochs"]):
@@ -173,12 +179,12 @@ hyper_params = {
     "batch_size": args.bs,
 }
 
-experiment_name = f'nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
+experiment_name = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
 path = f'nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
 if args.scaler:
-    experiment_name = f'Scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
-    path = f'Scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
-    hyper_params["scaler"] = f'Scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pkl'
+    experiment_name = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
+    path = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
+    hyper_params["scaler"] = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pkl'
 
 experiment = Experiment(
     api_key = args.api_key,
@@ -196,6 +202,6 @@ model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_
 print(model)
 model.to(device)
 
-E,M = train_loop(model,args.data,device,experiment,Features,hyper_params,path)
+E,M = train_loop(model,args.data,device,experiment,hyper_params,path)
 
 log_model(experiment, model, model_name = experiment_name )
