@@ -17,7 +17,8 @@ parser.add_argument('--bs', type=int,  help='batch size',default='512')
 parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
-parser.add_argument('--data', help='data',default='../../TopNN/data/H5/list_sig_AF3.txt')
+parser.add_argument('--data', help='data',default='Virtual_full.h5')
+parser.add_argument('--filelist', help='filelist',default='../data/train_list.txt')
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
@@ -47,51 +48,45 @@ def get_idxmap(filelist,dataset='train'):
     with open(filelist) as f:
         for line in f:
             filename = line.strip()
-            print('idxmap: ',filename)
+            data_index = (filename.index("/mc"))
+            name = (filename[data_index+1:])
             with h5py.File(filename, 'r') as Data:
-                length = len(Data['labels'][:])
-                if dataset=='train': length = int(length*0.9)
-                if dataset=='val': length = int(length*0.05)
-                idxmap[filename] = np.arange(offset,offset+int(length),dtype=int)
-                offset += int(length)
+                if dataset == 'train':
+                    length = int(len(Data['labels'])*0.9)
+                else:
+                    length = int(len(Data['labels'])*0.05)
+                idxmap[name] = [int(offset), int(offset+length)]
+                offset += length
     return idxmap
 
-def create_integer_file_map(idxmap):
-    integer_file_map = {}
-    file_names = list(idxmap.keys())
-    file_vectors = list(idxmap.values())
-    for i, file in enumerate(file_names):
-        print('integer_file_map: ',file)
-        vector = file_vectors[i]
-        for integer in vector:
-            if integer in integer_file_map:
-                integer_file_map[integer].append(file)
-            else:
-                integer_file_map[integer] = [file]
+def range_to_string(index, idxmap):
+    for name, range in idxmap.items():
+        if range[0] <= index <= range[1]:
+            return name, range[0], range[1]-range[0]
+    return "No matching range found"  
 
-    return integer_file_map
 
+    
 class CustomDataset(Dataset):
-    def __init__(self, idxmap,integer_file_map,dataset='train'):
-        self.integer_file_map = integer_file_map
-        self.length = len(integer_file_map)
+    def __init__(self, idxmap,file,dataset='train'):
         self.idxmap = idxmap
         self.dataset = dataset
+        self.file = file
+        self.length = list(self.idxmap.values())[-1][-1]
         print("N data : ", self.length)
         
     def __getitem__(self, index):
-        file_path = self.integer_file_map[index][0]
-        offset = np.min(self.idxmap[file_path])
+        name, offset, length = range_to_string(index,self.idxmap)
         x = []
-        with h5py.File(file_path, 'r') as f:
+        with h5py.File(self.file, 'r') as f:
             if self.dataset == 'val': 
-                index += int(len(f['labels'][:])*0.9)
-            x = f['multiplets'][index-offset]
-            y = f['labels'][index-offset]
+                index += int(length*0.9)
+            x = f[name]['multiplets'][index-offset]
+            y = f[name]['labels'][index-offset]
         return torch.tensor(x).float(),torch.tensor(y).float()
     
     def __len__(self):
-        return self.length    
+        return self.length        
 
 
 def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
@@ -143,7 +138,7 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
         return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
-def train_loop(model,filelist,device,experiment,hyper_params,path):
+def train_loop(model,filelist,file,device,experiment,hyper_params,path):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
     loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([15.]).to(device)) #16.4 in stop
     evals = []
@@ -152,10 +147,8 @@ def train_loop(model,filelist,device,experiment,hyper_params,path):
 
     idxmap = get_idxmap(filelist,dataset='train')
     idxmap_val = get_idxmap(filelist,dataset='val')
-    integer_file_map = create_integer_file_map(idxmap)
-    integer_file_map_val = create_integer_file_map(idxmap_val)
-    Dataset = CustomDataset(idxmap,integer_file_map,dataset='train')
-    Dataset_val = CustomDataset(idxmap_val,integer_file_map_val,dataset='val')
+    Dataset = CustomDataset(idxmap,file,dataset='train')
+    Dataset_val = CustomDataset(idxmap_val,file,dataset='val')
 
     val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
     for epoch in range (0,hyper_params["epochs"]):
@@ -208,6 +201,6 @@ model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_
 print(model)
 model.to(device)
 
-E,M = train_loop(model,args.data,device,experiment,hyper_params,path)
+E,M = train_loop(model,args.filelist,args.data,device,experiment,hyper_params,path)
 
 log_model(experiment, model, model_name = experiment_name )

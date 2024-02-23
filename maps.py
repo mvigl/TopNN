@@ -12,40 +12,17 @@ import pickle
 import h5py
 
   
-filelist = '../../TopNN/data/H5/list_all.txt'
 
-def get_idxmap(filelist,dataset='train'):
-    idxmap = {}
-    offset = 0 
-    with open(filelist) as f:
-        for line in f:
-            filename = line.strip()
-            print('idxmap: ',filename)
-            with h5py.File(filename, 'r') as Data:
-                length = len(Data['labels'][:])
-                if dataset=='train': length = int(length*0.9)
-                if dataset=='val': length = int(length*0.05)
-                idxmap[filename] = np.arange(offset,offset+int(length))
-                offset += int(length)
-    return idxmap
-
-def create_integer_file_map(idxmap):
-    integer_file_map = {}
-    file_names = list(idxmap.keys())
-    file_vectors = list(idxmap.values())
-    for i, file in enumerate(file_names):
-        print('integer_file_map: ',file)
-        vector = file_vectors[i]
-        for integer in vector:
-            if integer in integer_file_map:
-                integer_file_map[integer].append(file)
-            else:
-                integer_file_map[integer] = [file]
-
-    return integer_file_map
+if __name__ == "__main__":
+    filelist = '/raven/u/mvigl/Stop/TopNN/data/H5/list_all.txt'
+    with h5py.File('/raven/u/mvigl/Stop/data/H5/Virtual_full.h5',mode='w') as h5fw:
+        with open(filelist) as f:
+            for line in f:
+                filename = line.strip()
+                data_index = (filename.index("/mc"))
+                path = (filename[:data_index])
+                name = (filename[data_index+1:])
+                print(name)
+                h5fw[name] = h5py.ExternalLink(filename,'/')   
 
 
-idxmap = get_idxmap(filelist,dataset='train')
-idxmap_val = get_idxmap(filelist,dataset='val')
-integer_file_map = create_integer_file_map(idxmap)
-integer_file_map_val = create_integer_file_map(idxmap_val)
