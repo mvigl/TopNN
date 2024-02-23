@@ -118,20 +118,24 @@ def eval_fn(model, loss_fn,train_loader,val_loader,device):
     with torch.no_grad():
         model.eval()
         for i, train_batch in enumerate( train_loader ):
-            train_batch.to(device) 
             if i==0:
-                data, target = train_batch
+                data = train_batch[0]
+                target = train_batch[1]
+                data.to(device)
+                target.to(device)
             else: 
-                data = torch.cat((data,train_batch[0]),axis=0)
-                target = torch.cat((target,train_batch[1]),axis=0)
+                data = torch.cat((data,train_batch[0].to(device) ),axis=0)
+                target = torch.cat((target,train_batch[1].to(device) ),axis=0)
             if (i > 100): break 
         for i, val_batch in enumerate( val_loader ):
-            val_batch.to(device)
             if i==0:
-                data_val, target_val = val_batch
+                data_val = val_batch[0]
+                target_val = val_batch[1]
+                data_val.to(device)
+                target_val.to(device)
             else: 
-                data_val = torch.cat((data_val,val_batch[0]),axis=0)
-                target_val = torch.cat((target_val,val_batch[1]),axis=0)           
+                data_val = torch.cat((data_val,val_batch[0].to(device) ),axis=0)
+                target_val = torch.cat((target_val,val_batch[1].to(device) ),axis=0)           
 
         train_loss = loss_fn(model(data).reshape(len(data)),target.reshape(-1))
         test_loss = loss_fn(model(data_val).reshape(len(data_val)),target_val.reshape(-1))    
@@ -158,8 +162,10 @@ def train_loop(model,filelist,device,experiment,hyper_params,path):
         print(f'epoch: {epoch+1}') 
         train_loader = DataLoader(Dataset, batch_size=hyper_params["batch_size"], shuffle=True)
         for i, train_batch in enumerate( train_loader ):
-            train_batch.to(device)
-            data, target = train_batch
+            data = train_batch[0]
+            target = train_batch[1]
+            data.to(device)
+            target.to(device)
             report = train_step(model, data, target, opt, loss_fn )
         evals.append(eval_fn(model, loss_fn,train_loader,val_loader,device) )         
         val_loss = evals[epoch]['test_loss']
