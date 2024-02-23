@@ -104,8 +104,8 @@ with open(args.filelist) as f:
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
             print('reading : ',filename)
             data_index = filename.index("/mc")
-            out_dir_i = out_dir + (filename[data_index:]).replace(".root",".h5")
-            with h5py.File(out_dir+(filename).replace(".root",".h5"), 'w') as out_file: 
+            out_dir = out_dir + (filename[data_index:]).replace(".root",".h5")
+            with h5py.File(out_dir, 'w') as out_file: 
                 out_file.create_dataset('multiplets', data=multiplets)
                 out_file.create_dataset('labels', data=labels.reshape(-1),dtype='i4')
 
