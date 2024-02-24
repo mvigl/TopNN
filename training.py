@@ -18,12 +18,12 @@ parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5')
-parser.add_argument('--filterlist', help='filterlist',default='')#/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt
+parser.add_argument('--filterlist', help='filterlist',default='/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt')#/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
 parser.add_argument('--ws', help='workspace',default='mvigl')
-parser.add_argument('--mess', help='message',default='Full')
+parser.add_argument('--mess', help='message',default='Stop_FS')
 
 args = parser.parse_args()
 
@@ -166,8 +166,8 @@ def eval_fn(model,loss_fn,file,samples):
         
     data = torch.from_numpy(data).float().to(device)    
     target = torch.from_numpy(target.reshape(-1,1)).float().to(device)
-    data_val = torch.from_numpy(data).float().to(device)    
-    target_val = torch.from_numpy(target.reshape(-1,1)).float().to(device)
+    data_val = torch.from_numpy(data_val).float().to(device)    
+    target_val = torch.from_numpy(target_val.reshape(-1,1)).float().to(device)
 
     with torch.no_grad():
         model.eval()
