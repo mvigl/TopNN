@@ -18,7 +18,7 @@ parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5')
-parser.add_argument('--filterlist', help='filterlist',default='')
+parser.add_argument('--filterlist', help='filterlist',default='/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_all.txt')
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
@@ -108,7 +108,7 @@ class CustomDataset(Dataset):
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
-        print(self.dataset, " sample , ", "N data : ", self.length)
+        #print(self.dataset, " sample , ", "N data : ", self.length)
         
     def __len__(self):
         return self.length
@@ -136,6 +136,7 @@ def train_step(model,data,target,opt,loss_fn):
     return {'loss': float(loss)}
 
 def eval_fn(model,loss_fn,file,samples):
+    print('validation...')
     for name in samples:
         Dataset_val = CustomDataset(file,name,dataset='val')
         Dataset_train = CustomDataset(file,name,dataset='train')
