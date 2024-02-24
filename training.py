@@ -102,10 +102,10 @@ class CustomDataset(Dataset):
             idx_train = length_train
             idx_val = length_val
             if maxsamples !=1:
-                idx_train = np.arange(length_train)
-                idx_val = np.arange(length_train,length_val)
                 if length_train > maxsamples: idx_train = np.sort(random.sample(range(length_train), maxsamples))
+                else: idx_train = np.arange(length_train)    
                 if (length_val-length_train) > maxsamples: idx_val = np.sort(random.sample(range(length_train,length_val), maxsamples))
+                else: idx_train = idx_val = np.arange(length_train,length_val) 
 
                 if self.dataset == 'train':
                     data = f[name]['multiplets'][idx_train]
