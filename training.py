@@ -137,34 +137,42 @@ def train_step(model,data,target,opt,loss_fn):
 
 def eval_fn(model,loss_fn,file,samples):
     print('validation...')
+    i=0
     for name in samples:
-        Dataset_val = CustomDataset(file,name,dataset='val')
-        Dataset_train = CustomDataset(file,name,dataset='train')
-        val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
-        train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
-        if len(Dataset_train) < 1: continue
-        if len(Dataset_val) < 1: continue
-        with torch.no_grad():
-            model.eval()
-            for i, train_batch in enumerate( train_loader ):
-                if i==0:
-                    data,target = train_batch
-                else: 
-                    data = torch.cat((data,train_batch[0]),axis=0)
-                    target = torch.cat((target,train_batch[1]),axis=0)
-                if (i > 10): break 
-            for i, val_batch in enumerate( val_loader ):
-                if i==0:
-                    data_val, target_val = val_batch
-                else: 
-                    data_val = torch.cat((data_val,val_batch[0]),axis=0)
-                    target_val = torch.cat((target_val,val_batch[1]),axis=0)           
-                if (i > 10): break 
+        with h5py.File(file, 'r') as f:
+            length = len(f[name]['labels'])
+            length_train = int(length*0.9)
+            length_val = int(length*0.95)
 
-    train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
-    test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
-    print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
-    return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
+            if len(length_train) < 1: continue
+            if len(length_val) < 1: continue
+
+            if length_train > 10000: idx_train = 10000
+            if (length_val-length_train) > 10000: idx_val = length_train + 10000
+
+
+            if i==0:
+                data = f[name]['multiplets'][:idx_train]
+                target = f[name]['labels'][:idx_train]
+                data_val = f[name]['multiplets'][length_train:idx_val]
+                target_val = f[name]['labels'][length_train:idx_val]  
+            else: 
+                data = np.concatenate((data,f[name]['multiplets'][:idx_train]),axis=0)
+                target = np.concatenate((target,f[name]['labels'][:idx_train]),axis=0)
+                data_val = np.concatenate((data_val,f[name]['multiplets'][length_train:idx_val]),axis=0)
+                target_val = np.concatenate((target_val,f[name]['labels'][length_train:idx_val]),axis=0)
+        
+    data = torch.from_numpy(data).float().to(device)    
+    target = torch.from_numpy(target.reshape(-1,1)).float().to(device)
+    data_val = torch.from_numpy(data).float().to(device)    
+    target_val = torch.from_numpy(target.reshape(-1,1)).float().to(device)
+
+    with torch.no_grad():
+        model.eval()
+        train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
+        test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
+        print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
+        return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
 def train_loop(model,file,samples,device,experiment,hyper_params,path):
