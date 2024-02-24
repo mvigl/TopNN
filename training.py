@@ -147,6 +147,8 @@ def eval_fn(model,loss_fn,file,samples):
             if length_train < 1: continue
             if length_val < 1: continue
 
+            idx_train = length_train
+            idx_val = length_val
             if length_train > 10000: idx_train = 10000
             if (length_val-length_train) > 10000: idx_val = length_train + 10000
 
