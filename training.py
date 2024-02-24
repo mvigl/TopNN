@@ -122,8 +122,7 @@ class CustomDataset(Dataset):
                 else:
                     data = f[name]['multiplets'][length_train:idx_val]
                     target = f[name]['labels'][length_train:idx_val]  
-        
-        print(target)
+
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
@@ -263,7 +262,7 @@ print(device)
 with h5py.File(args.data, 'r') as f:
     samples = list(f.keys())    
 
-if args.filterlist != '': 
+if args.filterlist != 'no': 
     with open(args.filterlist, "r") as file:
         samples = [line.strip() for line in file.readlines()]
 
