@@ -108,6 +108,7 @@ class CustomDataset(Dataset):
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
+        print("sample : ", name)
         print("N data : ", self.length)
         
     def __len__(self):
