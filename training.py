@@ -198,7 +198,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
         for name in samples:
             Dataset_train = CustomDataset(file,name,dataset='train',maxsamples=hyper_params["maxsamples"])
             if len(Dataset_train) < 1: continue
-            train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True, pin_memory=True)
+            train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
             for i, train_batch in enumerate( train_loader ):
                 data, target = train_batch
                 report = train_step(model, data, target, opt, loss_fn )
