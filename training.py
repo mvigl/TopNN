@@ -102,15 +102,23 @@ class CustomDataset(Dataset):
             idx_train = length_train
             idx_val = length_val
             if maxsamples !=1:
-                if length_train > maxsamples: idx_train = maxsamples
-                if (length_val-length_train) > maxsamples: idx_val = length_train+maxsamples
+                if length_train > maxsamples: idx_train = random.sample(range(length_train), maxsamples)
+                if (length_val-length_train) > maxsamples: idx_val = random.sample(range(length_train,length_val), maxsamples)
+
+                if self.dataset == 'train':
+                    data = f[name]['multiplets'][idx_train]
+                    target = f[name]['labels'][idx_train]
+                else:
+                    data = f[name]['multiplets'][idx_val]
+                    target = f[name]['labels'][idx_val]  
             
-            if self.dataset == 'train':
-                data = f[name]['multiplets'][:idx_train]
-                target = f[name]['labels'][:idx_train]
             else:
-                data = f[name]['multiplets'][length_train:idx_val]
-                target = f[name]['labels'][length_train:idx_val]  
+                if self.dataset == 'train':
+                    data = f[name]['multiplets'][:idx_train]
+                    target = f[name]['labels'][:idx_train]
+                else:
+                    data = f[name]['multiplets'][length_train:idx_val]
+                    target = f[name]['labels'][length_train:idx_val]  
         
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
