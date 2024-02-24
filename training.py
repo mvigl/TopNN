@@ -15,8 +15,9 @@ parser = argparse.ArgumentParser(description='')
 parser.add_argument('--lr', type=float,  help='learning rate',default='0.0001')
 parser.add_argument('--bs', type=int,  help='batch size',default='512')
 parser.add_argument('--ep', type=int,  help='epochs',default='50')
-parser.add_argument('--nodes', type=int,  help='epochs',default='64')
-parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
+parser.add_argument('--nodes', type=int,  help='nodes',default='64')
+parser.add_argument('--nlayers', type=int,  help='layers',default='4')
+parser.add_argument('--maxsamples', type=int,  help='maxsamples',default='100000')
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5')
 parser.add_argument('--filterlist', help='filterlist',default='')#/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
@@ -89,21 +90,27 @@ class CustomDataset_maps(Dataset):
         return self.length        
 
 class CustomDataset(Dataset):
-    def __init__(self,file,name,dataset='train'):
+    def __init__(self,file,name,dataset='train',maxsamples=1):
         self.dataset = dataset
         self.file = file
         self.x=[]
         self.y=[]
         with h5py.File(self.file, 'r') as f:
             length = len(f[name]['labels'])
-            idx_train = int(length*0.9)
-            idx_val = int(length*0.95)
+            length_train = int(length*0.9)
+            length_val = int(length*0.95)
+            idx_train = length_train
+            idx_val = length_val
+            if maxsamples !=1:
+                if length_train > maxsamples: idx_train = maxsamples
+                if (length_val-length_train) > maxsamples: idx_val = length_train+maxsamples
+            
             if self.dataset == 'train':
                 data = f[name]['multiplets'][:idx_train]
                 target = f[name]['labels'][:idx_train]
             else:
-                data = f[name]['multiplets'][idx_train:idx_val]
-                target = f[name]['labels'][idx_train:idx_val]  
+                data = f[name]['multiplets'][length_train:idx_val]
+                target = f[name]['labels'][length_train:idx_val]  
         
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
@@ -189,7 +196,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
         print(f'epoch: {epoch+1}') 
         random.shuffle(samples)
         for name in samples:
-            Dataset_train = CustomDataset(file,name,dataset='train')
+            Dataset_train = CustomDataset(file,name,dataset='train',maxsamples=hyper_params["maxsamples"])
             if len(Dataset_train) < 1: continue
             train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True, pin_memory=True)
             for i, train_batch in enumerate( train_loader ):
@@ -206,6 +213,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     return evals, model    
 
 hyper_params = {
+    "maxsamples": args.maxsamples,
     "message": args.mess,
     "filter": args.filterlist,
     "data": args.data,
