@@ -195,6 +195,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     return evals, model    
 
 hyper_params = {
+    "message": args.mess,
     "filter": args.filterlist,
     "data": args.data,
     "scaler": '',
