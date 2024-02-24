@@ -18,7 +18,7 @@ parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='epochs',default='64')
 parser.add_argument('--nlayers', type=int,  help='epochs',default='4')
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5')
-parser.add_argument('--filelist', help='filelist',default='/raven/u/mvigl/Stop/TopNN/data/H5/list_all.txt')
+parser.add_argument('--filterlist', help='filterlist',default='/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt')
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
@@ -108,8 +108,7 @@ class CustomDataset(Dataset):
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
-        print("sample : ", name)
-        print("N data : ", self.length)
+        print(self.dataset, " sample , ", "N data : ", self.length)
         
     def __len__(self):
         return self.length
@@ -142,6 +141,8 @@ def eval_fn(model,loss_fn,file,samples):
         Dataset_train = CustomDataset(file,name,dataset='train')
         val_loader = DataLoader(Dataset_val, batch_size=hyper_params["batch_size"], shuffle=True)
         train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
+        if len(Dataset_train) < 1: continue
+        if len(Dataset_val) < 1: continue
         with torch.no_grad():
             model.eval()
             for i, train_batch in enumerate( train_loader ):
@@ -159,10 +160,10 @@ def eval_fn(model,loss_fn,file,samples):
                     target_val = torch.cat((target_val,val_batch[1]),axis=0)           
                 if (i > 10): break 
 
-            train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
-            test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
-            print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
-            return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
+    train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
+    test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
+    print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
+    return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
 def train_loop(model,file,samples,device,experiment,hyper_params,path):
@@ -177,6 +178,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
         random.shuffle(samples)
         for name in samples:
             Dataset_train = CustomDataset(file,name,dataset='train')
+            if len(Dataset_train) < 1: continue
             train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
             for i, train_batch in enumerate( train_loader ):
                 data, target = train_batch
@@ -225,7 +227,10 @@ print(model)
 model.to(device)
 print(device)
 with h5py.File(args.data, 'r') as f:
-    samples = list(f.keys())
+    samples = list(f.keys())    
+
+if args.filterlist != '': samples = args.filterlist
+
 E,M = train_loop(model,args.data,samples,device,experiment,hyper_params,path)
 
 log_model(experiment, model, model_name = experiment_name )
