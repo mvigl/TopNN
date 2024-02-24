@@ -152,14 +152,14 @@ def eval_fn(model,loss_fn,file,samples):
                 else: 
                     data = torch.cat((data,train_batch[0]),axis=0)
                     target = torch.cat((target,train_batch[1]),axis=0)
-                if (i > 100): break 
+                if (i > 10): break 
             for i, val_batch in enumerate( val_loader ):
                 if i==0:
                     data_val, target_val = val_batch
                 else: 
                     data_val = torch.cat((data_val,val_batch[0]),axis=0)
                     target_val = torch.cat((target_val,val_batch[1]),axis=0)           
-                if (i > 100): break 
+                if (i > 10): break 
 
     train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
     test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
