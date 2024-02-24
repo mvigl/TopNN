@@ -23,7 +23,7 @@ parser.add_argument('--scaler',  action='store_true', help='use scaler', default
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
 parser.add_argument('--ws', help='workspace',default='mvigl')
-parser.add_argument('--mess', help='message',default='Full')
+parser.add_argument('--mess', help='message',default='Stop_full')
 
 args = parser.parse_args()
 
