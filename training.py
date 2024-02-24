@@ -102,6 +102,7 @@ class CustomDataset(Dataset):
             idx_train = length_train
             idx_val = length_val
             if maxsamples !=1:
+                print('max ',maxsamples,' samples')
                 if length_train > maxsamples: idx_train = random.sample(range(length_train), maxsamples)
                 if (length_val-length_train) > maxsamples: idx_val = random.sample(range(length_train,length_val), maxsamples)
 
@@ -120,6 +121,7 @@ class CustomDataset(Dataset):
                     data = f[name]['multiplets'][length_train:idx_val]
                     target = f[name]['labels'][length_train:idx_val]  
         
+        print(target)
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
