@@ -229,7 +229,9 @@ print(device)
 with h5py.File(args.data, 'r') as f:
     samples = list(f.keys())    
 
-if args.filterlist != '': samples = args.filterlist
+if args.filterlist != '': 
+    with open(args.filterlist, "r") as file:
+        samples = [line.strip() for line in file.readlines()]
 
 E,M = train_loop(model,args.data,samples,device,experiment,hyper_params,path)
 
