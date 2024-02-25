@@ -90,12 +90,11 @@ class CustomDataset_maps(Dataset):
         return self.length        
 
 class CustomDataset(Dataset):
-    def __init__(self,file,samples,dataset='train'):
+    def __init__(self,file,samples,dataset='train',maxsamples=1):
         self.dataset = dataset
         self.file = file
         self.x=[]
         self.y=[]
-        maxsamples=1000000
         i=0
         with h5py.File(self.file, 'r') as f:
             for name in samples:
@@ -105,8 +104,8 @@ class CustomDataset(Dataset):
                 length_val = int(length*0.95)
                 idx_train = length_train
                 idx_val = length_val
-                if length_train > maxsamples: idx_train = maxsamples 
-                if (length_train-length_val) > maxsamples: idx_val = length_train+maxsamples 
+                if ((maxsamples!=1) and (length_train > maxsamples)): idx_train = maxsamples 
+                if ((maxsamples!=1) and (length_val-length_train)) > maxsamples: idx_val = length_train+maxsamples 
                 if i==0:
                     if self.dataset == 'train':
                         data = f[name]['multiplets'][:idx_train]
@@ -167,7 +166,7 @@ def eval_fn(model,loss_fn,file,samples):
             idx_train = length_train
             idx_val = length_val
             if length_train > maxsamples: idx_train = maxsamples 
-            if (length_train-length_val) > maxsamples: idx_val = length_train+maxsamples 
+            if (length_val-length_train) > maxsamples: idx_val = length_train+maxsamples 
 
             if i==0:
                 data = f[name]['multiplets'][:idx_train]
