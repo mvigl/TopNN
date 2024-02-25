@@ -10,6 +10,9 @@ import os
 
 filelist = '/raven/u/mvigl/Stop/TopNN/data/H5/list_all.txt'
 with open(filelist) as f:
+    length = 0
+    pos = 0
+    neg = 0
     for line in f:
         filename = line.strip()
         print('reading : ',filename)
@@ -22,7 +25,14 @@ with open(filelist) as f:
             #print('odd labels: ', odd_labels, ' out of: ', all_labels, ' meaning: ',(odd_labels/all_labels)*100, 'percent' )
             #print('pos labels: ', pos_labels, ' out of: ', all_labels, ' meaning: ',(pos_labels/all_labels)*100, 'percent' )
             #print('neg labels: ', neg_labels, ' out of: ', all_labels, ' meaning: ',(neg_labels/all_labels)*100, 'percent' )
-            if pos_labels != 0: print(filename) 
+            if pos_labels != 0: 
+                print(filename) 
+                length += all_labels
+                pos += pos_labels
+                neg += neg_labels
+    print('multiplets: ', length)  
+    print('pos: ', length)   
+    print('neg: ', length)            
 
 
 
