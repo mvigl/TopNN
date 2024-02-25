@@ -17,8 +17,9 @@ parser.add_argument('--bs', type=int,  help='batch size',default='512')
 parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='nodes',default='64')
 parser.add_argument('--nlayers', type=int,  help='layers',default='4')
+parser.add_argument('--maxsamples', type=int,  help='maxsamples',default='100000')
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5')
-parser.add_argument('--filterlist', help='filterlist',default='/raven/u/mvigl/Stop/TopNN/data/H5/filter_all.txt')#/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt
+parser.add_argument('--filterlist', help='filterlist',default='')#/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
@@ -89,38 +90,42 @@ class CustomDataset_maps(Dataset):
         return self.length        
 
 class CustomDataset(Dataset):
-    def __init__(self,file,samples,dataset='train'):
+    def __init__(self,file,name,dataset='train',maxsamples=1):
         self.dataset = dataset
         self.file = file
         self.x=[]
         self.y=[]
-        i=0
         with h5py.File(self.file, 'r') as f:
-            for name in samples:
-                length = len(f[name]['labels'])
-                print(name,' Ndata: ',length)
-                length_train = int(length*0.9)
-                length_val = int(length*0.95)
-                if i==0:
-                    if self.dataset == 'train':
-                        data = f[name]['multiplets'][:length_train]
-                        target = f[name]['labels'][:length_train]
-                    else:
-                        data = f[name]['multiplets'][length_train:length_val]
-                        target = f[name]['labels'][length_train:length_val]  
+            length = len(f[name]['labels'])
+            length_train = int(length*0.9)
+            length_val = int(length*0.95)
+            idx_train = length_train
+            idx_val = length_val
+            if maxsamples !=1:
+                if length_train > maxsamples: idx_train = np.sort(random.sample(range(length_train), maxsamples))
+                else: idx_train = np.arange(length_train)    
+                if (length_val-length_train) > maxsamples: idx_val = np.sort(random.sample(range(length_train,length_val), maxsamples))
+                else: idx_train = idx_val = np.arange(length_train,length_val) 
+
+                if self.dataset == 'train':
+                    data = f[name]['multiplets'][idx_train]
+                    target = f[name]['labels'][idx_train]
                 else:
-                    if self.dataset == 'train':
-                        data = np.concatenate((data,f[name]['multiplets'][:length_train]),axis=0)
-                        target = np.concatenate((target,f[name]['multiplets'][:length_train]),axis=0)
-                    else:
-                        data = np.concatenate((data,f[name]['multiplets'][length_train:length_val]),axis=0)
-                        target = np.concatenate((data,f[name]['multiplets'][length_train:length_val]),axis=0)
-                i+=1    
-                    
+                    data = f[name]['multiplets'][idx_val]
+                    target = f[name]['labels'][idx_val]  
+            
+            else:
+                if self.dataset == 'train':
+                    data = f[name]['multiplets'][:idx_train]
+                    target = f[name]['labels'][:idx_train]
+                else:
+                    data = f[name]['multiplets'][length_train:idx_val]
+                    target = f[name]['labels'][length_train:idx_val]  
+
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
-        print(self.dataset, " Data : ", self.length)
+        #print(self.dataset, " sample , ", "N data : ", self.length)
         
     def __len__(self):
         return self.length
@@ -150,24 +155,31 @@ def train_step(model,data,target,opt,loss_fn):
 def eval_fn(model,loss_fn,file,samples):
     print('validation...')
     i=0
-    with h5py.File(file, 'r') as f:
-        for name in samples:
+    for name in samples:
+        with h5py.File(file, 'r') as f:
             length = len(f[name]['labels'])
             length_train = int(length*0.9)
             length_val = int(length*0.95)
+
             if length_train < 1: continue
             if length_val < 1: continue
 
+            idx_train = length_train
+            idx_val = length_val
+            if length_train > 10000: idx_train = 10000
+            if (length_val-length_train) > 10000: idx_val = length_train + 10000
+
+
             if i==0:
-                data = f[name]['multiplets'][:length_train]
-                target = f[name]['labels'][:length_train]
-                data_val = f[name]['multiplets'][length_train:length_val]
-                target_val = f[name]['labels'][length_train:length_val]  
+                data = f[name]['multiplets'][:idx_train]
+                target = f[name]['labels'][:idx_train]
+                data_val = f[name]['multiplets'][length_train:idx_val]
+                target_val = f[name]['labels'][length_train:idx_val]  
             else: 
-                data = np.concatenate((data,f[name]['multiplets'][:length_train]),axis=0)
-                target = np.concatenate((target,f[name]['labels'][:length_train]),axis=0)
-                data_val = np.concatenate((data_val,f[name]['multiplets'][length_train:length_val]),axis=0)
-                target_val = np.concatenate((target_val,f[name]['labels'][length_train:length_val]),axis=0)
+                data = np.concatenate((data,f[name]['multiplets'][:idx_train]),axis=0)
+                target = np.concatenate((target,f[name]['labels'][:idx_train]),axis=0)
+                data_val = np.concatenate((data_val,f[name]['multiplets'][length_train:idx_val]),axis=0)
+                target_val = np.concatenate((target_val,f[name]['labels'][length_train:idx_val]),axis=0)
         i+=1        
         
     data = torch.from_numpy(data).float().to(device)    
@@ -189,13 +201,17 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
-    Dataset_train = CustomDataset(file,samples,dataset='train')
+
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
-        train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
-        for i, train_batch in enumerate( train_loader ):
-            data, target = train_batch
-            report = train_step(model, data, target, opt, loss_fn )
+        random.shuffle(samples)
+        for name in samples:
+            Dataset_train = CustomDataset(file,name,dataset='train',maxsamples=hyper_params["maxsamples"])
+            if len(Dataset_train) < 1: continue
+            train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
+            for i, train_batch in enumerate( train_loader ):
+                data, target = train_batch
+                report = train_step(model, data, target, opt, loss_fn )
         evals.append(eval_fn(model, loss_fn,file,samples) )         
         val_loss = evals[epoch]['test_loss']
         if val_loss < best_val_loss:
@@ -207,6 +223,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     return evals, model    
 
 hyper_params = {
+    "maxsamples": args.maxsamples,
     "message": args.mess,
     "filter": args.filterlist,
     "data": args.data,
@@ -218,12 +235,12 @@ hyper_params = {
     "batch_size": args.bs,
 }
 
-experiment_name = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
-path = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
+experiment_name = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
+path = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
 if args.scaler:
-    experiment_name = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
-    path = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
-    hyper_params["scaler"] = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pkl'
+    experiment_name = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
+    path = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
+    hyper_params["scaler"] = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pkl'
 
 experiment = Experiment(
     api_key = args.api_key,
@@ -241,9 +258,12 @@ model = make_mlp(in_features=12,out_features=hyper_params["nodes"],nlayer=hyper_
 print(model)
 model.to(device)
 print(device)
+with h5py.File(args.data, 'r') as f:
+    samples = list(f.keys())    
 
-with open(args.filterlist, "r") as file:
-    samples = [line.strip() for line in file.readlines()]
+if args.filterlist != 'no': 
+    with open(args.filterlist, "r") as file:
+        samples = [line.strip() for line in file.readlines()]
 
 E,M = train_loop(model,args.data,samples,device,experiment,hyper_params,path)
 
