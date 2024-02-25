@@ -95,7 +95,7 @@ class CustomDataset(Dataset):
         self.file = file
         self.x=[]
         self.y=[]
-        maxsamples=200000
+        maxsamples=1000000
         i=0
         with h5py.File(self.file, 'r') as f:
             for name in samples:
@@ -116,8 +116,8 @@ class CustomDataset(Dataset):
                         target = f[name]['labels'][length_train:idx_val]  
                 else:
                     if self.dataset == 'train':
-                        data = np.concatenate((data,f[name]['multiplets'][:length_train]),axis=0)
-                        target = np.concatenate((target,f[name]['labels'][:length_train]),axis=0)
+                        data = np.concatenate((data,f[name]['multiplets'][:idx_train]),axis=0)
+                        target = np.concatenate((target,f[name]['labels'][:idx_train]),axis=0)
                     else:
                         data = np.concatenate((data,f[name]['multiplets'][length_train:idx_val]),axis=0)
                         target = np.concatenate((target,f[name]['labels'][length_train:idx_val]),axis=0)
@@ -156,6 +156,7 @@ def train_step(model,data,target,opt,loss_fn):
 def eval_fn(model,loss_fn,file,samples):
     print('validation...')
     i=0
+    maxsamples = 1000000
     with h5py.File(file, 'r') as f:
         for name in samples:
             length = len(f[name]['labels'])
@@ -163,17 +164,21 @@ def eval_fn(model,loss_fn,file,samples):
             length_val = int(length*0.95)
             if length_train < 1: continue
             if length_val < 1: continue
+            idx_train = length_train
+            idx_val = length_val
+            if length_train > maxsamples: idx_train = maxsamples 
+            if (length_train-length_val) > maxsamples: idx_val = length_train+maxsamples 
 
             if i==0:
-                data = f[name]['multiplets'][:length_train]
-                target = f[name]['labels'][:length_train]
-                data_val = f[name]['multiplets'][length_train:length_val]
-                target_val = f[name]['labels'][length_train:length_val]  
+                data = f[name]['multiplets'][:idx_train]
+                target = f[name]['labels'][:idx_train]
+                data_val = f[name]['multiplets'][length_train:idx_val]
+                target_val = f[name]['labels'][length_train:idx_val]  
             else: 
-                data = np.concatenate((data,f[name]['multiplets'][:length_train]),axis=0)
-                target = np.concatenate((target,f[name]['labels'][:length_train]),axis=0)
-                data_val = np.concatenate((data_val,f[name]['multiplets'][length_train:length_val]),axis=0)
-                target_val = np.concatenate((target_val,f[name]['labels'][length_train:length_val]),axis=0)
+                data = np.concatenate((data,f[name]['multiplets'][:idx_train]),axis=0)
+                target = np.concatenate((target,f[name]['labels'][:idx_train]),axis=0)
+                data_val = np.concatenate((data_val,f[name]['multiplets'][length_train:idx_val]),axis=0)
+                target_val = np.concatenate((target_val,f[name]['labels'][length_train:idx_val]),axis=0)
         i+=1        
         
     data = torch.from_numpy(data).float().to(device)    
