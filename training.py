@@ -155,7 +155,7 @@ def train_step(model,data,target,opt,loss_fn):
 def eval_fn(model,loss_fn,file,samples):
     print('validation...')
     i=0
-    maxsamples = 100000
+    maxsamples = 200000
     with h5py.File(file, 'r') as f:
         for name in samples:
             length = len(f[name]['labels'])
@@ -199,7 +199,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
-    Dataset_train = CustomDataset(file,samples,dataset='train')
+    Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"])
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
         train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
@@ -217,6 +217,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     return evals, model    
 
 hyper_params = {
+    "maxsamples": args.maxsamples,
     "message": args.mess,
     "filter": args.filterlist,
     "data": args.data,
@@ -228,12 +229,12 @@ hyper_params = {
     "batch_size": args.bs,
 }
 
-experiment_name = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
-path = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
+experiment_name = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
+path = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
 if args.scaler:
-    experiment_name = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}'
-    path = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pt'
-    hyper_params["scaler"] = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}.pkl'
+    experiment_name = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
+    path = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
+    hyper_params["scaler"] = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pkl'
 
 experiment = Experiment(
     api_key = args.api_key,
