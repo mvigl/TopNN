@@ -103,6 +103,8 @@ class CustomDataset(Dataset):
                 print(name,' Ndata: ',length)
                 length_train = int(length*0.9)
                 length_val = int(length*0.95)
+                idx_train = length_train
+                idx_val = length_val
                 if length_train > maxsamples: idx_train = maxsamples 
                 if (length_train-length_val) > maxsamples: idx_val = length_train+maxsamples 
                 if i==0:
