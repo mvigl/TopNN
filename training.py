@@ -95,7 +95,7 @@ class CustomDataset(Dataset):
         self.file = file
         self.x=[]
         self.y=[]
-        maxsamples=10000000
+        maxsamples=1000000
         i=0
         with h5py.File(self.file, 'r') as f:
             for name in samples:
