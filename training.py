@@ -179,7 +179,7 @@ def eval_fn(model,loss_fn,file,samples):
                 target = np.concatenate((target,f[name]['labels'][:idx_train]),axis=0)
                 data_val = np.concatenate((data_val,f[name]['multiplets'][length_train:idx_val]),axis=0)
                 target_val = np.concatenate((target_val,f[name]['labels'][length_train:idx_val]),axis=0)
-        i+=1        
+            i+=1        
         
     data = torch.from_numpy(data).float().to(device)    
     target = torch.from_numpy(target.reshape(-1,1)).float().to(device)
