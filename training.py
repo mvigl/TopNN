@@ -95,7 +95,7 @@ class CustomDataset(Dataset):
         self.file = file
         self.x=[]
         self.y=[]
-        maxsamples=1000000
+        maxsamples=10000000
         i=0
         with h5py.File(self.file, 'r') as f:
             for name in samples:
@@ -156,7 +156,7 @@ def train_step(model,data,target,opt,loss_fn):
 def eval_fn(model,loss_fn,file,samples):
     print('validation...')
     i=0
-    maxsamples = 1000000
+    maxsamples = 10000000
     with h5py.File(file, 'r') as f:
         for name in samples:
             length = len(f[name]['labels'])
