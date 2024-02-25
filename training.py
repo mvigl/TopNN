@@ -21,6 +21,7 @@ parser.add_argument('--maxsamples', type=int,  help='maxsamples',default='100000
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5')
 parser.add_argument('--filterlist', help='filterlist',default='/raven/u/mvigl/Stop/TopNN/data/H5/filter_all.txt')#/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
+parser.add_argument('--slicing',  action='store_true', help='slicing', default=False)
 parser.add_argument('--project_name', help='project_name',default='Stop_final')
 parser.add_argument('--api_key', help='api_key',default='r1SBLyPzovxoWBPDLx3TAE02O')
 parser.add_argument('--ws', help='workspace',default='mvigl')
@@ -90,7 +91,7 @@ class CustomDataset_maps(Dataset):
         return self.length        
 
 class CustomDataset(Dataset):
-    def __init__(self,file,samples,dataset='train',maxsamples=1,slice=0):
+    def __init__(self,file,samples,dataset='train',maxsamples=1,epoch=0):
         self.dataset = dataset
         self.file = file
         self.x=[]
@@ -99,14 +100,15 @@ class CustomDataset(Dataset):
         with h5py.File(self.file, 'r') as f:
             for name in samples:
                 length = len(f[name]['labels'])
-                print(name,' Ndata: ',length)
+                #print(name,' Ndata: ',length)
                 length_train = int(length*0.9)
                 idx_train = length_train
                 lower_bound = 0
                 if ((maxsamples!=1) and (length_train > maxsamples)): 
                     quotient, remainder = divmod(length_train, maxsamples)
-                    slices = np.concatenate( ((np.ones(quotient)*maxsamples), np.array([remainder])), axis=0).astype(int)
-                    id = (slice - (len(slices)))%len(slices)
+                    if remainder > 2000: slices = np.concatenate( ((np.ones(quotient)*maxsamples), np.array([remainder])), axis=0).astype(int)
+                    else: slices = (np.ones(quotient)*maxsamples).astype(int)
+                    id = (epoch - (len(slices)))%len(slices)
                     lower_bound = np.sum(slices[:(id)])
                     idx_train = (lower_bound+slices[id])
                 if i==0:
@@ -194,9 +196,10 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
-    Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"])
+    if not hyper_params["slicing"]: Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"])
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
+        if hyper_params["slicing"]: Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"],epoch=epoch)
         train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
         for i, train_batch in enumerate( train_loader ):
             data, target = train_batch
@@ -211,7 +214,10 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     experiment.end()
     return evals, model    
 
+ 
+
 hyper_params = {
+    "slicing": args.slicing,
     "maxsamples": args.maxsamples,
     "message": args.mess,
     "filter": args.filterlist,
