@@ -95,6 +95,7 @@ class CustomDataset(Dataset):
         self.file = file
         self.x=[]
         self.y=[]
+        maxsamples=1000000
         i=0
         with h5py.File(self.file, 'r') as f:
             for name in samples:
@@ -102,20 +103,22 @@ class CustomDataset(Dataset):
                 print(name,' Ndata: ',length)
                 length_train = int(length*0.9)
                 length_val = int(length*0.95)
+                if length_train > maxsamples: idx_train = maxsamples 
+                if (length_train-length_val) > maxsamples: idx_val = length_train+maxsamples 
                 if i==0:
                     if self.dataset == 'train':
-                        data = f[name]['multiplets'][:length_train]
-                        target = f[name]['labels'][:length_train]
+                        data = f[name]['multiplets'][:idx_train]
+                        target = f[name]['labels'][:idx_train]
                     else:
-                        data = f[name]['multiplets'][length_train:length_val]
-                        target = f[name]['labels'][length_train:length_val]  
+                        data = f[name]['multiplets'][length_train:idx_val]
+                        target = f[name]['labels'][length_train:idx_val]  
                 else:
                     if self.dataset == 'train':
                         data = np.concatenate((data,f[name]['multiplets'][:length_train]),axis=0)
                         target = np.concatenate((target,f[name]['labels'][:length_train]),axis=0)
                     else:
-                        data = np.concatenate((data,f[name]['multiplets'][length_train:length_val]),axis=0)
-                        target = np.concatenate((target,f[name]['labels'][length_train:length_val]),axis=0)
+                        data = np.concatenate((data,f[name]['multiplets'][length_train:idx_val]),axis=0)
+                        target = np.concatenate((target,f[name]['labels'][length_train:idx_val]),axis=0)
                 i+=1    
                     
         self.x = torch.from_numpy(data).float().to(device)    
