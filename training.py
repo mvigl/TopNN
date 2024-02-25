@@ -112,10 +112,10 @@ class CustomDataset(Dataset):
                 else:
                     if self.dataset == 'train':
                         data = np.concatenate((data,f[name]['multiplets'][:length_train]),axis=0)
-                        target = np.concatenate((target,f[name]['multiplets'][:length_train]),axis=0)
+                        target = np.concatenate((target,f[name]['labels'][:length_train]),axis=0)
                     else:
                         data = np.concatenate((data,f[name]['multiplets'][length_train:length_val]),axis=0)
-                        target = np.concatenate((data,f[name]['multiplets'][length_train:length_val]),axis=0)
+                        target = np.concatenate((target,f[name]['labels'][length_train:length_val]),axis=0)
                 i+=1    
                     
         self.x = torch.from_numpy(data).float().to(device)    
