@@ -15,7 +15,6 @@ with open(filelist) as f:
     neg = 0
     for line in f:
         filename = line.strip()
-        print('reading : ',filename)
         with h5py.File(filename, 'r') as f:
             labels = f['labels'][:]
             odd_labels = np.sum(labels==0.5)
@@ -31,8 +30,8 @@ with open(filelist) as f:
                 pos += pos_labels
                 neg += neg_labels
     print('multiplets: ', length)  
-    print('pos: ', length)   
-    print('neg: ', length)            
+    print('pos: ', pos)   
+    print('neg: ', neg)            
 
 
 
