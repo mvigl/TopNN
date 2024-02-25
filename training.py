@@ -230,12 +230,13 @@ hyper_params = {
     "batch_size": args.bs,
 }
 
-experiment_name = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
-path = f'{args.mess}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
+if hyper_params["slicing"]: hyper_params["message"] = "Slicing_"+hyper_params["message"]
+experiment_name = f'{hyper_params["message"]}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
+path = f'{hyper_params["message"]}_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
 if args.scaler:
-    experiment_name = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
-    path = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
-    hyper_params["scaler"] = f'{args.mess}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pkl'
+    experiment_name = f'{hyper_params["message"]}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}'
+    path = f'{hyper_params["message"]}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pt'
+    hyper_params["scaler"] = f'{hyper_params["message"]}_scaler_nodes{hyper_params["nodes"]}_layers{hyper_params["nlayer"]}_lr{hyper_params["learning_rate"]}_bs{hyper_params["batch_size"]}_{args.maxsamples}.pkl'
 
 experiment = Experiment(
     api_key = args.api_key,
