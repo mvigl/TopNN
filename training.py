@@ -90,7 +90,7 @@ class CustomDataset_maps(Dataset):
         return self.length        
 
 class CustomDataset(Dataset):
-    def __init__(self,file,samples,dataset='train',maxsamples=1):
+    def __init__(self,file,samples,dataset='train',maxsamples=1,slice=0):
         self.dataset = dataset
         self.file = file
         self.x=[]
@@ -101,25 +101,20 @@ class CustomDataset(Dataset):
                 length = len(f[name]['labels'])
                 print(name,' Ndata: ',length)
                 length_train = int(length*0.9)
-                length_val = int(length*0.95)
                 idx_train = length_train
-                idx_val = length_val
-                if ((maxsamples!=1) and (length_train > maxsamples)): idx_train = maxsamples 
-                if ((maxsamples!=1) and (length_val-length_train)) > maxsamples: idx_val = length_train+maxsamples 
+                lower_bound = 0
+                if ((maxsamples!=1) and (length_train > maxsamples)): 
+                    quotient, remainder = divmod(length_train, maxsamples)
+                    slices = np.concatenate( ((np.ones(quotient)*maxsamples), np.array([remainder])), axis=0).astype(int)
+                    id = (slice - (len(slices)))%len(slices)
+                    lower_bound = np.sum(slices[:(id)])
+                    idx_train = (lower_bound+slices[id])
                 if i==0:
-                    if self.dataset == 'train':
-                        data = f[name]['multiplets'][:idx_train]
-                        target = f[name]['labels'][:idx_train]
-                    else:
-                        data = f[name]['multiplets'][length_train:idx_val]
-                        target = f[name]['labels'][length_train:idx_val]  
+                        data = f[name]['multiplets'][lower_bound:idx_train]
+                        target = f[name]['labels'][lower_bound:idx_train]
                 else:
-                    if self.dataset == 'train':
-                        data = np.concatenate((data,f[name]['multiplets'][:idx_train]),axis=0)
-                        target = np.concatenate((target,f[name]['labels'][:idx_train]),axis=0)
-                    else:
-                        data = np.concatenate((data,f[name]['multiplets'][length_train:idx_val]),axis=0)
-                        target = np.concatenate((target,f[name]['labels'][length_train:idx_val]),axis=0)
+                    data = np.concatenate((data,f[name]['multiplets'][lower_bound:idx_train]),axis=0)
+                    target = np.concatenate((target,f[name]['labels'][lower_bound:idx_train]),axis=0)
                 i+=1    
                     
         self.x = torch.from_numpy(data).float().to(device)    
