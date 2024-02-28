@@ -161,7 +161,7 @@ variables = ['counts',
             'WeightEvents',
             ]
 
-dataset = 'test'
+dataset = 'train'
 with open(args.filelist) as f:
     for line in f:
         filename = line.strip()
