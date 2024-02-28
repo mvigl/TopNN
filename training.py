@@ -153,7 +153,7 @@ def train_step(model,data,target,opt,loss_fn):
 def eval_fn(model,loss_fn,file,samples):
     print('validation...')
     i=0
-    maxsamples = 200000
+    maxsamples = 10000
     with h5py.File(file, 'r') as f:
         for name in samples:
             length = len(f[name]['labels'])

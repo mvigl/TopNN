@@ -1,1 +1,0 @@
-../data/MCRun2_mc20a/mc20_13TeV.346344.stop1L.mc20a_NONE.root
