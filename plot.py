@@ -135,15 +135,15 @@ models_name = {
  'Slicing_Full_200000': 'Trained on Stop-FS and Background',
 }
 
-def get_test_data(length,array,counts):
-    length_evts = len(counts)
+def get_test_data(length,array,truth_info):
+    length_evts = len(truth_info)
     idx_val = int(length_evts*0.95)
     if (length_evts-idx_val) > 10000:
-        max_evts = ak.sum(counts[length_evts-10000:])
-        return array[length-max_evts:],counts[length_evts-10000:]
+        max_evts = ak.sum(truth_info[length_evts-10000:,0])
+        return array[length-max_evts:],truth_info[length_evts-10000:,0]
     else: 
-        max_evts = ak.sum(counts[idx_val:])    
-        return array[length-max_evts:],counts[idx_val:]
+        max_evts = ak.sum(truth_info[idx_val:,0])    
+        return array[length-max_evts:],truth_info[idx_val:,0]
 
 
 def get_inputs(file,samples,idmap):
