@@ -142,7 +142,11 @@ def get_test_data(length,array,truth_info):
         max_evts = ak.sum(truth_info[length_evts-10000:,0])
         return array[length-max_evts:],truth_info[length_evts-10000:,0]
     else: 
+        print(truth_info[idx_val:,0])
         max_evts = ak.sum(truth_info[idx_val:,0])    
+        print(max_evts)
+        print(idx_val)
+        print(length)
         return array[length-max_evts:],truth_info[idx_val:,0]
 
 
