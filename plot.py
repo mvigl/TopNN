@@ -6,6 +6,7 @@ import torch
 from sklearn.metrics import roc_curve,auc
 import math
 import vector 
+import os
 
 def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -468,8 +469,9 @@ def plot(results,model,sample='bkg',obj='top',obs='mass'):
     elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
     if obs=='TopNN_score': ax.legend(fontsize=8,loc='upper left')
     else: ax.legend(fontsize=8,loc='upper right')
-    #axs[h,w].semilogy()
-    fig.savefig(f'Plots/Event_level/{model}_{sample}_Cand_{obj}_{obs}.png')
+    out_dir='Plots/Event_level'   
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')  
+    fig.savefig(f'{out_dir}/{model}_{sample}_Cand_{obj}_{obs}.png')
 
 def plot_multiple_models(results,models,sample='bkg',obj='top',obs='mass'):
     Heigth=int(math.sqrt( len(models) ))+1
@@ -518,8 +520,130 @@ def plot_multiple_models(results,models,sample='bkg',obj='top',obs='mass'):
         elif obs=='truth_top_pt': axs[h,w].set_xlabel('true top pT [GeV]',loc='right')
         if obs=='TopNN_score': axs[h,w].legend(fontsize=8,loc='upper left')
         else: axs[h,w].legend(fontsize=8,loc='upper right')
-        #axs[h,w].semilogy()
-    fig.savefig(f'Plots/Event_level/Multiple_models/{sample}_Cand_{obj}_{obs}.png')
+    out_dir='Plots/Event_level/Multiple_models'   
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')  
+    fig.savefig(f'{out_dir}/{sample}_Cand_{obj}_{obs}.png')
+
+def get_matrix(results,model,metric='auc',seff=0.9):
+    M1 = np.arange(500,1601,100)
+    M2 = np.arange(0,801,100)
+    M2[0]=1
+    M2 = np.flip(M2)
+    fig, ax = plt.subplots(figsize=(12, 10), dpi=600)
+    matrix = np.ones((len(M2),len(M1)))
+    for j,m1 in enumerate(M1):
+        for i,m2  in enumerate(M2):
+            matrix[i,j] = 0 
+            MS = (m1 - m2)
+            for sample in results['stop_samples'][model].keys():
+                if f'_{m1}_{m2}_' in sample:
+                    if metric == 'bkg_rej': 
+                        matrix[i,j] = 1/results['stop_samples'][model][sample]['fpr'][int(len(results['stop_samples'][model][sample]['fpr'])*seff)]
+                    else: matrix[i,j] = results['stop_samples'][model][sample][metric]                
+    if metric == 'bkg_rej': 
+        matrix[0,0] = 1/results['stop'][model]['fpr'][int(len(results['stop'][model]['fpr'])*seff)]
+        matrix[0,1] = 1/results['bkg'][model]['fpr'][int(len(results['bkg'][model]['fpr'])*seff)]
+        matrix[1,0] = 1/results['all'][model]['fpr'][int(len(results['all'][model]['fpr'])*seff)]
+    else: 
+        matrix[0,0] = results['stop'][model][metric]   
+        matrix[0,1] = results['bkg'][model][metric]    
+        matrix[1,0] = results['all'][model][metric]                   
+    matrix[matrix == 0] = np.nan         
+    ax.matshow(matrix, cmap=plt.cm.Blues, interpolation = 'none', vmin = 0.8)
+    xaxis = np.arange(len(M1))
+    yaxis = np.arange(len(M2))
+    if metric == 'bkg_rej': ax.set_title(f'{metric} at {seff} signal efficiency [ {models_name[model]} ]')
+    else: ax.set_title(f'{metric} [ {models_name[model]} ]')
+    ax.set_xticks(xaxis)
+    ax.set_yticks(yaxis)
+    ax.set_xlabel('Stop mass')
+    ax.set_ylabel('Neutralino mass')
+    ax.set_yticklabels(list(np.char.mod('%d', M2)))
+    ax.set_xticklabels(list(np.char.mod('%d', M1)))
+    ax.xaxis.set_ticks_position('bottom')
+    for j,m1 in enumerate(M1):
+        for i,m2  in enumerate(M2):
+            mess = ''
+            color="black"
+            fontsize='medium'
+            fontstyle='normal'
+            if not np.isnan(matrix[i,j]) : 
+                if (i == 0) and j == 0: 
+                    mess = 'All stop\n'
+                    fontsize='large'
+                    fontstyle='italic'
+                elif (i == 0) and j == 1: 
+                    mess = 'All bkg\n'
+                    fontsize='large'
+                    fontstyle='italic'
+                elif (i == 1) and j == 0: 
+                    mess = 'All\n s+b\n'
+                    fontsize='large'
+                    fontstyle='italic'    
+                ax.text(j, i, f'{mess}{matrix[i,j]:.3f}', va='center', ha='center',color=color,fontstyle=fontstyle,fontsize=fontsize)
+  
+    if metric == 'bkg_rej': 
+        out = f'{metric}_{seff}_{model}.png' 
+    else: 
+        out = f'{metric}_{model}.png'     
+    out_dir = f'Plots/{metric}'    
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')    
+    fig.savefig(f'{out_dir}/{out}')    
+    return matrix    
+
+def get_ratios(matrices,model1,model2,metric='auc',seff=0.9):
+    M1 = np.arange(500,1601,100)
+    M2 = np.arange(0,801,100)
+    M2[0]=1
+    M2 = np.flip(M2)
+    fig, ax = plt.subplots(figsize=(12, 10), dpi=600)
+    if metric == 'bkg_rej': 
+        matrix=matrices[model1][f'{metric}_{seff}']/matrices[model2][f'{metric}_{seff}']
+        vmin=0.5
+        vmax=1.5
+    else: 
+        matrix=matrices[model1][metric]/matrices[model2][metric]
+        vmin=0.95
+        vmax=1.05
+    ax.matshow(matrix, cmap=plt.cm.RdBu, interpolation = 'none', vmin=vmin, vmax=vmax)
+    xaxis = np.arange(len(M1))
+    yaxis = np.arange(len(M2))
+    if metric == 'bkg_rej': ax.set_title(f'{metric} at {seff} signal efficiency [ {models_name[model1]} / {models_name[model2]} ]')
+    else: ax.set_title(f'{metric} - {models_name[model1]} / {models_name[model2]}')
+    ax.set_xticks(xaxis)
+    ax.set_yticks(yaxis)
+    ax.set_xlabel('Stop mass')
+    ax.set_ylabel('Neutralino mass')
+    ax.set_yticklabels(list(np.char.mod('%d', M2)))
+    ax.set_xticklabels(list(np.char.mod('%d', M1)))
+    ax.xaxis.set_ticks_position('bottom')
+    for j,m1 in enumerate(M1):
+        for i,m2  in enumerate(M2):
+            mess = ''
+            color="black"
+            fontsize='medium'
+            fontstyle='normal'
+            if not np.isnan(matrix[i,j]) : 
+                if (i == 0) and j == 0: 
+                    mess = 'All stop\n'
+                    fontsize='large'
+                    fontstyle='italic'
+                elif (i == 0) and j == 1: 
+                    mess = 'All bkg\n'
+                    fontsize='large'
+                    fontstyle='italic'
+                elif (i == 1) and j == 0: 
+                    mess = 'All\n s+b\n'
+                    fontsize='large'
+                    fontstyle='italic' 
+                ax.text(j, i, f'{mess}{matrix[i,j]:.3f}', va='center', ha='center',color=color,fontstyle=fontstyle,fontsize=fontsize)
+    if metric == 'bkg_rej': 
+        out = f'{metric}_{seff}_ratio_{model1}_{model2}.png' 
+    else:  
+        out = f'{metric}_ratio_{model1}_{model2}.png'  
+    out_dir = f'Plots/{metric}_ratio'        
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')    
+    fig.savefig(f'{out_dir}/{out}')         
 
 if __name__ == "__main__":
     
@@ -574,4 +698,20 @@ if __name__ == "__main__":
         axs[h,w].set_ylabel('Multiplets')
         axs[h,w].set_xlabel('TopNN score',loc='right')
         axs[h,w].semilogy()
-    fig.savefig(f'Plots/Scores/Scores.png')
+    out_dir='Plots/Scores'   
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')        
+    fig.savefig(f'{out_dir}/Scores.png')
+
+    models = list(results['stop'].keys())[1:]
+
+    MATRICES = {}
+    for model in models:
+        MATRICES[model] = {}
+        MATRICES[model]['auc'] = get_matrix(results,model,metric='auc')
+        for seff in [0.6,0.7,0.8,0.9]:
+            MATRICES[model][f'bkg_rej_{seff}'] = get_matrix(results,model,metric='bkg_rej',seff=seff)       
+
+    for model in list(models)[1:]:
+        get_ratios(MATRICES,model,'Stop_FS',metric='auc')
+        for seff in [0.6,0.7,0.8,0.9]:
+            get_ratios(MATRICES,model,'Stop_FS',metric='bkg_rej',seff=seff)         
