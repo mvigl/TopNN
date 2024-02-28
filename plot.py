@@ -139,7 +139,9 @@ def split_data(length,array,dataset='train'):
     idx_val = int(length*0.95)
     if dataset=='train': return array[:idx_train]
     if dataset=='val': return array[idx_train:idx_val]    
-    if dataset=='test': return array[idx_val:]    
+    if dataset=='test': 
+        if (len(array)-idx_val)>68000: return array[(len(array)-68000):]
+        else: return array[idx_val:]
     else:       
         print('choose: train, val, test')
         return 0     
