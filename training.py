@@ -128,8 +128,9 @@ class CustomDataset(Dataset):
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
         self.w = np.ones(self.length)
-        weight = num_bkg/num_stop
-        if num_bkg != 0: self.w[:num_stop] *= weight  
+        if num_bkg != 0: 
+            weight = num_bkg/num_stop
+            self.w[:num_stop] *= weight  
         self.w = torch.from_numpy(self.w).float().to(device)    
         print(self.dataset, " Data : ", self.length)
         
@@ -204,11 +205,11 @@ def eval_fn(model,file,samples):
 
     w_train = np.ones(len(target))
     w_val = np.ones(len(target_val))
-    weight_train = num_bkg_train/num_stop_train
-    weight_val = num_bkg_val/num_stop_val
     if num_bkg_train != 0: 
+        weight_train = num_bkg_train/num_stop_train
         w_train[:num_stop_train] *= weight_train  
     if num_bkg_val != 0: 
+        weight_val = num_bkg_val/num_stop_val
         w_val[:num_stop_train] *= weight_val      
     w_train = torch.from_numpy(w_train).float().to(device)
     w_val = torch.from_numpy(w_val).float().to(device)
