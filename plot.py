@@ -7,6 +7,7 @@ from sklearn.metrics import roc_curve,auc
 import math
 import vector 
 import os
+import yaml
 
 def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -215,10 +216,6 @@ def get_data(branches,vars=['pT','eta','phi','M'],dataset='train'):
                    
     return out_data,output['label'],out_truth_info
 
-
-
-import yaml
-filelist = '/Users/matthiasvigl/Documents/Physics/Stop/analysis/data/Tot_train_list_stop.txt'
 def get_inputs(filelist,idmap):
     with open(idmap) as file:
         map = yaml.load(file, Loader=yaml.FullLoader)['samples'] 
@@ -227,9 +224,11 @@ def get_inputs(filelist,idmap):
         i=0
         for line in f:
             filename = line.strip()
-            print('reading : ',filename)
             number = filename[(filename.index("TeV.")+4):(filename.index(".stop1L"))]
-            if number not in map.keys(): continue
+            if number not in map.keys(): 
+                print('skip')
+                continue
+            print('reading : ',filename)
             sample = map[number]
             with uproot.open({filename: "stop1L_NONE;1"}) as tree:
                 branches = tree.arrays(Features)
