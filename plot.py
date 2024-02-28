@@ -8,6 +8,7 @@ import math
 import vector 
 import os
 import yaml
+import h5py
 
 def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -140,126 +141,56 @@ def split_data(length,array,dataset='train'):
     if dataset=='train': return array[:idx_train]
     if dataset=='val': return array[idx_train:idx_val]    
     if dataset=='test': 
-        if (len(array)-idx_val)>68000: return array[(len(array)-68000):]
+        if (len(array)-idx_val)>68000: return array[(len(array)-idx_val):]
         else: return array[idx_val:]
     else:       
         print('choose: train, val, test')
         return 0     
-      
 
-def idxs_to_var(out,branches,var,dataset):
-    length = len(ak.Array(branches['ljetIdxs_saved'][:]))
-    counts = ak.num( split_data(length,ak.Array(branches['multiplets']),dataset=dataset) )
 
-    out['label'] = (ak.flatten(  split_data(length,ak.Array(branches['multiplets']),dataset=dataset)  )[:,-1].to_numpy()+1)/2
-    bj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['bjetIdxs_saved'][:,0]))[:,:,0]*(ak.Array(branches['bjet1'+var]))
-    bj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['bjetIdxs_saved'][:,1]))[:,:,0]*(ak.Array(branches['bjet2'+var]))
-    out['bjet_'+var] = ak.flatten(   split_data(length,(bj1 + bj2),dataset=dataset)   ).to_numpy()
-    lj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,0]))[:,:,1]*(ak.Array(branches['ljet1'+var]))
-    lj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,1]))[:,:,1]*(ak.Array(branches['ljet2'+var]))
-    lj3 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,2]))[:,:,1]*(ak.Array(branches['ljet3'+var]))
-    lj4 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,3]))[:,:,1]*(ak.Array(branches['ljet4'+var]))
-    out['jet1_'+var] = ak.flatten(   split_data(length,(lj1 + lj2 + lj3 + lj4),dataset=dataset)   ).to_numpy()
-    lj1 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,0]))[:,:,2]*(ak.Array(branches['ljet1'+var]))
-    lj2 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,1]))[:,:,2]*(ak.Array(branches['ljet2'+var]))
-    lj3 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,2]))[:,:,2]*(ak.Array(branches['ljet3'+var]))
-    lj4 = (ak.Array(branches['multiplets'][:])==ak.Array(branches['ljetIdxs_saved'][:,3]))[:,:,2]*(ak.Array(branches['ljet4'+var]))
-    out['jet2_'+var] = ak.flatten(   split_data(length,(lj1 + lj2 + lj3 + lj4),dataset=dataset)   ).to_numpy()
-
-    truth_info = {
-        'counts': counts,
-        'truth_top_min_dR': split_data(length,branches['truth_top_min_dR'][:].to_numpy(),dataset=dataset),
-        'truth_top_min_dR_m': split_data(length,branches['truth_top_min_dR_m'][:].to_numpy(),dataset=dataset),
-        'truth_top_min_dR_jj': split_data(length,branches['truth_top_min_dR_jj'][:].to_numpy(),dataset=dataset),
-        'truth_top_min_dR_m_jj': split_data(length,branches['truth_top_min_dR_m_jj'][:].to_numpy(),dataset=dataset),
-        'truth_topp_match': split_data(length,branches['truth_topp_match'][:].to_numpy(),dataset=dataset),
-        'truth_topm_match': split_data(length,branches['truth_topm_match'][:].to_numpy(),dataset=dataset),
-        'truth_topp_pt': split_data(length,branches['truth_topp_pt'][:].to_numpy(),dataset=dataset),
-        'truth_topm_pt': split_data(length,branches['truth_topm_pt'][:].to_numpy(),dataset=dataset),
-        'truth_Wp_pt': split_data(length,branches['truth_Wp_pt'][:].to_numpy(),dataset=dataset),
-        'truth_Wm_pt': split_data(length,branches['truth_Wm_pt'][:].to_numpy(),dataset=dataset),
-        'WeightEvents': split_data(length,branches['WeightEvents'][:].to_numpy(),dataset=dataset),
-    }
-    return out,truth_info
-
-def get_data(branches,vars=['pT','eta','phi','M'],dataset='train'):
-    output = {}
-    for var in vars:
-        output,truth_info = idxs_to_var(output,branches,var,dataset)
-        
-    out_data = np.hstack(   (       output['bjet_pT'][:,np.newaxis],
-                                    output['jet1_pT'][:,np.newaxis],
-                                    output['jet2_pT'][:,np.newaxis],
-                                    output['bjet_eta'][:,np.newaxis],
-                                    output['jet1_eta'][:,np.newaxis],
-                                    output['jet2_eta'][:,np.newaxis],
-                                    output['bjet_phi'][:,np.newaxis],
-                                    output['jet1_phi'][:,np.newaxis],
-                                    output['jet2_phi'][:,np.newaxis],
-                                    output['bjet_M'][:,np.newaxis],
-                                    output['jet1_M'][:,np.newaxis],
-                                    output['jet2_M'][:,np.newaxis]
-                            ) 
-                        )
-    out_truth_info = np.hstack(   (     truth_info['counts'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR_m'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR_jj'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR_m_jj'][:,np.newaxis],
-                                        truth_info['truth_topp_match'][:,np.newaxis],
-                                        truth_info['truth_topm_match'][:,np.newaxis],
-                                        truth_info['truth_topp_pt'][:,np.newaxis],
-                                        truth_info['truth_topm_pt'][:,np.newaxis],
-                                        truth_info['truth_Wp_pt'][:,np.newaxis],
-                                        truth_info['truth_Wm_pt'][:,np.newaxis],
-                                        truth_info['WeightEvents'][:,np.newaxis]
-                            ) 
-                        )
-                   
-    return out_data,output['label'],out_truth_info
-
-def get_inputs(filelist,idmap):
+def get_inputs(file,samples,idmap):
     with open(idmap) as file:
         map = yaml.load(file, Loader=yaml.FullLoader)['samples'] 
     data_signals = {}
-    with open(filelist) as f:
+    with h5py.File(file, 'r') as f:
         i=0
-        for line in f:
-            filename = line.strip()
-            number = filename[(filename.index("TeV.")+4):(filename.index(".stop1L"))]
+        for name in samples:
+            number = name[(name.index("TeV.")+4):(name.index(".stop1L"))]
             if number not in map.keys(): 
                 print('skip')
                 continue
-            print('reading : ',filename)
+            print('reading : ',name)
+            length = len(f[name]['labels'])
             sample = map[number]
-            with uproot.open({filename: "stop1L_NONE;1"}) as tree:
-                branches = tree.arrays(Features)
-                if i ==0:
-                    data,target,truth_info = get_data(branches,dataset='test')
-                    if '_Signal_' in filename:
+            if i ==0:
+                data = split_data(length,f[name]['multiplets'],dataset='test')
+                target = split_data(length,f[name]['labels'],dataset='test')
+                truth_info = split_data(length,f[name]['variables'],dataset='test')
+                if '_Signal_' in name:
+                    data_signals[sample] = {
+                            'x': data,
+                            'y': target,
+                            'truth_info': truth_info,
+                        }   
+            else:
+                data_i = split_data(length,f[name]['multiplets'],dataset='test')
+                target_i = split_data(length,f[name]['labels'],dataset='test')
+                truth_info_i = split_data(length,f[name]['variables'],dataset='test')
+                data = np.concatenate((data,data_i),axis=0)
+                target = np.concatenate((target,target_i),axis=0)
+                truth_info = np.concatenate((truth_info,truth_info_i),axis=0)
+                if '_Signal_' in name:
+                    if sample not in data_signals.keys():
                         data_signals[sample] = {
-                                'x': data,
-                                'y': target,
-                                'truth_info': truth_info,
-                            }   
-
-                else:
-                    data_i,target_i,truth_info_i = get_data(branches,dataset='test')
-                    data = np.concatenate((data,data_i),axis=0)
-                    target = np.concatenate((target,target_i),axis=0)
-                    truth_info = np.concatenate((truth_info,truth_info_i),axis=0)
-                    if '_Signal_' in filename:
-                        if sample not in data_signals.keys():
-                            data_signals[sample] = {
-                                'x': data_i,
-                                'y': target_i,
-                                'truth_info': truth_info_i,
-                            }
-                        else:
-                             data_signals[sample]['x'] = np.concatenate((data_signals[sample]['x'],data_i),axis=0)
-                             data_signals[sample]['y'] = np.concatenate((data_signals[sample]['y'],target_i),axis=0) 
-                             data_signals[sample]['truth_info'] = np.concatenate((data_signals[sample]['truth_info'],truth_info_i),axis=0) 
-                i+=1
+                            'x': data_i,
+                            'y': target_i,
+                            'truth_info': truth_info_i,
+                        }
+                    else:
+                         data_signals[sample]['x'] = np.concatenate((data_signals[sample]['x'],data_i),axis=0)
+                         data_signals[sample]['y'] = np.concatenate((data_signals[sample]['y'],target_i),axis=0) 
+                         data_signals[sample]['truth_info'] = np.concatenate((data_signals[sample]['truth_info'],truth_info_i),axis=0) 
+            i+=1
 
         x = torch.from_numpy(data).float().to(device)    
         y = target.reshape(-1,1)
