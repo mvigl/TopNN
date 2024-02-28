@@ -291,6 +291,7 @@ print(device)
 with open(args.filterlist, "r") as file:
     samples = [line.strip() for line in file.readlines()]
 
-E,M = train_loop(model,args.data,samples,device,experiment,hyper_params,path)
+if __name__ == "__main__":
 
-log_model(experiment, model, model_name = experiment_name )
+    E,M = train_loop(model,args.data,samples,device,experiment,hyper_params,path)
+    log_model(experiment, model, model_name = experiment_name )
