@@ -13,8 +13,8 @@ import h5py
 def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     return device
-#device = get_device()
-device = 'cpu'
+device = get_device()
+#device = 'cpu'
 
 def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
     layers = []
@@ -141,7 +141,7 @@ def split_data(length,array,dataset='train'):
     if dataset=='train': return array[:idx_train]
     if dataset=='val': return array[idx_train:idx_val]    
     if dataset=='test': 
-        if (len(array)-idx_val)>68000: return array[(len(array)-idx_val):]
+        if (len(array)-idx_val)>1000000: return array[(len(array)-idx_val):]#68000
         else: return array[idx_val:]
     else:       
         print('choose: train, val, test')
@@ -645,6 +645,6 @@ if __name__ == "__main__":
             MATRICES[model][f'bkg_rej_{seff}'] = get_matrix(results,model,metric='bkg_rej',seff=seff)       
 
     for model in list(models)[1:]:
-        get_ratios(MATRICES,model,'Stop_FS',metric='auc')
+        get_ratios(MATRICES,model,'Stop_FS_1000000',metric='auc')
         for seff in [0.6,0.7,0.8,0.9]:
-            get_ratios(MATRICES,model,'Stop_FS',metric='bkg_rej',seff=seff)         
+            get_ratios(MATRICES,model,'Stop_FS_1000000',metric='bkg_rej',seff=seff)         
