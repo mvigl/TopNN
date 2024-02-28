@@ -137,11 +137,13 @@ models_name = {
 
 def get_test_data(length,array,counts):
     length_evts = len(counts)
-    idx_val = int(length*0.95)
+    idx_val = int(length_evts*0.95)
     if (length_evts-idx_val) > 10000:
-        max_evts = ak.sum(counts[length-10000:])
-    else: max_evts = ak.sum(counts)    
-    return array[length-max_evts:],counts[length-10000:]
+        max_evts = ak.sum(counts[length_evts-10000:])
+        return array[length-max_evts:],counts[length_evts-10000:]
+    else: 
+        max_evts = ak.sum(counts[idx_val:])    
+        return array[length-max_evts:],counts[idx_val:]
 
 
 def get_inputs(file,samples,idmap):
