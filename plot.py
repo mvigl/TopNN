@@ -199,10 +199,10 @@ def get_inputs(file,samples,idmap):
             data_signals[sample]['y'] = data_signals[sample]['y'].reshape(-1,1)
         return x,y,truth_info,data_signals
     
-def get_results(filelist_sig,filelist_bkg,idmap,models=None):
+def get_results(file,samples_sig,samples_bkg,idmap,models=None):
 
-    x,y,truth_info,data_signals = get_inputs(filelist_sig,idmap)
-    x_bkg,y_bkg,truth_info_bkg,empty = get_inputs(filelist_bkg,idmap)
+    x,y,truth_info,data_signals = get_inputs(file,samples_sig,idmap)
+    x_bkg,y_bkg,truth_info_bkg,empty = get_inputs(file,samples_bkg,idmap)
 
     if models is None:
         models = [  '/u/mvigl/Stop/run/Full/Stop_FS_nodes128_layers4_lr0.0001_bs512_10000.pt',
@@ -475,11 +475,11 @@ def get_matrix(results,model,metric='auc',seff=0.9):
     if metric == 'bkg_rej': 
         matrix[0,0] = 1/results['stop'][model]['fpr'][int(len(results['stop'][model]['fpr'])*seff)]
         matrix[0,1] = 1/results['bkg'][model]['fpr'][int(len(results['bkg'][model]['fpr'])*seff)]
-        matrix[1,0] = 1/results['all'][model]['fpr'][int(len(results['all'][model]['fpr'])*seff)]
+        #matrix[1,0] = 1/results['all'][model]['fpr'][int(len(results['all'][model]['fpr'])*seff)]
     else: 
         matrix[0,0] = results['stop'][model][metric]   
         matrix[0,1] = results['bkg'][model][metric]    
-        matrix[1,0] = results['all'][model][metric]                   
+        #matrix[1,0] = results['all'][model][metric]                   
     matrix[matrix == 0] = np.nan         
     ax.matshow(matrix, cmap=plt.cm.Blues, interpolation = 'none', vmin = 0.8)
     xaxis = np.arange(len(M1))
@@ -508,10 +508,10 @@ def get_matrix(results,model,metric='auc',seff=0.9):
                     mess = 'All bkg\n'
                     fontsize='large'
                     fontstyle='italic'
-                elif (i == 1) and j == 0: 
-                    mess = 'All\n s+b\n'
-                    fontsize='large'
-                    fontstyle='italic'    
+                #elif (i == 1) and j == 0: 
+                #    mess = 'All\n s+b\n'
+                #    fontsize='large'
+                #    fontstyle='italic'    
                 ax.text(j, i, f'{mess}{matrix[i,j]:.3f}', va='center', ha='center',color=color,fontstyle=fontstyle,fontsize=fontsize)
   
     if metric == 'bkg_rej': 
@@ -564,10 +564,10 @@ def get_ratios(matrices,model1,model2,metric='auc',seff=0.9):
                     mess = 'All bkg\n'
                     fontsize='large'
                     fontstyle='italic'
-                elif (i == 1) and j == 0: 
-                    mess = 'All\n s+b\n'
-                    fontsize='large'
-                    fontstyle='italic' 
+                #elif (i == 1) and j == 0: 
+                #    mess = 'All\n s+b\n'
+                #    fontsize='large'
+                #    fontstyle='italic' 
                 ax.text(j, i, f'{mess}{matrix[i,j]:.3f}', va='center', ha='center',color=color,fontstyle=fontstyle,fontsize=fontsize)
     if metric == 'bkg_rej': 
         out = f'{metric}_{seff}_ratio_{model1}_{model2}.png' 
@@ -579,10 +579,11 @@ def get_ratios(matrices,model1,model2,metric='auc',seff=0.9):
 
 if __name__ == "__main__":
     
-    filelist_sig='/raven/u/mvigl/Stop/TopNN/data/root/list_sig_FS.txt'
-    filelist_bkg='/raven/u/mvigl/Stop/TopNN/data/root/list_bkg_all.txt'
+    file = '/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5'
+    samples_sig='/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt'
+    samples_bkg='/raven/u/mvigl/Stop/TopNN/data/H5/filter_bkg_all.txt'
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
-    results = get_results(filelist_sig,filelist_bkg,idmap,models=None)
+    results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
 
     models = [
         'Stop_FS_1000000',
@@ -625,7 +626,7 @@ if __name__ == "__main__":
         axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=1*(results['bkg']['labels']==0),histtype='step',density=True,label='BKG not truth top')
         axs[h,w].text(0.3, 4.0, (f'AUC STOP = {results["stop"][model]["auc"]:.3f}') )
         axs[h,w].text(0.3, 2.8, (f'AUC BKG   = {results["bkg"][model]["auc"]:.3f}') )
-        axs[h,w].text(0.3, 2.0, (f'AUC ALL    = {results["all"][model]["auc"]:.3f}') )
+        #axs[h,w].text(0.3, 2.0, (f'AUC ALL    = {results["all"][model]["auc"]:.3f}') )
         axs[h,w].legend(loc='lower center')
         axs[h,w].set_ylabel('Multiplets')
         axs[h,w].set_xlabel('TopNN score',loc='right')
