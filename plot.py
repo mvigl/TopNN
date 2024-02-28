@@ -135,17 +135,13 @@ models_name = {
  'Slicing_Full_200000': 'Trained on Stop-FS and Background',
 }
 
-def split_data(length,array,dataset='train'):
-    idx_train = int(length*0.9)
+def get_test_data(length,array,counts):
+    length_evts = len(counts)
     idx_val = int(length*0.95)
-    if dataset=='train': return array[:idx_train]
-    if dataset=='val': return array[idx_train:idx_val]    
-    if dataset=='test': 
-        if (len(array)-idx_val)>10000: return array[(len(array)-10000):]#68000
-        else: return array[idx_val:]
-    else:       
-        print('choose: train, val, test')
-        return 0     
+    if (length_evts-idx_val) > 10000:
+        max_evts = ak.sum(counts[length-10000:])
+    else: max_evts = ak.sum(counts)    
+    return array[length-max_evts:],counts[length-10000:]
 
 
 def get_inputs(file,samples,idmap):
@@ -163,9 +159,9 @@ def get_inputs(file,samples,idmap):
             length = len(f[name]['labels'])
             sample = map[number]
             if i ==0:
-                data = split_data(length,f[name]['multiplets'],dataset='test')
-                target = split_data(length,f[name]['labels'],dataset='test')
-                truth_info = split_data(length,f[name]['variables'],dataset='test')
+                truth_info = f[name]['variables']
+                data, truth = get_test_data(length,f[name]['multiplets'],truth_info)
+                target, truth = get_test_data(length,f[name]['labels'],truth_info)
                 if '_Signal_' in name:
                     data_signals[sample] = {
                             'x': data,
@@ -173,23 +169,23 @@ def get_inputs(file,samples,idmap):
                             'truth_info': truth_info,
                         }   
             else:
-                data_i = split_data(length,f[name]['multiplets'],dataset='test')
-                target_i = split_data(length,f[name]['labels'],dataset='test')
-                truth_info_i = split_data(length,f[name]['variables'],dataset='test')
+                truth_info_i = f[name]['variables']
+                data_i, truth_i = get_test_data(length,f[name]['multiplets'],truth_info_i)
+                target_i, truth_i = get_test_data(length,f[name]['labels'],truth_info_i)
                 data = np.concatenate((data,data_i),axis=0)
                 target = np.concatenate((target,target_i),axis=0)
-                truth_info = np.concatenate((truth_info,truth_info_i),axis=0)
+                truth = np.concatenate((truth,truth_i),axis=0)
                 if '_Signal_' in name:
                     if sample not in data_signals.keys():
                         data_signals[sample] = {
                             'x': data_i,
                             'y': target_i,
-                            'truth_info': truth_info_i,
+                            'truth_info': truth_i,
                         }
                     else:
                          data_signals[sample]['x'] = np.concatenate((data_signals[sample]['x'],data_i),axis=0)
                          data_signals[sample]['y'] = np.concatenate((data_signals[sample]['y'],target_i),axis=0) 
-                         data_signals[sample]['truth_info'] = np.concatenate((data_signals[sample]['truth_info'],truth_info_i),axis=0) 
+                         data_signals[sample]['truth_info'] = np.concatenate((data_signals[sample]['truth_info'],truth_i),axis=0) 
             i+=1
 
         x = torch.from_numpy(data).float().to(device)    
