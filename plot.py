@@ -218,7 +218,7 @@ def get_data(branches,vars=['pT','eta','phi','M'],dataset='train'):
 
 import yaml
 filelist = '/Users/matthiasvigl/Documents/Physics/Stop/analysis/data/Tot_train_list_stop.txt'
-def get_data(filelist,idmap):
+def get_inputs(filelist,idmap):
     with open(idmap) as file:
         map = yaml.load(file, Loader=yaml.FullLoader)['samples'] 
     data_signals = {}
@@ -268,8 +268,8 @@ def get_data(filelist,idmap):
     
 def get_results(filelist_sig,filelist_bkg,idmap,models=None):
 
-    x,y,truth_info,data_signals = get_data(filelist_sig,idmap)
-    x_bkg,y_bkg,truth_info_bkg,empty = get_data(filelist_bkg,idmap)
+    x,y,truth_info,data_signals = get_inputs(filelist_sig,idmap)
+    x_bkg,y_bkg,truth_info_bkg,empty = get_inputs(filelist_bkg,idmap)
 
     if models is None:
         models = [  '/u/mvigl/Stop/run/Full/Stop_FS_nodes128_layers4_lr0.0001_bs512_10000.pt',
