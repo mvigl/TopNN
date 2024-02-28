@@ -580,8 +580,11 @@ def get_ratios(matrices,model1,model2,metric='auc',seff=0.9):
 if __name__ == "__main__":
     
     file = '/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5'
-    samples_sig='/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt'
-    samples_bkg='/raven/u/mvigl/Stop/TopNN/data/H5/filter_bkg_all.txt'
+    with open('/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt', "r") as file:
+        samples_sig = [line.strip() for line in file.readlines()]
+    with open('/raven/u/mvigl/Stop/TopNN/data/H5/filter_bkg_all.txt', "r") as file:
+        samples_bkg = [line.strip() for line in file.readlines()]
+
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
 
