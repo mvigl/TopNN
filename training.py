@@ -136,7 +136,7 @@ class CustomDataset(Dataset):
     def __len__(self):
         return self.length
     def __getitem__(self, idx):
-        return self.x[idx], self.y[idx]
+        return self.x[idx], self.y[idx], self.w[idx]
 
 def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
     layers = []
