@@ -97,6 +97,9 @@ class CustomDataset(Dataset):
         self.file = file
         self.x=[]
         self.y=[]
+        self.w = np.ones(self.length)
+        num_stop=0
+        num_bkg=0
         i=0
         with h5py.File(self.file, 'r') as f:
             for name in samples:
@@ -117,12 +120,16 @@ class CustomDataset(Dataset):
                         target = f[name]['labels'][lower_bound:idx_train]
                 else:
                     data = np.concatenate((data,f[name]['multiplets'][lower_bound:idx_train]),axis=0)
-                    target = np.concatenate((target,f[name]['labels'][lower_bound:idx_train]),axis=0)
+                    target = np.concatenate((target,f[name]['labels'][lower_bound:idx_train]),axis=0)        
+                if 'Signal' in name: num_stop += idx_train-lower_bound
+                else: num_bkg += idx_train-lower_bound
                 i+=1    
-                    
+
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
+        weight = num_bkg/num_stop
+        if num_bkg != 0: self.w[:num_stop] *= weight  
         print(self.dataset, " Data : ", self.length)
         
     def __len__(self):
