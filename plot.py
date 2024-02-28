@@ -149,8 +149,8 @@ def split_data(length,array,dataset='train'):
 
 
 def get_inputs(file,samples,idmap):
-    with open(idmap) as file:
-        map = yaml.load(file, Loader=yaml.FullLoader)['samples'] 
+    with open(idmap) as m:
+        map = yaml.load(m, Loader=yaml.FullLoader)['samples'] 
     data_signals = {}
     with h5py.File(file, 'r') as f:
         i=0
