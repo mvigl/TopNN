@@ -10,12 +10,12 @@ parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
 args = parser.parse_args()
 
-def split_data(length,array,dataset='train'):
-    idx_train = int(length*0.9)
-    idx_val = int(length*0.95)
-    if dataset=='train': return array[:idx_train]
-    if dataset=='val': return array[idx_train:idx_val]    
-    if dataset=='test': return array[idx_val:]    
+def split_data(length,array,dataset='test'):
+    idx_train = int(length*0.95)
+    if dataset=='train': return array[:idx_train] 
+    if dataset=='test': 
+        if length-idx_train> 200000: return array[length-200000:] 
+        else: return array[idx_train:]    
     if dataset=='full': return array[:]  
     else:       
         print('choose: train, val, test')
@@ -161,17 +161,18 @@ variables = ['counts',
             'WeightEvents',
             ]
 
+dataset = 'test'
 with open(args.filelist) as f:
     for line in f:
         filename = line.strip()
         print('reading : ',filename)
         with uproot.open({filename: "stop1L_NONE;1"}) as tree:
             branches = tree.arrays(Features)
-            multiplets,labels,out_truth_info = get_data(branches,dataset='full')
+            multiplets,labels,out_truth_info = get_data(branches,dataset=dataset)
             out_dir = '/raven/u/mvigl/Stop/data/H5_full'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
             data_index = filename.index("/MC")
-            out_dir = out_dir + (filename[data_index:]).replace(".root",".h5")
+            out_dir = out_dir + (filename[data_index:]).replace(".root",f"_{dataset}.h5")
             with h5py.File(out_dir, 'w') as out_file: 
                 out_file.create_dataset('multiplets', data=multiplets,compression="gzip")
                 out_file.create_dataset('labels', data=labels.reshape(-1),dtype='i4',compression="gzip")
