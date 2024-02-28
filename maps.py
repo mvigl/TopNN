@@ -21,7 +21,8 @@ if __name__ == "__main__":
                 filename = line.strip()
                 data_index = (filename.index("/mc"))
                 name = (filename[data_index+1:])
-                if 'MCRun2_Signal_AF3' in filename: name = 'MCRun2_Signal_AF3_' + name 
+                if 'MCRun2_Signal_AF3' in filename: name = 'MCRun2_Signal_AF3_' + name
+                if 'MCRun2_Signal_FS' in filename: name = 'MCRun2_Signal_FS_' + name 
                 print(name)
                 h5fw[name] = h5py.ExternalLink(filename,'/')   
 

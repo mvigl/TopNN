@@ -121,7 +121,7 @@ class CustomDataset(Dataset):
                 else:
                     data = np.concatenate((data,f[name]['multiplets'][lower_bound:idx_train]),axis=0)
                     target = np.concatenate((target,f[name]['labels'][lower_bound:idx_train]),axis=0)        
-                if 'Signal' in name: num_stop += idx_train-lower_bound
+                if '_Signal_' in name: num_stop += idx_train-lower_bound
                 else: num_bkg += idx_train-lower_bound
                 i+=1    
 
@@ -130,6 +130,7 @@ class CustomDataset(Dataset):
         self.length = len(target)
         weight = num_bkg/num_stop
         if num_bkg != 0: self.w[:num_stop] *= weight  
+        self.w = torch.from_numpy(self.w).float().to(device)    
         print(self.dataset, " Data : ", self.length)
         
     def __len__(self):
@@ -148,17 +149,22 @@ def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
     model = torch.nn.Sequential(*layers)
     return model
 
-def train_step(model,data,target,opt,loss_fn):
+def train_step(model,data,target,opt,w):
     model.train()
     preds =  model(data)
+    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([19.6]).to(device),weight=w) #16.4 in stop
     loss = loss_fn(preds.reshape(-1),target.reshape(-1))
     loss.backward()
     opt.step()
     opt.zero_grad()
     return {'loss': float(loss)}
 
-def eval_fn(model,loss_fn,file,samples):
+def eval_fn(model,file,samples):
     print('validation...')
+    num_stop_train=0
+    num_bkg_train=0
+    num_stop_val=0
+    num_bkg_val=0
     i=0
     maxsamples = 200000
     with h5py.File(file, 'r') as f:
@@ -183,6 +189,12 @@ def eval_fn(model,loss_fn,file,samples):
                 target = np.concatenate((target,f[name]['labels'][:idx_train]),axis=0)
                 data_val = np.concatenate((data_val,f[name]['multiplets'][length_train:idx_val]),axis=0)
                 target_val = np.concatenate((target_val,f[name]['labels'][length_train:idx_val]),axis=0)
+            if '_Signal_' in name: 
+                num_stop_train += idx_train
+                num_stop_val += idx_val-length_train
+            else: 
+                num_bkg_train += idx_train
+                num_bkg_val += idx_val-length_train
             i+=1        
         
     data = torch.from_numpy(data).float().to(device)    
@@ -190,17 +202,29 @@ def eval_fn(model,loss_fn,file,samples):
     data_val = torch.from_numpy(data_val).float().to(device)    
     target_val = torch.from_numpy(target_val.reshape(-1,1)).float().to(device)
 
+    w_train = np.ones(len(target))
+    w_val = np.ones(len(target_val))
+    weight_train = num_bkg_train/num_stop_train
+    weight_val = num_bkg_val/num_stop_val
+    if num_bkg_train != 0: 
+        w_train[:num_stop_train] *= weight_train  
+    if num_bkg_val != 0: 
+        w_val[:num_stop_train] *= weight_val      
+    w_train = torch.from_numpy(w_train).float().to(device)
+    w_val = torch.from_numpy(w_val).float().to(device)
+    
+    loss_fn_train = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([19.6]).to(device),weight=w_train)
+    loss_fn_val = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([19.6]).to(device),weight=w_val)
     with torch.no_grad():
         model.eval()
-        train_loss = loss_fn(model(data).reshape(-1),target.reshape(-1))
-        test_loss = loss_fn(model(data_val).reshape(-1),target_val.reshape(-1))    
+        train_loss = loss_fn_train(model(data).reshape(-1),target.reshape(-1))
+        test_loss = loss_fn_val(model(data_val).reshape(-1),target_val.reshape(-1))    
         print(f'train_loss: {float(train_loss)} | test_loss: {float(test_loss)}')
         return {'test_loss': float(test_loss), 'train_loss': float(train_loss)}
     
 
 def train_loop(model,file,samples,device,experiment,hyper_params,path):
     opt = optim.Adam(model.parameters(), hyper_params["learning_rate"])
-    loss_fn = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor([19.6]).to(device)) #16.4 in stop
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
@@ -210,9 +234,9 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
         if hyper_params["slicing"]: Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"],epoch=epoch)
         train_loader = DataLoader(Dataset_train, batch_size=hyper_params["batch_size"], shuffle=True)
         for i, train_batch in enumerate( train_loader ):
-            data, target = train_batch
-            report = train_step(model, data, target, opt, loss_fn )
-        evals.append(eval_fn(model, loss_fn,file,samples) )         
+            data, target, w = train_batch
+            report = train_step(model, data, target, opt, w )
+        evals.append(eval_fn(model,file,samples) )         
         val_loss = evals[epoch]['test_loss']
         if val_loss < best_val_loss:
             best_val_loss = val_loss
