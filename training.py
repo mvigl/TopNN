@@ -97,7 +97,6 @@ class CustomDataset(Dataset):
         self.file = file
         self.x=[]
         self.y=[]
-        self.w = np.ones(self.length)
         num_stop=0
         num_bkg=0
         i=0
@@ -128,6 +127,7 @@ class CustomDataset(Dataset):
         self.x = torch.from_numpy(data).float().to(device)    
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
+        self.w = np.ones(self.length)
         weight = num_bkg/num_stop
         if num_bkg != 0: self.w[:num_stop] *= weight  
         self.w = torch.from_numpy(self.w).float().to(device)    
