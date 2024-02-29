@@ -575,12 +575,16 @@ def get_ratios(matrices,model1,model2,metric='auc',seff=0.9):
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')    
     fig.savefig(f'{out_dir}/{out}')         
 
+def plot_bkg_rej():
+    
+    return    
+
 if __name__ == "__main__":
     
-    file = '/raven/u/mvigl/Stop/data/H5_full/Virtual_full.h5'
-    with open('/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt', "r") as filter:
+    file = '/raven/u/mvigl/Stop/data/H5_full/Virtual_test.h5'
+    with open('/raven/u/mvigl/Stop/TopNN/data/H5/test/filter_sig_FS.txt', "r") as filter:
         samples_sig = [line.strip() for line in filter.readlines()]
-    with open('/raven/u/mvigl/Stop/TopNN/data/H5/filter_bkg_all.txt', "r") as filter:
+    with open('/raven/u/mvigl/Stop/TopNN/data/H5/test/filter_bkg_all.txt', "r") as filter:
         samples_bkg = [line.strip() for line in filter.readlines()]
 
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
@@ -622,9 +626,9 @@ if __name__ == "__main__":
         #print('w: ', w,' h: ', h )
         axs[h,w].set_title(models_name[model])
         axs[h,w].hist(results['stop'][model]['preds'],bins=b,weights=results['stop']['labels'],histtype='step',density=True,label=f'STOP truth top')
-        axs[h,w].hist(results['stop'][model]['preds'],bins=b,weights=1*(results['stop']['labels']==0),histtype='step',density=True,label='STOP not truth top')
+        axs[h,w].hist(results['stop'][model]['preds'],bins=b,weights=1*(results['stop']['labels']==0),histtype='step',density=True,label='STOP no truth top')
         axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=results['bkg']['labels'],histtype='step',density=True,label='BKG truth top')
-        axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=1*(results['bkg']['labels']==0),histtype='step',density=True,label='BKG not truth top')
+        axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=1*(results['bkg']['labels']==0),histtype='step',density=True,label='BKG no truth top')
         axs[h,w].text(0.3, 4.0, (f'AUC STOP = {results["stop"][model]["auc"]:.3f}') )
         axs[h,w].text(0.3, 2.8, (f'AUC BKG   = {results["bkg"][model]["auc"]:.3f}') )
         #axs[h,w].text(0.3, 2.0, (f'AUC ALL    = {results["all"][model]["auc"]:.3f}') )
@@ -649,3 +653,27 @@ if __name__ == "__main__":
         get_ratios(MATRICES,model,'Stop_FS_1000000',metric='auc')
         for seff in [0.6,0.7,0.8,0.9]:
             get_ratios(MATRICES,model,'Stop_FS_1000000',metric='bkg_rej',seff=seff)         
+
+    
+    models = [  'Stop_FS_1000000.pt',
+                'Full_bkg_68010.pt',
+                'Full_bkg_80000.pt',
+                'Full_bkg_100000.pt',
+                'Full_bkg_200000.pt',
+                'Full_bkg_1000000.pt',
+                'Slicing_Full_bkg_1000000.pt',
+                'Slicing_Full_200000.pt',
+          ]
+    
+    fig, axs = plt.subplots(figsize=(8, 6), dpi=600)
+    for model in models:
+        axs.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
+    axs.legend()    
+    axs.set_xlim(0.6,1)
+    axs.set_ylim(0.,17.5)     
+    axs.set_ylabel('Bkg rej')
+    axs.set_xlabel('Signal efficiency',loc='right')
+    axs.semilogy()
+    out_dir='Plots/Hierarchy'   
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')       
+    fig.savefig(f'{out_dir}/Bkg_rej.png')
