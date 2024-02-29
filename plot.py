@@ -42,6 +42,7 @@ def get_scores(weights,data,device,in_features=12,out_features=128,nlayer=4,for_
     eval_model = load_weights(eval_model,weights,device)
     with torch.no_grad():
         eval_model.eval()
+        model.to(device)
         preds = eval_model(data)
     return preds.detach().cpu().numpy()
 
