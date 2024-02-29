@@ -670,7 +670,7 @@ if __name__ == "__main__":
         axs.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
     axs.legend()    
     axs.set_xlim(0.6,1)
-    axs.set_ylim(0.,17.5)     
+    axs.set_ylim(1,17.5)     
     axs.set_ylabel('Bkg rej')
     axs.set_xlabel('Signal efficiency',loc='right')
     axs.semilogy()
