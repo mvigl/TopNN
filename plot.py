@@ -14,7 +14,7 @@ def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     return device
 device = get_device()
-#device = 'cpu'
+device = 'cpu'
 
 def make_mlp(in_features,out_features,nlayer,for_inference=False,binary=True):
     layers = []
