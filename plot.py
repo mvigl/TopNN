@@ -135,17 +135,6 @@ models_name = {
  'Slicing_Full_200000': 'Trained on Stop-FS and Background',
 }
 
-def get_test_data(length,array,truth_info):
-    length_evts = len(truth_info)
-    idx_val = int(length_evts*0.95)
-    if (length_evts-idx_val) > 10000:
-        max_evts = np.array(ak.sum(truth_info[length_evts-10000:,0])).astype(int)
-        return array[length-max_evts:],truth_info[length_evts-10000:]
-    else: 
-        max_evts = np.array(ak.sum(truth_info[idx_val:,0])).astype(int)
-        return array[length-max_evts:],truth_info[idx_val:]
-
-
 def get_inputs(file,samples,idmap):
     with open(idmap) as m:
         map = yaml.load(m, Loader=yaml.FullLoader)['samples'] 
@@ -162,8 +151,8 @@ def get_inputs(file,samples,idmap):
             sample = map[number]
             if i ==0:
                 truth_info = f[name]['variables']
-                data, truth = get_test_data(length,f[name]['multiplets'],truth_info)
-                target, truth = get_test_data(length,f[name]['labels'],truth_info)
+                data = f[name]['multiplets']
+                target = f[name]['labels']
                 if '_Signal_' in name:
                     data_signals[sample] = {
                             'x': data,
@@ -172,22 +161,22 @@ def get_inputs(file,samples,idmap):
                         }   
             else:
                 truth_info_i = f[name]['variables']
-                data_i, truth_i = get_test_data(length,f[name]['multiplets'],truth_info_i)
-                target_i, truth_i = get_test_data(length,f[name]['labels'],truth_info_i)
+                data_i = f[name]['multiplets']
+                target_i = f[name]['labels']
                 data = np.concatenate((data,data_i),axis=0)
                 target = np.concatenate((target,target_i),axis=0)
-                truth = np.concatenate((truth,truth_i),axis=0)
+                truth_info = np.concatenate((truth_info,truth_info_i),axis=0)
                 if '_Signal_' in name:
                     if sample not in data_signals.keys():
                         data_signals[sample] = {
                             'x': data_i,
                             'y': target_i,
-                            'truth_info': truth_i,
+                            'truth_info': truth_info_i,
                         }
                     else:
                          data_signals[sample]['x'] = np.concatenate((data_signals[sample]['x'],data_i),axis=0)
                          data_signals[sample]['y'] = np.concatenate((data_signals[sample]['y'],target_i),axis=0) 
-                         data_signals[sample]['truth_info'] = np.concatenate((data_signals[sample]['truth_info'],truth_i),axis=0) 
+                         data_signals[sample]['truth_info'] = np.concatenate((data_signals[sample]['truth_info'],truth_info_i),axis=0) 
             i+=1
 
         x = torch.from_numpy(data).float().to(device)    
