@@ -645,14 +645,14 @@ if __name__ == "__main__":
             get_ratios(MATRICES,model,'Stop_FS_1000000',metric='bkg_rej',seff=seff)         
 
     
-    models = [  'Stop_FS_1000000.pt',
-                'Full_bkg_68010.pt',
-                'Full_bkg_80000.pt',
-                'Full_bkg_100000.pt',
-                'Full_bkg_200000.pt',
-                'Full_bkg_1000000.pt',
-                'Slicing_Full_bkg_1000000.pt',
-                'Slicing_Full_200000.pt',
+    models = [  'Stop_FS_1000000',
+                'Full_bkg_68010',
+                'Full_bkg_80000',
+                'Full_bkg_100000',
+                'Full_bkg_200000',
+                'Full_bkg_1000000',
+                'Slicing_Full_bkg_1000000',
+                'Slicing_Full_200000',
           ]
     
     fig, axs = plt.subplots(figsize=(8, 6), dpi=600)
