@@ -104,7 +104,7 @@ class CustomDataset(Dataset):
             for name in samples:
                 length = len(f[name]['labels'])
                 #print(name,' Ndata: ',length)
-                length_train = int(length*0.9)
+                length_train = int(length*0.95)
                 idx_train = length_train
                 lower_bound = 0
                 if ((maxsamples!=1) and (length_train > maxsamples)): 
@@ -171,8 +171,8 @@ def eval_fn(model,file,samples):
     with h5py.File(file, 'r') as f:
         for name in samples:
             length = len(f[name]['labels'])
-            length_train = int(length*0.9)
-            length_val = int(length*0.95)
+            length_train = int(length*0.95)
+            length_val = int(length-1)
             if length_train < 1: continue
             if length_val < 1: continue
             idx_train = length_train
