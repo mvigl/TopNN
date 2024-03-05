@@ -14,8 +14,8 @@ import h5py
   
 
 if __name__ == "__main__":
-    filelist = '/raven/u/mvigl/Stop/TopNN/data/H5/test/list_all.txt'
-    with h5py.File('/raven/u/mvigl/Stop/data/H5_full/Virtual_test.h5',mode='w') as h5fw:
+    filelist = '/raven/u/mvigl/Stop/TopNN/data/H5/train/list_all.txt'
+    with h5py.File('/raven/u/mvigl/Stop/data/H5_full/Virtual_train.h5',mode='w') as h5fw:
         with open(filelist) as f:
             for line in f:
                 filename = line.strip()
