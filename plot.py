@@ -230,7 +230,7 @@ def get_results(file,samples_sig,samples_bkg,idmap,models=None):
         preds_sig = get_scores(weights,x,device,in_features=in_features,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
         preds_bkg = get_scores(weights,x_bkg,device,in_features=in_features,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
         preds_all = get_scores(weights,x_all,device,in_features=in_features,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
-        name = weights[(weights.index("Full/")+5):weights.index("_nodes")] + weights[(weights.index("bs512")+5):weights.index(".pt")]
+        name = weights[(weights.index("Final/")+5):weights.index("_nodes")] + weights[(weights.index("bs512")+5):weights.index(".pt")]
 
         results['stop'][name]={}
         results['stop_samples'][name]={}
