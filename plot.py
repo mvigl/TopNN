@@ -126,7 +126,9 @@ models_name = {
  'Stop_FS_50000':'Trained on Stop-FS (#evt)',
  'Stop_FS_100000':'Trained on Stop-FS (#evt)',
  'Stop_FS_1000000': 'Trained on Stop-FS',
- 'Full_bkg_68010': 'Trained on Background (#evt)',
+ 'Full_bkg_65000': 'Trained on Background (#evt)',
+ 'Full_bkg_68000': 'Trained on Background (#evt)',
+ 'Full_bkg_70000': 'Trained on Background (#evt)',  
  'Full_bkg_80000': 'Trained on Background (#evt)',
  'Full_bkg_100000': 'Trained on Background (#evt)',
  'Full_bkg_200000': 'Trained on Background (#evt)',
@@ -230,7 +232,7 @@ def get_results(file,samples_sig,samples_bkg,idmap,models=None):
         preds_sig = get_scores(weights,x,device,in_features=in_features,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
         preds_bkg = get_scores(weights,x_bkg,device,in_features=in_features,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
         preds_all = get_scores(weights,x_all,device,in_features=in_features,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
-        name = weights[(weights.index("Final/")+5):weights.index("_nodes")] + weights[(weights.index("bs512")+5):weights.index(".pt")]
+        name = weights[(weights.index("Final/")+6):weights.index("_nodes")] + weights[(weights.index("bs512")+5):weights.index(".pt")]
 
         results['stop'][name]={}
         results['stop_samples'][name]={}
