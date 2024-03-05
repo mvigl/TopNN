@@ -193,18 +193,20 @@ def get_results(file,samples_sig,samples_bkg,idmap,models=None):
     x_bkg,y_bkg,truth_info_bkg,empty = get_inputs(file,samples_bkg,idmap)
 
     if models is None:
-        models = [  '/u/mvigl/Stop/run/Full/Stop_FS_nodes128_layers4_lr0.0001_bs512_10000.pt',
-                    '/u/mvigl/Stop/run/Full/Stop_FS_nodes128_layers4_lr0.0001_bs512_50000.pt',
-                    '/u/mvigl/Stop/run/Full/Stop_FS_nodes128_layers4_lr0.0001_bs512_100000.pt',
-                    '/u/mvigl/Stop/run/Full/Stop_FS_nodes128_layers4_lr0.0001_bs512_1000000.pt',
-                    '/u/mvigl/Stop/run/Full/Full_bkg_nodes128_layers4_lr0.0001_bs512_68010.pt',
-                    '/u/mvigl/Stop/run/Full/Full_bkg_nodes128_layers4_lr0.0001_bs512_80000.pt',
-                    '/u/mvigl/Stop/run/Full/Full_bkg_nodes128_layers4_lr0.0001_bs512_100000.pt',
-                    '/u/mvigl/Stop/run/Full/Full_bkg_nodes128_layers4_lr0.0001_bs512_200000.pt',
-                    '/u/mvigl/Stop/run/Full/Full_bkg_nodes128_layers4_lr0.0001_bs512_1000000.pt',
-                    '/u/mvigl/Stop/run/Full/Slicing_Full_bkg_nodes128_layers4_lr0.0001_bs512_1000000.pt',
-                    '/u/mvigl/Stop/run/Full/Slicing_Full_nodes128_layers4_lr0.0001_bs512_200000.pt',
-                    '/u/mvigl/Stop/run/Full/Slicing_Full_nodes128_layers4_lr0.0001_bs512_1000000.pt',
+        models = [  '/u/mvigl/Stop/run/Final/Stop_FS_nodes128_layers4_lr0.0001_bs512_10000.pt',
+                    '/u/mvigl/Stop/run/Final/Stop_FS_nodes128_layers4_lr0.0001_bs512_50000.pt',
+                    '/u/mvigl/Stop/run/Final/Stop_FS_nodes128_layers4_lr0.0001_bs512_100000.pt',
+                    '/u/mvigl/Stop/run/Final/Stop_FS_nodes128_layers4_lr0.0001_bs512_1000000.pt',
+                    '/u/mvigl/Stop/run/Final/Full_bkg_nodes128_layers4_lr0.0001_bs512_65000.pt',
+                    '/u/mvigl/Stop/run/Final/Full_bkg_nodes128_layers4_lr0.0001_bs512_68000.pt',
+                    '/u/mvigl/Stop/run/Final/Full_bkg_nodes128_layers4_lr0.0001_bs512_70000.pt',
+                    '/u/mvigl/Stop/run/Final/Full_bkg_nodes128_layers4_lr0.0001_bs512_80000.pt',
+                    '/u/mvigl/Stop/run/Final/Full_bkg_nodes128_layers4_lr0.0001_bs512_100000.pt',
+                    '/u/mvigl/Stop/run/Final/Full_bkg_nodes128_layers4_lr0.0001_bs512_200000.pt',
+                    '/u/mvigl/Stop/run/Final/Full_bkg_nodes128_layers4_lr0.0001_bs512_1000000.pt',
+                    '/u/mvigl/Stop/run/Final/Slicing_Full_bkg_nodes128_layers4_lr0.0001_bs512_1000000.pt',
+                    '/u/mvigl/Stop/run/Final/Slicing_Full_nodes128_layers4_lr0.0001_bs512_200000.pt',
+                    '/u/mvigl/Stop/run/Final/Slicing_Full_nodes128_layers4_lr0.0001_bs512_1000000.pt',
           ]
           
     results = {
@@ -646,7 +648,9 @@ if __name__ == "__main__":
 
     
     models = [  'Stop_FS_1000000',
-                'Full_bkg_68010',
+                'Full_bkg_65000',
+                'Full_bkg_68000',
+                'Full_bkg_70000',
                 'Full_bkg_80000',
                 'Full_bkg_100000',
                 'Full_bkg_200000',
