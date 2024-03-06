@@ -657,17 +657,31 @@ if __name__ == "__main__":
                 'Full_bkg_68000',
                 #'Full_bkg_70000',
                 #'Full_bkg_80000',
-                'Full_bkg_100000',
+                #'Full_bkg_100000',
                 'Full_bkg_200000',
                 'Full_bkg_1000000',
                 'Slicing_Full_bkg_1000000',
                 'Slicing_Full_200000',
           ]
     
+    colors = [
+                'Stop_FS_10000':'darkcyan',
+                'Stop_FS_50000':'blue',
+                'Stop_FS_1000000':'navy',
+                #'Full_bkg_65000':,
+                'Full_bkg_68000':'indianred',
+                #'Full_bkg_70000':,
+                #'Full_bkg_80000':,
+                #'Full_bkg_100000':,
+                'Full_bkg_200000':'orange',
+                'Full_bkg_1000000':'red',
+                'Slicing_Full_bkg_1000000':'maroon',
+                'Slicing_Full_200000':'green',
+    ]
     fig = plt.figure(figsize=(8, 6), dpi=600)
     ax = fig.add_subplot(4,1,(1,3)) 
     for model in models:
-        ax.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
+        ax.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}',color=colors[model]) 
     ax.legend()    
     ax.semilogy()
     ax.set_xlim(0.6,1)
@@ -676,7 +690,7 @@ if __name__ == "__main__":
     plt.setp(ax.get_xticklabels(), visible=False)
     ax = fig.add_subplot(4,1,4)
     for model in models:
-        ax.plot(results['stop'][model]['tpr'],results['stop']['Stop_FS_1000000']['fpr']/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
+        ax.plot(results['stop'][model]['tpr'],results['stop']['Stop_FS_1000000']['fpr']/results['stop'][model]['fpr'],label=f'{models_name[model]}',color=colors[model]) 
     ax.set_xlim(0.6,1)
     ax.set_ylim(0.9,1.05) 
     ax.set_xlabel('Signal efficiency',loc='right')
