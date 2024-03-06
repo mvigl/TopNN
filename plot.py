@@ -664,7 +664,7 @@ if __name__ == "__main__":
                 'Slicing_Full_200000',
           ]
     
-    colors = [
+    colors = {
                 'Stop_FS_10000':'darkcyan',
                 'Stop_FS_50000':'blue',
                 'Stop_FS_1000000':'navy',
@@ -677,7 +677,7 @@ if __name__ == "__main__":
                 'Full_bkg_1000000':'red',
                 'Slicing_Full_bkg_1000000':'maroon',
                 'Slicing_Full_200000':'green',
-    ]
+    }
     fig = plt.figure(figsize=(8, 6), dpi=600)
     ax = fig.add_subplot(4,1,(1,3)) 
     for model in models:
