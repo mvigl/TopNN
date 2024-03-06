@@ -584,78 +584,79 @@ if __name__ == "__main__":
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
 
-    models = [
-        'Stop_FS_1000000',
-        'Slicing_Full_bkg_1000000',
-        'Slicing_Full_200000',
-        ]
-    
-    for model in models:
-        plot(results,model,sample='stop',obj='top',obs='mass')
-        plot(results,model,sample='stop',obj='W',obs='mass')
-        plot(results,model,sample='bkg',obj='top',obs='mass')
-        plot(results,model,sample='bkg',obj='W',obs='mass')
-        plot(results,model,sample='stop',obs='TopNN_score')
-        plot(results,model,sample='bkg',obs='TopNN_score')
-        plot(results,model,sample='stop',obs='truth_top_pt')
-        plot(results,model,sample='bkg',obs='truth_top_pt')
+    if False:
+        models = [
+            'Stop_FS_1000000',
+            'Slicing_Full_bkg_1000000',
+            'Slicing_Full_200000',
+            ]
 
-    plot_multiple_models(results,models,sample='stop',obj='top',obs='mass')
-    plot_multiple_models(results,models,sample='stop',obj='W',obs='mass')
-    plot_multiple_models(results,models,sample='bkg',obj='top',obs='mass')
-    plot_multiple_models(results,models,sample='bkg',obj='W',obs='mass')
-    plot_multiple_models(results,models,sample='stop',obs='TopNN_score')
-    plot_multiple_models(results,models,sample='bkg',obs='TopNN_score')
-    plot_multiple_models(results,models,sample='stop',obs='truth_top_pt')
-    plot_multiple_models(results,models,sample='bkg',obs='truth_top_pt')    
+        for model in models:
+            plot(results,model,sample='stop',obj='top',obs='mass')
+            plot(results,model,sample='stop',obj='W',obs='mass')
+            plot(results,model,sample='bkg',obj='top',obs='mass')
+            plot(results,model,sample='bkg',obj='W',obs='mass')
+            plot(results,model,sample='stop',obs='TopNN_score')
+            plot(results,model,sample='bkg',obs='TopNN_score')
+            plot(results,model,sample='stop',obs='truth_top_pt')
+            plot(results,model,sample='bkg',obs='truth_top_pt')
 
-    Heigth=int(math.sqrt( len(models) ))+1
-    Width=int(math.sqrt(len(models)) )+1
-    b=np.linspace(0,1,100)
-    fig, axs = plt.subplots(Heigth, Width,figsize=(12, 10), dpi=600)
-    h = -1
-    for i,model in enumerate(models):
-        w = (i)%Width
-        if w==0: h += 1
-        #print('w: ', w,' h: ', h )
-        axs[h,w].set_title(models_name[model])
-        axs[h,w].hist(results['stop'][model]['preds'],bins=b,weights=results['stop']['labels'],histtype='step',density=True,label=f'STOP truth top')
-        axs[h,w].hist(results['stop'][model]['preds'],bins=b,weights=1*(results['stop']['labels']==0),histtype='step',density=True,label='STOP no truth top')
-        axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=results['bkg']['labels'],histtype='step',density=True,label='BKG truth top')
-        axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=1*(results['bkg']['labels']==0),histtype='step',density=True,label='BKG no truth top')
-        axs[h,w].text(0.3, 4.0, (f'AUC STOP = {results["stop"][model]["auc"]:.3f}') )
-        axs[h,w].text(0.3, 2.8, (f'AUC BKG   = {results["bkg"][model]["auc"]:.3f}') )
-        #axs[h,w].text(0.3, 2.0, (f'AUC ALL    = {results["all"][model]["auc"]:.3f}') )
-        axs[h,w].legend(loc='lower center')
-        axs[h,w].set_ylabel('Multiplets')
-        axs[h,w].set_xlabel('TopNN score',loc='right')
-        axs[h,w].semilogy()
-    out_dir='Plots/Scores'   
-    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')        
-    fig.savefig(f'{out_dir}/Scores.png')
+        plot_multiple_models(results,models,sample='stop',obj='top',obs='mass')
+        plot_multiple_models(results,models,sample='stop',obj='W',obs='mass')
+        plot_multiple_models(results,models,sample='bkg',obj='top',obs='mass')
+        plot_multiple_models(results,models,sample='bkg',obj='W',obs='mass')
+        plot_multiple_models(results,models,sample='stop',obs='TopNN_score')
+        plot_multiple_models(results,models,sample='bkg',obs='TopNN_score')
+        plot_multiple_models(results,models,sample='stop',obs='truth_top_pt')
+        plot_multiple_models(results,models,sample='bkg',obs='truth_top_pt')    
 
-    models = list(results['stop'].keys())[1:]
+        Heigth=int(math.sqrt( len(models) ))+1
+        Width=int(math.sqrt(len(models)) )+1
+        b=np.linspace(0,1,100)
+        fig, axs = plt.subplots(Heigth, Width,figsize=(12, 10), dpi=600)
+        h = -1
+        for i,model in enumerate(models):
+            w = (i)%Width
+            if w==0: h += 1
+            #print('w: ', w,' h: ', h )
+            axs[h,w].set_title(models_name[model])
+            axs[h,w].hist(results['stop'][model]['preds'],bins=b,weights=results['stop']['labels'],histtype='step',density=True,label=f'STOP truth top')
+            axs[h,w].hist(results['stop'][model]['preds'],bins=b,weights=1*(results['stop']['labels']==0),histtype='step',density=True,label='STOP no truth top')
+            axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=results['bkg']['labels'],histtype='step',density=True,label='BKG truth top')
+            axs[h,w].hist(results['bkg'][model]['preds'],bins=b,weights=1*(results['bkg']['labels']==0),histtype='step',density=True,label='BKG no truth top')
+            axs[h,w].text(0.3, 4.0, (f'AUC STOP = {results["stop"][model]["auc"]:.3f}') )
+            axs[h,w].text(0.3, 2.8, (f'AUC BKG   = {results["bkg"][model]["auc"]:.3f}') )
+            #axs[h,w].text(0.3, 2.0, (f'AUC ALL    = {results["all"][model]["auc"]:.3f}') )
+            axs[h,w].legend(loc='lower center')
+            axs[h,w].set_ylabel('Multiplets')
+            axs[h,w].set_xlabel('TopNN score',loc='right')
+            axs[h,w].semilogy()
+        out_dir='Plots/Scores'   
+        if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')        
+        fig.savefig(f'{out_dir}/Scores.png')
 
-    MATRICES = {}
-    for model in models:
-        MATRICES[model] = {}
-        MATRICES[model]['auc'] = get_matrix(results,model,metric='auc')
-        for seff in [0.6,0.7,0.8,0.9]:
-            MATRICES[model][f'bkg_rej_{seff}'] = get_matrix(results,model,metric='bkg_rej',seff=seff)       
+        models = list(results['stop'].keys())[1:]
 
-    for model in list(models)[1:]:
-        get_ratios(MATRICES,model,'Stop_FS_1000000',metric='auc')
-        for seff in [0.6,0.7,0.8,0.9]:
-            get_ratios(MATRICES,model,'Stop_FS_1000000',metric='bkg_rej',seff=seff)         
+        MATRICES = {}
+        for model in models:
+            MATRICES[model] = {}
+            MATRICES[model]['auc'] = get_matrix(results,model,metric='auc')
+            for seff in [0.6,0.7,0.8,0.9]:
+                MATRICES[model][f'bkg_rej_{seff}'] = get_matrix(results,model,metric='bkg_rej',seff=seff)       
+
+        for model in list(models)[1:]:
+            get_ratios(MATRICES,model,'Stop_FS_1000000',metric='auc')
+            for seff in [0.6,0.7,0.8,0.9]:
+                get_ratios(MATRICES,model,'Stop_FS_1000000',metric='bkg_rej',seff=seff)         
 
     
     models = [  'Stop_FS_10000',
                 'Stop_FS_50000',
                 'Stop_FS_1000000',
-                'Full_bkg_65000',
+                #'Full_bkg_65000',
                 'Full_bkg_68000',
-                'Full_bkg_70000',
-                'Full_bkg_80000',
+                #'Full_bkg_70000',
+                #'Full_bkg_80000',
                 'Full_bkg_100000',
                 'Full_bkg_200000',
                 'Full_bkg_1000000',
@@ -672,11 +673,12 @@ if __name__ == "__main__":
     ax.set_xlim(0.6,1)
     ax.set_ylim(1,17.5)     
     ax.set_ylabel('Bkg rej')
+    plt.setp(ax.get_xticklabels(), visible=False)
     ax = fig.add_subplot(4,1,4)
     for model in models:
         ax.plot(results['stop'][model]['tpr'],results['stop']['Stop_FS_1000000']['fpr']/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
     ax.set_xlim(0.6,1)
-    ax.set_ylim(0.9,1.1) 
+    ax.set_ylim(0.9,1.05) 
     ax.set_xlabel('Signal efficiency',loc='right')
     out_dir='Plots/Hierarchy'   
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')       
