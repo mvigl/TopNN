@@ -122,18 +122,18 @@ variables = ['counts',
 #-1 for leptonic decaying top or if topp(topn) doesn't exist
 
 models_name = {
- 'Stop_FS_10000':'Trained on Stop-FS (#evt)',
- 'Stop_FS_50000':'Trained on Stop-FS (#evt)',
- 'Stop_FS_100000':'Trained on Stop-FS (#evt)',
- 'Stop_FS_1000000': 'Trained on Stop-FS',
- 'Full_bkg_65000': 'Trained on Background (#evt)',
- 'Full_bkg_68000': 'Trained on Background (#evt)',
- 'Full_bkg_70000': 'Trained on Background (#evt)',  
- 'Full_bkg_80000': 'Trained on Background (#evt)',
- 'Full_bkg_100000': 'Trained on Background (#evt)',
- 'Full_bkg_200000': 'Trained on Background (#evt)',
- 'Full_bkg_1000000': 'Trained on Background',
- 'Slicing_Full_bkg_1000000': 'Trained on Background (#evt)',
+ 'Stop_FS_10000':'Trained on Stop-FS (2.714.253)',
+ 'Stop_FS_50000':'Trained on Stop-FS (4.440.130)',
+ 'Stop_FS_100000':'Trained on Stop-FS (5.217.010)',
+ 'Stop_FS_1000000': 'Trained on Stop-FS', #5.830.734
+ 'Full_bkg_65000': 'Trained on Background (5.523.543)',
+ 'Full_bkg_68000': 'Trained on Background (5.772.543)',
+ 'Full_bkg_70000': 'Trained on Background (5.938.543)',  
+ 'Full_bkg_80000': 'Trained on Background (6.768.543)',
+ 'Full_bkg_100000': 'Trained on Background (8.400.280)',
+ 'Full_bkg_200000': 'Trained on Background (16.082.372)',
+ 'Full_bkg_1000000': 'Trained on Background (70.404.619)',
+ 'Slicing_Full_bkg_1000000': 'Trained on Background',
  'Slicing_Full_1000000': 'Trained on Stop-FS and Background (#evt)',
  'Slicing_Full_200000': 'Trained on Stop-FS and Background',
 }
@@ -649,7 +649,9 @@ if __name__ == "__main__":
             get_ratios(MATRICES,model,'Stop_FS_1000000',metric='bkg_rej',seff=seff)         
 
     
-    models = [  'Stop_FS_1000000',
+    models = [  'Stop_FS_10000',
+                'Stop_FS_50000',
+                'Stop_FS_1000000',
                 'Full_bkg_65000',
                 'Full_bkg_68000',
                 'Full_bkg_70000',
@@ -661,15 +663,21 @@ if __name__ == "__main__":
                 'Slicing_Full_200000',
           ]
     
-    fig, axs = plt.subplots(figsize=(8, 6), dpi=600)
+    fig = plt.figure(figsize=(8, 6), dpi=600)
+    ax = fig.add_subplot(4,1,(1,3)) 
     for model in models:
-        axs.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
-    axs.legend()    
-    axs.set_xlim(0.6,1)
-    axs.set_ylim(1,17.5)     
-    axs.set_ylabel('Bkg rej')
-    axs.set_xlabel('Signal efficiency',loc='right')
-    axs.semilogy()
+        ax.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
+    ax.legend()    
+    ax.semilogy()
+    ax.set_xlim(0.6,1)
+    ax.set_ylim(1,17.5)     
+    ax.set_ylabel('Bkg rej')
+    ax = fig.add_subplot(4,1,4)
+    for model in models:
+        ax.plot(results['stop'][model]['tpr'],results['stop']['Stop_FS_1000000']['fpr']/results['stop'][model]['fpr'],label=f'{models_name[model]}') 
+    ax.set_xlim(0.6,1)
+    ax.set_ylim(0.9,1.1) 
+    ax.set_xlabel('Signal efficiency',loc='right')
     out_dir='Plots/Hierarchy'   
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')       
     fig.savefig(f'{out_dir}/Bkg_rej.png')
