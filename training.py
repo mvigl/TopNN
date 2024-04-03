@@ -1,15 +1,13 @@
 from comet_ml import Experiment,ExistingExperiment
 from comet_ml.integration.pytorch import log_model
 import numpy as np
-import uproot
-import awkward as ak
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 import argparse
 from sklearn.preprocessing import StandardScaler
-import random
 import h5py
+import pickle
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--lr', type=float,  help='learning rate',default='0.0001')
@@ -17,7 +15,7 @@ parser.add_argument('--bs', type=int,  help='batch size',default='512')
 parser.add_argument('--ep', type=int,  help='epochs',default='50')
 parser.add_argument('--nodes', type=int,  help='nodes',default='64')
 parser.add_argument('--nlayers', type=int,  help='layers',default='4')
-parser.add_argument('--maxsamples', type=int,  help='maxsamples',default='100000')
+parser.add_argument('--maxsamples', type=int,  help='maxsamples',default='1')
 parser.add_argument('--data', help='data',default='/raven/u/mvigl/Stop/data/H5_full/Virtual_train.h5')
 parser.add_argument('--filterlist', help='filterlist',default='/raven/u/mvigl/Stop/TopNN/data/H5/filter_all.txt')#/raven/u/mvigl/Stop/TopNN/data/H5/filter_sig_FS.txt
 parser.add_argument('--scaler',  action='store_true', help='use scaler', default=False)
@@ -34,65 +32,10 @@ def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     return device
 device = get_device()
-
-def split_data(length,array,dataset='train'):
-    idx_train = int(length*0.9)
-    idx_val = int(length*0.95)
-    if dataset=='train': return array[:idx_train]
-    if dataset=='val': return array[idx_train:idx_val]    
-    if dataset=='test': return array[idx_val:]    
-    else:       
-        print('choose: train, val, test')
-        return 0       
-
-def get_idxmap(filelist,dataset='train'):
-    idxmap = {}
-    offset = 0 
-    with open(filelist) as f:
-        for line in f:
-            filename = line.strip()
-            data_index = (filename.index("/mc"))
-            name = (filename[data_index+1:])
-            with h5py.File(filename, 'r') as Data:
-                if dataset == 'train':
-                    length = int(len(Data['labels'])*0.9)
-                else:
-                    length = int(len(Data['labels'])*0.05)
-                idxmap[name] = [int(offset), int(offset+length)]
-                offset += length
-    return idxmap
-
-def range_to_string(index, idxmap):
-    for name, range in idxmap.items():
-        if range[0] <= index < range[1]:
-            return name, range[0], range[1]-range[0]
-    return "No matching range found"  
-
-
-    
-class CustomDataset_maps(Dataset):
-    def __init__(self, idxmap,file,dataset='train'):
-        self.idxmap = idxmap
-        self.dataset = dataset
-        self.file = file
-        self.length = list(self.idxmap.values())[-1][-1]
-        print("N data : ", self.length)
-        
-    def __getitem__(self, index):
-        name, offset, length = range_to_string(index,self.idxmap)
-        x = []
-        with h5py.File(self.file, 'r') as f:
-            if self.dataset == 'val': 
-                index += int(length*0.9)
-            x = f[name]['multiplets'][index-offset]
-            y = f[name]['labels'][index-offset]
-        return torch.tensor(x).float(),torch.tensor(y).float()
-    
-    def __len__(self):
-        return self.length        
+   
 
 class CustomDataset(Dataset):
-    def __init__(self,file,samples,dataset='train',maxsamples=1,epoch=0):
+    def __init__(self,file,samples,dataset='train',maxsamples=1,epoch=0,scaler_path=''):
         self.dataset = dataset
         self.file = file
         self.x=[]
@@ -124,7 +67,20 @@ class CustomDataset(Dataset):
                 else: num_bkg += idx_train-lower_bound
                 i+=1    
 
-        self.x = torch.from_numpy(data).float().to(device)    
+
+        self.scaler = StandardScaler()
+        if scaler_path !='' : 
+            if (self.dataset == 'train'): 
+                X_norm = self.scaler.fit_transform(data)
+                with open(scaler_path,'wb') as f:
+                    pickle.dump(self.scaler, f)
+            else:         
+                with open(scaler_path,'rb') as f:
+                    self.scaler = pickle.load(f)
+                X_norm = self.scaler.transform(data)
+            self.x = torch.from_numpy(X_norm).float().to(device)
+        else: self.x = torch.from_numpy(data).float().to(device)    
+        
         self.y = torch.from_numpy(target.reshape(-1,1)).float().to(device)
         self.length = len(target)
         self.w = np.ones(self.length)
@@ -229,7 +185,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
     evals = []
     best_val_loss = float('inf')
     best_model_params_path = path
-    if not hyper_params["slicing"]: Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"])
+    if not hyper_params["slicing"]: Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"],scaler_path=hyper_params["scaler"])
     for epoch in range (0,hyper_params["epochs"]):
         print(f'epoch: {epoch+1}') 
         if hyper_params["slicing"]: Dataset_train = CustomDataset(file,samples,dataset='train',maxsamples=hyper_params["maxsamples"],epoch=epoch)

@@ -8,6 +8,8 @@ import os
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
+parser.add_argument('--split', help='train,test,val',default='train')
+parser.add_argument('--out_dir', help='out_dir',default='H5_samples')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
@@ -161,7 +163,8 @@ variables = ['counts',
             'WeightEvents',
             ]
 
-dataset = 'train'
+dataset = args.dataset
+out_dir = f'{args.out_dir}_{dataset}/'
 with open(args.filelist) as f:
     for line in f:
         filename = line.strip()
@@ -169,7 +172,6 @@ with open(args.filelist) as f:
         with uproot.open({filename: "stop1L_NONE;1"}) as tree:
             branches = tree.arrays(Features)
             multiplets,labels,out_truth_info = get_data(branches,dataset=dataset)
-            out_dir = '/raven/u/mvigl/Stop/data/H5_full'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
             data_index = filename.index("/MC")
             out_dir = out_dir + (filename[data_index:]).replace(".root",f"_{dataset}.h5")
