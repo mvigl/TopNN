@@ -116,7 +116,7 @@ def train_step(model,data,target,opt,w):
     opt.zero_grad()
     return {'loss': float(loss)}
 
-def eval_fn(model,file,samples):
+def eval_fn(model,file,samples,scaler_path='no'):
     print('validation...')
     num_stop_train=0
     num_bkg_train=0
@@ -153,7 +153,12 @@ def eval_fn(model,file,samples):
                 num_bkg_train += idx_train
                 num_bkg_val += idx_val-length_train
             i+=1        
-        
+
+    if scaler_path!='no':    
+        with open(scaler_path,'rb') as f:
+            scaler = pickle.load(f)
+            data = scaler.transform(data)   
+            data_val = scaler.transform(data_val)    
     data = torch.from_numpy(data).float().to(device)    
     target = torch.from_numpy(target.reshape(-1,1)).float().to(device)
     data_val = torch.from_numpy(data_val).float().to(device)    
