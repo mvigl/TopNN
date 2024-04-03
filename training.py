@@ -198,7 +198,7 @@ def train_loop(model,file,samples,device,experiment,hyper_params,path):
         for i, train_batch in enumerate( train_loader ):
             data, target, w = train_batch
             report = train_step(model, data, target, opt, w )
-        evals.append(eval_fn(model,file,samples) )         
+        evals.append(eval_fn(model,file,samples,scaler_path=hyper_params["scaler"]) )         
         val_loss = evals[epoch]['test_loss']
         if val_loss < best_val_loss:
             best_val_loss = val_loss
