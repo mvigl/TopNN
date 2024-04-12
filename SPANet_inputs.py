@@ -183,7 +183,7 @@ with open(args.filelist) as f:
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
             data_index = filename.index("/MC")
             out_dir = out_dir + (filename[data_index:]).replace(".root",f"_{dataset}.h5")
-            out_index = out_dir.index("/mc2") -3 
+            out_index = out_dir.index("/mc2") 
             if (not os.path.exists(out_dir[:out_index])): os.system(f'mkdir {out_dir[:out_index]}')
             with h5py.File(out_dir, 'w') as out_file: 
                 out_file.create_dataset('INPUTS', data=inputs,compression="gzip")
