@@ -36,6 +36,7 @@ def idxs_to_var(branches,dataset):
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
         else:
             inputs[var] = np.zeros((length,10))
+            print(ak.Array(branches['bjet1'+var][filter]).to_numpy())
             inputs[var][:,0] += ak.Array(branches['bjet1'+var][filter]).to_numpy()
             inputs[var][:,1] += ak.Array(branches['bjet2'+var][filter]).to_numpy()
             inputs[var][:,2] += ak.Array(branches['ljet1'+var][filter]).to_numpy()
