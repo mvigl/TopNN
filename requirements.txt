@@ -1,0 +1,12 @@
+Matplotlib
+git+https://gitlab.cern.ch/fsauerbu/nnfwtbn.git
+keras
+tensorflow
+jupyter
+dask[dataframe]
+uproot
+fastparquet
+packaging
+pyarrow
+corner
+httplib2
