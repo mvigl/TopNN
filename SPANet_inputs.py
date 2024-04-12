@@ -43,6 +43,7 @@ def idxs_to_var(branches,dataset):
             inputs[var][:,3] += ak.Array(branches['ljet2'+var][filter]).to_numpy()
             inputs[var][:,4] += ak.Array(branches['ljet3'+var][filter]).to_numpy()
             inputs[var][:,5] += ak.Array(branches['ljet4'+var][filter]).to_numpy()
+            (inputs[var])[inputs[var]==-10]=0.
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
     mask = (inputs['pT']>0)
 
