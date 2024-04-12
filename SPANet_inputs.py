@@ -29,14 +29,20 @@ def idxs_to_var(branches,dataset):
     vars=['btag','eta','M','phi','pT']
     inputs = {}
     for var in vars:
-        inputs[var] = np.zeros((length,10))
-        inputs[var][filter,0] += ak.Array(branches['bjet1'+var][filter])
-        inputs[var][filter,1] += ak.Array(branches['bjet2'+var][filter])
-        inputs[var][filter,2] += ak.Array(branches['ljet1'+var][filter])
-        inputs[var][filter,3] += ak.Array(branches['ljet2'+var][filter])
-        inputs[var][filter,4] += ak.Array(branches['ljet3'+var][filter])
-        inputs[var][filter,5] += ak.Array(branches['ljet4'+var][filter])
-        inputs[var] = split_data(length,inputs[var],dataset=dataset)
+        if var == 'btag':
+            inputs[var] = np.zeros((length,10))
+            inputs[var][filter,0] += 1
+            inputs[var][filter,1] += 1
+            inputs[var] = split_data(length,inputs[var],dataset=dataset)
+        else:
+            inputs[var] = np.zeros((length,10))
+            inputs[var][filter,0] += ak.Array(branches['bjet1'+var][filter])
+            inputs[var][filter,1] += ak.Array(branches['bjet2'+var][filter])
+            inputs[var][filter,2] += ak.Array(branches['ljet1'+var][filter])
+            inputs[var][filter,3] += ak.Array(branches['ljet2'+var][filter])
+            inputs[var][filter,4] += ak.Array(branches['ljet3'+var][filter])
+            inputs[var][filter,5] += ak.Array(branches['ljet4'+var][filter])
+            inputs[var] = split_data(length,inputs[var],dataset=dataset)
     mask = (inputs['pT']<=0).astype(int)    
 
     targets = {}
