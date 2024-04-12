@@ -172,12 +172,12 @@ variables = ['truth_top_min_dR',
             ]
 
 dataset = args.split
-out_dir = f'{args.out_dir}_{dataset}/'
 with open(args.filelist) as f:
     for line in f:
         filename = line.strip()
         print('reading : ',filename)
         with uproot.open({filename: "stop1L_NONE;1"}) as tree:
+            out_dir = f'{args.out_dir}_{dataset}/'
             branches = tree.arrays(Features)
             mask,inputs,targets,out_truth_info = get_data(branches,dataset=dataset)
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
