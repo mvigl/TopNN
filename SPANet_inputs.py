@@ -193,7 +193,7 @@ with open(args.filelist) as f:
                 source.create_dataset('eta', data=inputs['eta'])
                 source.create_dataset('mass', data=inputs['M'])
                 source.create_dataset('phi', data=inputs['phi'])
-                source.create_dataset('pt', data=inputs['pt'])
+                source.create_dataset('pt', data=inputs['pT'])
                 targets_group = out_file.create_group('TARGETS')
                 ht = targets_group.create_group(f'ht')
                 ht.create_dataset('b', data=targets['htb'])
