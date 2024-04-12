@@ -191,7 +191,7 @@ with open(args.filelist) as f:
                 source.create_dataset('MASK', data=mask)
                 source.create_dataset('btag', data=inputs['btag'])
                 source.create_dataset('eta', data=inputs['eta'])
-                source.create_dataset('mass', data=inputs['mass'])
+                source.create_dataset('mass', data=inputs['M'])
                 source.create_dataset('phi', data=inputs['phi'])
                 source.create_dataset('pt', data=inputs['pt'])
                 targets_group = out_file.create_group('TARGETS')
