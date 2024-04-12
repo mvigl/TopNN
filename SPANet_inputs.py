@@ -200,4 +200,4 @@ with open(args.filelist) as f:
                 ht.create_dataset('q1', data=targets['q1'])
                 ht.create_dataset('q2', data=targets['q2'])
                 lt = targets_group.create_group(f'lt')
-                ht.create_dataset('b', data=targets['ltb'])
+                lt.create_dataset('b', data=targets['ltb'])
