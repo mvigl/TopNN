@@ -24,7 +24,7 @@ def split_data(length,array,dataset='test'):
         return 0       
 
 def idxs_to_var(branches,dataset):
-    filter =  split_data(length,(ak.Array(branches['multiplets'])[:,0,-1]==1),dataset=dataset)
+    filter =  (ak.Array(branches['multiplets'])[:,0,-1]==1)
     length = len(filter)
     vars=['btag','eta','M','phi','pT']
     inputs = {}
@@ -165,7 +165,7 @@ variables = ['counts',
             'WeightEvents',
             ]
 
-dataset = args.dataset
+dataset = args.split
 out_dir = f'{args.out_dir}_{dataset}/'
 with open(args.filelist) as f:
     for line in f:
