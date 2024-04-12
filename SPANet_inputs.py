@@ -86,8 +86,8 @@ def idxs_to_var(branches,dataset):
 
 def get_data(branches,vars=['eta','M','phi','pT'],dataset='train'):
     mask,inputs,targets,truth_info = idxs_to_var(branches,dataset)
-    out_truth_info = np.hstack(   (     truth_info['counts'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR'][:,np.newaxis],
+    out_truth_info = np.hstack(   (    
+                                         truth_info['truth_top_min_dR'][:,np.newaxis],
                                         truth_info['truth_top_min_dR_m'][:,np.newaxis],
                                         truth_info['truth_top_min_dR_jj'][:,np.newaxis],
                                         truth_info['truth_top_min_dR_m_jj'][:,np.newaxis],
@@ -158,8 +158,7 @@ inputs = [  'bjet_pT',
             'jet2_M',
 ]
 
-variables = ['counts',
-            'truth_top_min_dR',
+variables = ['truth_top_min_dR',
             'truth_top_min_dR_m',
             'truth_top_min_dR_jj',
             'truth_top_min_dR_m_jj',
