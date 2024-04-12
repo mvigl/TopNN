@@ -53,16 +53,16 @@ def idxs_to_var(branches,dataset):
     targets['ltb'] = -np.ones((length))
 
     targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,0]))] = 0
-    targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,0]))] = 1
+    targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,1]))] = 1
     targets['ltb'] = np.abs(targets['htb']-1)
-    targets['q1'][(ak.Array(branches['multiplets'][filter,1,0])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
-    targets['q1'][(ak.Array(branches['multiplets'][filter,1,0])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
-    targets['q1'][(ak.Array(branches['multiplets'][filter,1,0])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
-    targets['q1'][(ak.Array(branches['multiplets'][filter,1,0])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
-    targets['q2'][(ak.Array(branches['multiplets'][filter,2,0])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
-    targets['q2'][(ak.Array(branches['multiplets'][filter,2,0])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
-    targets['q2'][(ak.Array(branches['multiplets'][filter,2,0])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
-    targets['q2'][(ak.Array(branches['multiplets'][filter,2,0])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
+    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
+    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
+    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
+    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
+    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
+    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
+    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
+    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
 
     targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
     targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
@@ -187,7 +187,7 @@ with open(args.filelist) as f:
             if (not os.path.exists(out_dir[:out_index])): os.system(f'mkdir {out_dir[:out_index]}')
             with h5py.File(out_dir, 'w') as out_file: 
                 inputs_group = out_file.create_group('INPUTS')
-                source = inputs_group.create_group(f'SOURCE')
+                source = inputs_group.create_group(f'Source')
                 source.create_dataset('MASK', data=mask)
                 source.create_dataset('btag', data=inputs['btag'])
                 source.create_dataset('eta', data=inputs['eta'])
