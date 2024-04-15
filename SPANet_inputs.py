@@ -9,7 +9,7 @@ import os
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
 parser.add_argument('--split', help='train,test,val',default='train')
-parser.add_argument('--out_dir', help='out_dir',default='H5_spanet')
+parser.add_argument('--out_dir', help='out_dir',default='H5_spanet_stop')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
