@@ -198,7 +198,7 @@ if __name__ == '__main__':
                     inputs = merge(inputs,inputs_i)
                     targets = merge(targets,targets_i)
                     out_truth_info = np.concatenate((out_truth_info,out_truth_info_i),axis=0)
-            
+                i+=1
             out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
             out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
