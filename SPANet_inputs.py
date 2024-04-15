@@ -9,7 +9,7 @@ import os
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
 parser.add_argument('--split', help='train,test,val',default='train')
-parser.add_argument('--out_dir', help='out_dir',default='H5_spanet_stop')
+parser.add_argument('--out_dir', help='out_dir',default='H5_spanet_stop_all')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
@@ -197,9 +197,8 @@ if __name__ == '__main__':
             
             out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-            out_dir = out_dir + f'/spanet_inputs_{dataset}.h5'
-            if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-            with h5py.File(out_dir, 'w') as out_file: 
+            out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
+            with h5py.File(out_f, 'w') as out_file: 
                 inputs_group = out_file.create_group('INPUTS')
                 source = inputs_group.create_group(f'Source')
                 source.create_dataset('MASK', data=mask)
