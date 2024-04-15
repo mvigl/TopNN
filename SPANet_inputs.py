@@ -174,20 +174,31 @@ variables = ['truth_top_min_dR',
             'WeightEvents',
             ]
 
-dataset = args.split
-with open(args.filelist) as f:
-    for line in f:
-        filename = line.strip()
-        print('reading : ',filename)
-        with uproot.open({filename: "stop1L_NONE;1"}) as tree:
-            out_dir = f'{args.out_dir}_{dataset}/'
-            branches = tree.arrays(Features)
-            mask,inputs,targets,out_truth_info = get_data(branches,dataset=dataset)
+if __name__ == '__main__':
+    dataset = args.split
+    with open(args.filelist) as f:
+        i=0
+        for line in f:
+            filename = line.strip()
+            print('reading : ',filename)
+            with uproot.open({filename: "stop1L_NONE;1"}) as tree:
+                branches = tree.arrays(Features)
+                mask_i,inputs_i,targets_i,out_truth_info_i = get_data(branches,dataset=dataset)
+                if i==0:
+                    mask = np.copy(mask_i)
+                    inputs = np.copy(inputs_i)
+                    targets = np.copy(targets_i)
+                    out_truth_info = np.copy(out_truth_info_i)
+                else:
+                    mask = np.concatenate((mask,mask_i),axis=0)
+                    inputs = np.concatenate((inputs,inputs_i),axis=0)
+                    targets = np.concatenate((targets,targets_i),axis=0)
+                    out_truth_info = np.concatenate((out_truth_info,out_truth_info_i),axis=0)
+            
+            out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-            data_index = filename.index("/MC")
-            out_dir = out_dir + (filename[data_index:]).replace(".root",f"_{dataset}.h5")
-            out_index = out_dir.index("/mc2") 
-            if (not os.path.exists(out_dir[:out_index])): os.system(f'mkdir {out_dir[:out_index]}')
+            out_dir = out_dir + f'/spanet_inputs_{dataset}.h5'
+            if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
             with h5py.File(out_dir, 'w') as out_file: 
                 inputs_group = out_file.create_group('INPUTS')
                 source = inputs_group.create_group(f'Source')
@@ -204,3 +215,33 @@ with open(args.filelist) as f:
                 ht.create_dataset('q2', data=targets['q2'],dtype='i4')
                 lt = targets_group.create_group(f'lt')
                 lt.create_dataset('b', data=targets['ltb'],dtype='i4')
+
+    #with open(args.filelist) as f:
+    #    for line in f:
+    #        filename = line.strip()
+    #        print('reading : ',filename)
+    #        with uproot.open({filename: "stop1L_NONE;1"}) as tree:
+    #            out_dir = f'{args.out_dir}_{dataset}/'
+    #            branches = tree.arrays(Features)
+    #            mask,inputs,targets,out_truth_info = get_data(branches,dataset=dataset)
+    #            if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+    #            data_index = filename.index("/MC")
+    #            out_dir = out_dir + (filename[data_index:]).replace(".root",f"_{dataset}.h5")
+    #            out_index = out_dir.index("/mc2") 
+    #            if (not os.path.exists(out_dir[:out_index])): os.system(f'mkdir {out_dir[:out_index]}')
+    #            with h5py.File(out_dir, 'w') as out_file: 
+    #                inputs_group = out_file.create_group('INPUTS')
+    #                source = inputs_group.create_group(f'Source')
+    #                source.create_dataset('MASK', data=mask)
+    #                source.create_dataset('btag', data=inputs['btag'])
+    #                source.create_dataset('eta', data=inputs['eta'])
+    #                source.create_dataset('mass', data=inputs['M'])
+    #                source.create_dataset('phi', data=inputs['phi'])
+    #                source.create_dataset('pt', data=inputs['pT'])
+    #                targets_group = out_file.create_group('TARGETS')
+    #                ht = targets_group.create_group(f'ht')
+    #                ht.create_dataset('b', data=targets['htb'],dtype='i4')
+    #                ht.create_dataset('q1', data=targets['q1'],dtype='i4')
+    #                ht.create_dataset('q2', data=targets['q2'],dtype='i4')
+    #                lt = targets_group.create_group(f'lt')
+    #                lt.create_dataset('b', data=targets['ltb'],dtype='i4')
