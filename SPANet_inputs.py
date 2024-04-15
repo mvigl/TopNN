@@ -108,7 +108,7 @@ def get_data(branches,vars=['eta','M','phi','pT'],dataset='train'):
 def merge(d1,d2):
     merged_dict = {}
     for key in d1.keys():
-        merged_dict[key] = d1[key] + d2[key]
+        merged_dict[key] = np.concatenate((d1[key],d2[key]),axis=0)
     return merged_dict
 
 Features = ['multiplets',
@@ -189,10 +189,10 @@ if __name__ == '__main__':
                 branches = tree.arrays(Features)
                 mask_i,inputs_i,targets_i,out_truth_info_i = get_data(branches,dataset=dataset)
                 if i==0:
-                    mask = np.copy(mask_i)
-                    inputs = np.copy(inputs_i)
-                    targets = np.copy(targets_i)
-                    out_truth_info = np.copy(out_truth_info_i)
+                    mask = mask_i
+                    inputs = inputs_i
+                    targets = targets_i
+                    out_truth_info = out_truth_info_i
                 else:
                     mask = np.concatenate((mask,mask_i),axis=0)
                     inputs = merge(inputs,inputs_i)
