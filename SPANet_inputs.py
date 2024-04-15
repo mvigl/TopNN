@@ -195,8 +195,8 @@ if __name__ == '__main__':
                     out_truth_info = np.copy(out_truth_info_i)
                 else:
                     mask = np.concatenate((mask,mask_i),axis=0)
-                    inputs = merge((inputs,inputs_i),axis=0)
-                    targets = merge((targets,targets_i),axis=0)
+                    inputs = merge(inputs,inputs_i)
+                    targets = merge(targets,targets_i)
                     out_truth_info = np.concatenate((out_truth_info,out_truth_info_i),axis=0)
             
             out_dir = f'{args.out_dir}/'
