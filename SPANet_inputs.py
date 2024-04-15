@@ -36,7 +36,6 @@ def idxs_to_var(branches,dataset):
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
         else:
             inputs[var] = np.zeros((length,10))
-            print(ak.Array(branches['bjet1'+var][filter]).to_numpy())
             inputs[var][:,0] += ak.Array(branches['bjet1'+var][filter]).to_numpy()
             inputs[var][:,1] += ak.Array(branches['bjet2'+var][filter]).to_numpy()
             inputs[var][:,2] += ak.Array(branches['ljet1'+var][filter]).to_numpy()
@@ -106,6 +105,11 @@ def get_data(branches,vars=['eta','M','phi','pT'],dataset='train'):
                    
     return mask,inputs,targets,out_truth_info
 
+def merge(d1,d2):
+    merged_dict = {}
+    for key in d1.keys():
+        merged_dict[key] = d1[key] + d2[key]
+    return merged_dict
 
 Features = ['multiplets',
             'bjetIdxs_saved',
@@ -191,8 +195,8 @@ if __name__ == '__main__':
                     out_truth_info = np.copy(out_truth_info_i)
                 else:
                     mask = np.concatenate((mask,mask_i),axis=0)
-                    inputs = np.concatenate((inputs,inputs_i),axis=0)
-                    targets = np.concatenate((targets,targets_i),axis=0)
+                    inputs = merge((inputs,inputs_i),axis=0)
+                    targets = merge((targets,targets_i),axis=0)
                     out_truth_info = np.concatenate((out_truth_info,out_truth_info_i),axis=0)
             
             out_dir = f'{args.out_dir}/'
