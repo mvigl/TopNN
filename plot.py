@@ -292,6 +292,13 @@ def get_results(file,samples_sig,samples_bkg,idmap,models=None):
         results['bkg'][name]['evt']['top_Matched'] = np.array(ak.max(ak.unflatten(y_bkg.reshape(-1), np.array(truth_info_bkg[:,0]).astype(int)),axis=-1)).reshape(-1).astype(int)
         results['all'][name]['evt']['top_Matched'] = np.array(ak.max(ak.unflatten(y_all.reshape(-1), np.array(truth_info_all[:,0]).astype(int)),axis=-1)).reshape(-1).astype(int)
 
+        acc_sig = np.sum(results['stop'][name]['evt']['top_Maxscore_label'])/np.sum(results['stop'][name]['evt']['top_Matched'])
+        acc_bkg = np.sum(results['bkg'][name]['evt']['top_Maxscore_label'])/np.sum(results['bkg'][name]['evt']['top_Matched'])
+        acc_all = np.sum(results['all'][name]['evt']['top_Maxscore_label'])/np.sum(results['all'][name]['evt']['top_Matched'])
+        results['stop'][name]['acc'] = acc_sig
+        results['bkg'][name]['acc'] = acc_bkg
+        results['all'][name]['acc'] = acc_all
+
         for sample in data_signals.keys():
             preds_sig = get_scores(weights,data_signals[sample]['x'],device,in_features=12,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
             results['stop_samples'][name][sample]={}
@@ -680,6 +687,7 @@ if __name__ == "__main__":
                 mass = h5fw['INPUTS']['Source']['mass'][:]
                 predictions = evals['predictions'][0]
 
+    print('accuracy baseline : ',results['stop']['Stop_FS_1000000']['acc'])
     plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='mass')
     plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='W',obs='mass')
 
