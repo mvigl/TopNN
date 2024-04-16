@@ -84,6 +84,7 @@ def idxs_to_var(branches,dataset):
         'truth_Wp_pt': split_data(length,branches['truth_Wp_pt'][filter].to_numpy(),dataset=dataset),
         'truth_Wm_pt': split_data(length,branches['truth_Wm_pt'][filter].to_numpy(),dataset=dataset),
         'WeightEvents': split_data(length,branches['WeightEvents'][filter].to_numpy(),dataset=dataset),
+        'is_matched': split_data(length,(branches['multiplets'][filter,0,-1]==1).to_numpy(),dataset=dataset)
     }
     return mask,inputs,targets,truth_info
 
@@ -183,7 +184,7 @@ if __name__ == '__main__':
                     mask = np.concatenate((mask,mask_i),axis=0)
                     inputs = merge(inputs,inputs_i)
                     targets = merge(targets,targets_i)
-                    out_truth_info = merge((out_truth_info,out_truth_info_i))
+                    out_truth_info = merge(out_truth_info,out_truth_info_i)
                 i+=1
             out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
