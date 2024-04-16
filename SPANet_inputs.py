@@ -8,8 +8,8 @@ import os
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
-parser.add_argument('--split', help='train,test,val',default='train')
-parser.add_argument('--out_dir', help='out_dir',default='H5_spanet_stop_all')
+parser.add_argument('--split', help='train,test,val',default='test')
+parser.add_argument('--out_dir', help='out_dir',default='H5_spanet_stop_FS')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
@@ -89,22 +89,7 @@ def idxs_to_var(branches,dataset):
 
 def get_data(branches,vars=['eta','M','phi','pT'],dataset='train'):
     mask,inputs,targets,truth_info = idxs_to_var(branches,dataset)
-    out_truth_info = np.hstack(   (    
-                                         truth_info['truth_top_min_dR'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR_m'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR_jj'][:,np.newaxis],
-                                        truth_info['truth_top_min_dR_m_jj'][:,np.newaxis],
-                                        truth_info['truth_topp_match'][:,np.newaxis],
-                                        truth_info['truth_topm_match'][:,np.newaxis],
-                                        truth_info['truth_topp_pt'][:,np.newaxis],
-                                        truth_info['truth_topm_pt'][:,np.newaxis],
-                                        truth_info['truth_Wp_pt'][:,np.newaxis],
-                                        truth_info['truth_Wm_pt'][:,np.newaxis],
-                                        truth_info['WeightEvents'][:,np.newaxis]
-                            ) 
-                        )
-                   
-    return mask,inputs,targets,out_truth_info
+    return mask,inputs,targets,truth_info
 
 def merge(d1,d2):
     merged_dict = {}
@@ -198,7 +183,7 @@ if __name__ == '__main__':
                     mask = np.concatenate((mask,mask_i),axis=0)
                     inputs = merge(inputs,inputs_i)
                     targets = merge(targets,targets_i)
-                    out_truth_info = np.concatenate((out_truth_info,out_truth_info_i),axis=0)
+                    out_truth_info = merge((out_truth_info,out_truth_info_i))
                 i+=1
             out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
@@ -219,6 +204,10 @@ if __name__ == '__main__':
                 ht.create_dataset('q2', data=targets['q2'],dtype='i4')
                 lt = targets_group.create_group(f'lt')
                 lt.create_dataset('b', data=targets['ltb'],dtype='i4')
+
+                truth_info_group = out_file.create_group('truth_info')
+                for info in out_truth_info.keys():
+                    truth_info_group.create_dataset(info, data=out_truth_info[info])
 
     #with open(args.filelist) as f:
     #    for line in f:
