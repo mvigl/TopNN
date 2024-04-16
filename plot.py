@@ -672,8 +672,8 @@ if __name__ == "__main__":
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
 
-    with h5py.File('../SPANet/data/semi_leptonic_ttbar/spanet_inputs_test.h5','r') as h5fw :
-            with h5py.File('../SPANet/evals_output/evals.h5','r') as evals :
+    with h5py.File('/raven/u/mvigl/Stop/run/pre/H5_spanet_sig_FS/spanet_inputs_test.h5','r') as h5fw :
+            with h5py.File('/raven/u/mvigl/Stop/TopNN/data/SPANet/evals.h5','r') as evals :
                 pt = h5fw['INPUTS']['Source']['pt'][:]
                 eta = h5fw['INPUTS']['Source']['eta'][:]
                 phi = h5fw['INPUTS']['Source']['phi'][:]
@@ -773,7 +773,7 @@ if __name__ == "__main__":
                     'Slicing_Full_bkg_1000000',
                     'Slicing_Full_200000',
               ]
-     
+
         colors = {
                     'Stop_FS_10000':'darkcyan',
                     'Stop_FS_50000':'blue',
