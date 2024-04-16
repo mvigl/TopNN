@@ -352,6 +352,52 @@ def get_observable(results,model,sample,inputs,reco='top',obs='mass'):
         return 0
     return observable
 
+def get_observable_SPANet(pt,phi,eta,mass,predictions,reco='top',obs='mass'):
+    N = len(pt)
+    row_values = np.arange(10)
+    map = np.tile(row_values, (N, 1))
+
+    pt = pt[np.arange(len(predictions))[:, np.newaxis], predictions]
+    phi = phi[np.arange(len(predictions))[:, np.newaxis], predictions]
+    eta = eta[np.arange(len(predictions))[:, np.newaxis], predictions]
+    mass = mass[np.arange(len(predictions))[:, np.newaxis], predictions]
+    for v in [pt,phi,eta,mass]:
+        print(v.shape)
+    b= vector.array(
+        {
+            "pt": pt[:,0],
+            "phi": phi[:,0],
+            "eta": eta[:,0],
+            "M": mass[:,0],
+        }
+    )
+    j1 = vector.array(
+        {
+            "pt": pt[:,1],
+            "phi": phi[:,1],
+            "eta": eta[:,1],
+            "M": mass[:,1],
+        }
+    )
+    j2 = vector.array(
+        {
+            "pt": pt[:,2],
+            "phi": phi[:,2],
+            "eta": eta[:,2],
+            "M": mass[:,2],
+        }
+    )
+    if reco == 'top': obj = b+(j1+j2)
+    elif reco == 'W': obj = (j1+j2)
+    else: 
+        print('choose reco: top, W')
+        return 0
+    if obs=='mass': observable = obj.mass
+    else: 
+        print('choose observable: mass')
+        return 0
+    return observable
+
 def plot(results,model,sample='bkg',obj='top',obs='mass'):
     if obj=='top': b=np.linspace(0,400,40)
     elif obj=='W': b=np.linspace(0,140,40)
@@ -396,6 +442,52 @@ def plot(results,model,sample='bkg',obj='top',obs='mass'):
     out_dir='Plots/Event_level'   
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')  
     fig.savefig(f'{out_dir}/{model}_{sample}_Cand_{obj}_{obs}.png')
+
+
+def plot_SPANet(model,pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='mass'):
+    if obj=='top': b=np.linspace(0,400,40)
+    elif obj=='W': b=np.linspace(0,140,40)
+    if obs=='TopNN_score': b=np.linspace(0,1,40)
+    elif obs=='truth_top_pt': b=np.linspace(0,1000,40)
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
+    ax.set_title(models_name[model])
+    WeightEvents = results[sample][model]['evt']['variables'][:,variables.index('WeightEvents')]
+    WeightEvents=1
+    observable = get_observable_SPANet(pt,phi,eta,mass,predictions,reco=obj,obs=obs)
+    ax.hist([     
+                    observable,
+                    observable,
+                    observable,
+                    observable,
+                    observable,
+                    ],
+                    bins=b,
+                    weights=[
+                        WeightEvents*(results[sample][model]['evt']['top_Matched']==0),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']==0),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']==0),
+                    ],
+                    stacked=True,
+                    label=[
+                        f'{sample} w/o complete truth top had',
+                        f'{sample} w/ top Pair not matched',
+                        f'{sample} w/ top Pair matched',
+                        f'{sample} w/ top Triplet not matched',
+                        f'{sample} w/ top Triplet matched',
+                    ],    
+                )
+    ax.set_ylabel('Events (a.u.)')
+    if obj=='top': ax.set_xlabel(f'top cand {obs} [GeV]',loc='right')
+    elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
+    elif obs=='TopNN_score': ax.set_xlabel('top cand score',loc='right')
+    elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
+    if obs=='TopNN_score': ax.legend(fontsize=8,loc='upper left')
+    else: ax.legend(fontsize=8,loc='upper right')
+    out_dir='Plots/Event_level'   
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')  
+    fig.savefig(f'{out_dir}/SPANet_{model}_{sample}_Cand_{obj}_{obs}.png')
 
 def plot_multiple_models(results,models,sample='bkg',obj='top',obs='mass'):
     Heigth=int(math.sqrt( len(models) ))+1
@@ -569,10 +661,6 @@ def get_ratios(matrices,model1,model2,metric='auc',seff=0.9):
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')    
     fig.savefig(f'{out_dir}/{out}')         
 
-def plot_bkg_rej():
-    
-    return    
-
 if __name__ == "__main__":
     
     file = '/raven/u/mvigl/Stop/data/H5_full/Virtual_test.h5'
@@ -583,6 +671,18 @@ if __name__ == "__main__":
 
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
+
+    with h5py.File('../SPANet/data/semi_leptonic_ttbar/spanet_inputs_test.h5','r') as h5fw :
+            with h5py.File('../SPANet/evals_output/evals.h5','r') as evals :
+                pt = h5fw['INPUTS']['Source']['pt'][:]
+                eta = h5fw['INPUTS']['Source']['eta'][:]
+                phi = h5fw['INPUTS']['Source']['phi'][:]
+                mass = h5fw['INPUTS']['Source']['mass'][:]
+                predictions = evals['predictions'][0]
+
+    plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='mass')
+    plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='W',obs='mass')
+
 
     if False:
         models = [
@@ -600,6 +700,16 @@ if __name__ == "__main__":
             plot(results,model,sample='bkg',obs='TopNN_score')
             plot(results,model,sample='stop',obs='truth_top_pt')
             plot(results,model,sample='bkg',obs='truth_top_pt')
+        with h5py.File('../SPANet/data/semi_leptonic_ttbar/spanet_inputs_test.h5','r') as h5fw :
+            with h5py.File('../SPANet/evals_output/evals.h5','r') as evals :
+                pt = h5fw['INPUTS']['Source']['pt'][:]
+                eta = h5fw['INPUTS']['Source']['eta'][:]
+                phi = h5fw['INPUTS']['Source']['phi'][:]
+                mass = h5fw['INPUTS']['Source']['mass'][:]
+                predictions = evals['predictions'][0]
+
+        plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='mass')
+        plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='W',obs='mass')
 
         plot_multiple_models(results,models,sample='stop',obj='top',obs='mass')
         plot_multiple_models(results,models,sample='stop',obj='W',obs='mass')
@@ -650,50 +760,50 @@ if __name__ == "__main__":
                 get_ratios(MATRICES,model,'Stop_FS_1000000',metric='bkg_rej',seff=seff)         
 
     
-    models = [  'Stop_FS_10000',
-                'Stop_FS_50000',
-                'Stop_FS_1000000',
-                #'Full_bkg_65000',
-                'Full_bkg_68000',
-                #'Full_bkg_70000',
-                #'Full_bkg_80000',
-                #'Full_bkg_100000',
-                'Full_bkg_200000',
-                'Full_bkg_1000000',
-                'Slicing_Full_bkg_1000000',
-                'Slicing_Full_200000',
-          ]
-    
-    colors = {
-                'Stop_FS_10000':'darkcyan',
-                'Stop_FS_50000':'blue',
-                'Stop_FS_1000000':'navy',
-                #'Full_bkg_65000':,
-                'Full_bkg_68000':'indianred',
-                #'Full_bkg_70000':,
-                #'Full_bkg_80000':,
-                #'Full_bkg_100000':,
-                'Full_bkg_200000':'orange',
-                'Full_bkg_1000000':'red',
-                'Slicing_Full_bkg_1000000':'maroon',
-                'Slicing_Full_200000':'green',
-    }
-    fig = plt.figure(figsize=(8, 6), dpi=600)
-    ax = fig.add_subplot(4,1,(1,3)) 
-    for model in models:
-        ax.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}',color=colors[model]) 
-    ax.legend()    
-    ax.semilogy()
-    ax.set_xlim(0.6,1)
-    ax.set_ylim(1,17.5)     
-    ax.set_ylabel('Bkg rej')
-    plt.setp(ax.get_xticklabels(), visible=False)
-    ax = fig.add_subplot(4,1,4)
-    for model in models:
-        ax.plot(results['stop'][model]['tpr'],results['stop']['Stop_FS_1000000']['fpr']/results['stop'][model]['fpr'],label=f'{models_name[model]}',color=colors[model]) 
-    ax.set_xlim(0.6,1)
-    ax.set_ylim(0.9,1.05) 
-    ax.set_xlabel('Signal efficiency',loc='right')
-    out_dir='Plots/Hierarchy'   
-    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')       
-    fig.savefig(f'{out_dir}/Bkg_rej.png')
+        models = [  'Stop_FS_10000',
+                    'Stop_FS_50000',
+                    'Stop_FS_1000000',
+                    #'Full_bkg_65000',
+                    'Full_bkg_68000',
+                    #'Full_bkg_70000',
+                    #'Full_bkg_80000',
+                    #'Full_bkg_100000',
+                    'Full_bkg_200000',
+                    'Full_bkg_1000000',
+                    'Slicing_Full_bkg_1000000',
+                    'Slicing_Full_200000',
+              ]
+     
+        colors = {
+                    'Stop_FS_10000':'darkcyan',
+                    'Stop_FS_50000':'blue',
+                    'Stop_FS_1000000':'navy',
+                    #'Full_bkg_65000':,
+                    'Full_bkg_68000':'indianred',
+                    #'Full_bkg_70000':,
+                    #'Full_bkg_80000':,
+                    #'Full_bkg_100000':,
+                    'Full_bkg_200000':'orange',
+                    'Full_bkg_1000000':'red',
+                    'Slicing_Full_bkg_1000000':'maroon',
+                    'Slicing_Full_200000':'green',
+        }
+        fig = plt.figure(figsize=(8, 6), dpi=600)
+        ax = fig.add_subplot(4,1,(1,3)) 
+        for model in models:
+            ax.plot(results['stop'][model]['tpr'],1/results['stop'][model]['fpr'],label=f'{models_name[model]}',color=colors[model]) 
+        ax.legend()    
+        ax.semilogy()
+        ax.set_xlim(0.6,1)
+        ax.set_ylim(1,17.5)     
+        ax.set_ylabel('Bkg rej')
+        plt.setp(ax.get_xticklabels(), visible=False)
+        ax = fig.add_subplot(4,1,4)
+        for model in models:
+            ax.plot(results['stop'][model]['tpr'],results['stop']['Stop_FS_1000000']['fpr']/results['stop'][model]['fpr'],label=f'{models_name[model]}',color=colors[model]) 
+        ax.set_xlim(0.6,1)
+        ax.set_ylim(0.9,1.05) 
+        ax.set_xlabel('Signal efficiency',loc='right')
+        out_dir='Plots/Hierarchy'   
+        if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')       
+        fig.savefig(f'{out_dir}/Bkg_rej.png')
