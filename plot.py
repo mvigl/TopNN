@@ -46,6 +46,13 @@ def get_scores(weights,data,device,in_features=12,out_features=128,nlayer=4,for_
         preds = eval_model(data)
     return preds.detach().cpu().numpy()
 
+def get_AUC_topMAX(results,model,sample='stop',label='top_Maxscore_label'):
+    preds_sig = results[sample][model]['evt']['top_Maxscore']
+    label = results[sample][model]['evt'][label]
+    fpr_sig, tpr_sig, thresholds_sig = roc_curve(label,preds_sig)
+    Auc_sig = auc(fpr_sig,tpr_sig)
+    return Auc_sig
+
 Features = ['multiplets',
             'bjetIdxs_saved',
             'ljetIdxs_saved',
@@ -689,6 +696,8 @@ if __name__ == "__main__":
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
 
+    print('AUC top_Maxscore_label : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Maxscore_label'))
+    print('AUC top_Matched : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Matched'))
     #with h5py.File('/raven/u/mvigl/Stop/run/pre/H5_spanet_sig_FS/spanet_inputs_test.h5','r') as h5fw :
     #        with h5py.File('/raven/u/mvigl/Stop/TopNN/data/SPANet/evals.h5','r') as evals :
     #            pt = h5fw['INPUTS']['Source']['pt'][:]
