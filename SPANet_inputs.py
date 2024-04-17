@@ -25,7 +25,8 @@ def split_data(length,array,dataset='test'):
 
 def idxs_to_var(branches,dataset):
     filter =  (ak.Array(branches['multiplets'])[:,0,-1]==1)
-    if dataset == 'test': filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
+    #if dataset == 'test': 
+    filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
     length = np.sum(filter)
     vars=['btag','eta','M','phi','pT']
     inputs = {}
