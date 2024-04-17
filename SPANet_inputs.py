@@ -68,7 +68,7 @@ def idxs_to_var(branches,dataset):
     targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
     targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
     single_b = mask[:,0]*mask[:,1]
-    (targets['ltb'])[single_b]=0
+    (targets['ltb'])[single_b]=-1
     targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
     targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
 
