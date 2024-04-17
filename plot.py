@@ -288,6 +288,14 @@ def get_results(file,samples_sig,samples_bkg,idmap,models=None):
         results['bkg'][name]['evt']['top_MaxisPair'] = np.array((results['bkg'][name]['evt']['top_Maxinputs'][:,inputs.index('jet2_pT')])==0).reshape(-1).astype(int)
         results['all'][name]['evt']['top_MaxisPair'] = np.array((results['all'][name]['evt']['top_Maxinputs'][:,inputs.index('jet2_pT')])==0).reshape(-1).astype(int)
 
+        results['stop'][name]['evt']['top_true_inputs'] = np.array(ak.unflatten(x.detach().cpu().numpy(), np.array(truth_info[:,0]).astype(int))[ak.argmax(ak.unflatten(y.reshape(-1), np.array(truth_info[:,0]).astype(int)),keepdims=True,axis=-1)][:,0])
+        results['bkg'][name]['evt']['top_true_inputs'] = np.array(ak.unflatten(x_bkg.detach().cpu().numpy(), np.array(truth_info_bkg[:,0]).astype(int))[ak.argmax(ak.unflatten(y_bkg.reshape(-1), np.array(truth_info_bkg[:,0]).astype(int)),keepdims=True,axis=-1)][:,0])
+        results['all'][name]['evt']['top_true_inputs'] = np.array(ak.unflatten(x_all.detach().cpu().numpy(), np.array(truth_info_all[:,0]).astype(int))[ak.argmax(ak.unflatten(y_all.reshape(-1), np.array(truth_info_all[:,0]).astype(int)),keepdims=True,axis=-1)][:,0])
+
+        results['stop'][name]['evt']['top_true_isPair'] = np.array((results['stop'][name]['evt']['top_true_inputs'][:,inputs.index('jet2_pT')])==0).reshape(-1).astype(int)
+        results['bkg'][name]['evt']['top_true_isPair'] = np.array((results['bkg'][name]['evt']['top_true_inputs'][:,inputs.index('jet2_pT')])==0).reshape(-1).astype(int)
+        results['all'][name]['evt']['top_true_isPair'] = np.array((results['all'][name]['evt']['top_true_inputs'][:,inputs.index('jet2_pT')])==0).reshape(-1).astype(int)
+
         results['stop'][name]['evt']['top_Matched'] = np.array(ak.max(ak.unflatten(y.reshape(-1), np.array(truth_info[:,0]).astype(int)),axis=-1)).reshape(-1).astype(int)
         results['bkg'][name]['evt']['top_Matched'] = np.array(ak.max(ak.unflatten(y_bkg.reshape(-1), np.array(truth_info_bkg[:,0]).astype(int)),axis=-1)).reshape(-1).astype(int)
         results['all'][name]['evt']['top_Matched'] = np.array(ak.max(ak.unflatten(y_all.reshape(-1), np.array(truth_info_all[:,0]).astype(int)),axis=-1)).reshape(-1).astype(int)
@@ -317,6 +325,8 @@ def get_results(file,samples_sig,samples_bkg,idmap,models=None):
             results['stop_samples'][name][sample]['evt']['top_Maxscore_label'] = np.array(ak.unflatten(results['stop_samples'][name][sample]['labels'].reshape(-1), np.array(data_signals[sample]['truth_info'][:,0]).astype(int))[ak.argmax(ak.unflatten(preds_sig.reshape(-1), np.array(data_signals[sample]['truth_info'][:,0]).astype(int)),keepdims=True,axis=-1)]).reshape(-1).astype(int)
             results['stop_samples'][name][sample]['evt']['top_Maxinputs'] = np.array(ak.unflatten(data_signals[sample]['x'].detach().cpu().numpy(), np.array(data_signals[sample]['truth_info'][:,0]).astype(int))[ak.argmax(ak.unflatten(preds_sig.reshape(-1), np.array(data_signals[sample]['truth_info'][:,0]).astype(int)),keepdims=True,axis=-1)][:,0])
             results['stop_samples'][name][sample]['evt']['top_MaxisPair'] = np.array((results['stop_samples'][name][sample]['evt']['top_Maxinputs'][:,inputs.index('jet2_pT')])==0).reshape(-1).astype(int)
+            results['stop_samples'][name][sample]['evt']['top_true_inputs'] = np.array(ak.unflatten(data_signals[sample]['x'].detach().cpu().numpy(), np.array(data_signals[sample]['truth_info'][:,0]).astype(int))[ak.argmax(ak.unflatten(data_signals[sample]['y'].reshape(-1), np.array(data_signals[sample]['truth_info'][:,0]).astype(int)),keepdims=True,axis=-1)][:,0])
+            results['stop_samples'][name][sample]['evt']['top_true_isPair'] = np.array((results['stop_samples'][name][sample]['evt']['top_true_inputs'][:,inputs.index('jet2_pT')])==0).reshape(-1).astype(int)
             results['stop_samples'][name][sample]['evt']['top_Matched'] = np.array(ak.max(ak.unflatten(results['stop_samples'][name][sample]['labels'].reshape(-1), np.array(data_signals[sample]['truth_info'][:,0]).astype(int)),axis=-1)).reshape(-1)
 
     return results
@@ -425,10 +435,10 @@ def plot(results,model,sample='bkg',obj='top',obs='mass'):
                     bins=b,
                     weights=[
                         WeightEvents*(results[sample][model]['evt']['top_Matched']==0),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']==0),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']==0),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_true_isPair']),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_true_isPair']),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_true_isPair']==0),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_true_isPair']==0),
                     ],
                     stacked=True,
                     label=[
@@ -471,10 +481,10 @@ def plot_SPANet(model,pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='m
                     bins=b,
                     weights=[
                         WeightEvents*(results[sample][model]['evt']['top_Matched']==0),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']==0),
-                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']==0),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_true_isPair']),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_true_isPair']),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_true_isPair']==0),
+                        WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_true_isPair']==0),
                     ],
                     stacked=True,
                     label=[
@@ -522,10 +532,10 @@ def plot_multiple_models(results,models,sample='bkg',obj='top',obs='mass'):
                         bins=b,
                         weights=[
                             WeightEvents*(results[sample][model]['evt']['top_Matched']==0),
-                            WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']),
-                            WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']),
-                            WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_MaxisPair']==0),
-                            WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_MaxisPair']==0),
+                            WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_true_isPair']),
+                            WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_true_isPair']),
+                            WeightEvents*results[sample][model]['evt']['top_Matched']*(results[sample][model]['evt']['top_Maxscore_label']==0)*(results[sample][model]['evt']['top_true_isPair']==0),
+                            WeightEvents*results[sample][model]['evt']['top_Matched']*results[sample][model]['evt']['top_Maxscore_label']*(results[sample][model]['evt']['top_true_isPair']==0),
                         ],
                         stacked=True,
                         label=[
@@ -679,20 +689,20 @@ if __name__ == "__main__":
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
 
-    with h5py.File('/raven/u/mvigl/Stop/run/pre/H5_spanet_sig_FS/spanet_inputs_test.h5','r') as h5fw :
-            with h5py.File('/raven/u/mvigl/Stop/TopNN/data/SPANet/evals.h5','r') as evals :
-                pt = h5fw['INPUTS']['Source']['pt'][:]
-                eta = h5fw['INPUTS']['Source']['eta'][:]
-                phi = h5fw['INPUTS']['Source']['phi'][:]
-                mass = h5fw['INPUTS']['Source']['mass'][:]
-                predictions = evals['predictions'][0]
+    #with h5py.File('/raven/u/mvigl/Stop/run/pre/H5_spanet_sig_FS/spanet_inputs_test.h5','r') as h5fw :
+    #        with h5py.File('/raven/u/mvigl/Stop/TopNN/data/SPANet/evals.h5','r') as evals :
+    #            pt = h5fw['INPUTS']['Source']['pt'][:]
+    #            eta = h5fw['INPUTS']['Source']['eta'][:]
+    #            phi = h5fw['INPUTS']['Source']['phi'][:]
+    #            mass = h5fw['INPUTS']['Source']['mass'][:]
+    #            predictions = evals['predictions'][0]
+#
+    #print('accuracy baseline : ',results['stop']['Stop_FS_1000000']['acc'])
+    #plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='mass')
+    #plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='W',obs='mass')
 
-    print('accuracy baseline : ',results['stop']['Stop_FS_1000000']['acc'])
-    plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='mass')
-    plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='W',obs='mass')
 
-
-    if False:
+    if True:
         models = [
             'Stop_FS_1000000',
             'Slicing_Full_bkg_1000000',
