@@ -314,6 +314,13 @@ def get_results(file,samples_sig,samples_bkg,idmap,models=None):
         results['bkg'][name]['acc'] = acc_bkg
         results['all'][name]['acc'] = acc_all
 
+        acc_sig_triplets = np.sum((results['stop'][name]['evt']['top_Maxscore_label'])[results['stop'][name]['evt']['top_true_isPair']==0])/np.sum((results['stop'][name]['evt']['top_Matched'])[results['stop'][name]['evt']['top_true_isPair']==0])
+        acc_bkg_triplets = np.sum((results['bkg'][name]['evt']['top_Maxscore_label'])[results['bkg'][name]['evt']['top_true_isPair']==0])/np.sum((results['bkg'][name]['evt']['top_Matched'])[results['bkg'][name]['evt']['top_true_isPair']==0])
+        acc_all_triplets = np.sum((results['all'][name]['evt']['top_Maxscore_label'])[results['all'][name]['evt']['top_true_isPair']==0])/np.sum((results['all'][name]['evt']['top_Matched'])[results['all'][name]['evt']['top_true_isPair']==0])
+        results['stop'][name]['acc_triplets'] = acc_sig_triplets
+        results['bkg'][name]['acc_triplets'] = acc_bkg_triplets
+        results['all'][name]['acc_triplets'] = acc_all_triplets
+
         for sample in data_signals.keys():
             preds_sig = get_scores(weights,data_signals[sample]['x'],device,in_features=12,out_features=out_features,nlayer=nlayer,for_inference=True,binary=True)
             results['stop_samples'][name][sample]={}
@@ -698,6 +705,7 @@ if __name__ == "__main__":
 
     print('AUC top_Maxscore_label : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Maxscore_label'))
     print('AUC top_Matched : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Matched'))
+    print('accuracy triplets baseline : ',results['stop']['Stop_FS_1000000']['acc_triplets'])
     #with h5py.File('/raven/u/mvigl/Stop/run/pre/H5_spanet_sig_FS/spanet_inputs_test.h5','r') as h5fw :
     #        with h5py.File('/raven/u/mvigl/Stop/TopNN/data/SPANet/evals.h5','r') as evals :
     #            pt = h5fw['INPUTS']['Source']['pt'][:]
@@ -706,7 +714,7 @@ if __name__ == "__main__":
     #            mass = h5fw['INPUTS']['Source']['mass'][:]
     #            predictions = evals['predictions'][0]
 #
-    #print('accuracy baseline : ',results['stop']['Stop_FS_1000000']['acc'])
+    print('accuracy baseline : ',results['stop']['Stop_FS_1000000']['acc'])
     #plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='top',obs='mass')
     #plot_SPANet('Stop_FS_1000000',pt,phi,eta,mass,predictions,sample='stop',obj='W',obs='mass')
 
