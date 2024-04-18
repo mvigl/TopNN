@@ -702,6 +702,10 @@ if __name__ == "__main__":
 
     idmap='/raven/u/mvigl/Stop/TopNN/data/stop_samples.yaml'
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
+    dir_out = 'results'
+    if (not os.path.exists(dir_out)): os.system(f'mkdir {dir_out}')
+    with h5py.File(f'{dir_out}/results.h5', 'w') as out_file: 
+        out_file.create_dataset('results', data=results)
 
     print('AUC top_Maxscore_label : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Maxscore_label'))
     print('AUC top_Matched : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Matched'))
