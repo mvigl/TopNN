@@ -25,8 +25,7 @@ def split_data(length,array,dataset='test'):
 
 def idxs_to_var(branches,dataset):
     filter =  (ak.Array(branches['multiplets'])[:,0,-1]==1)
-    #if dataset == 'test': 
-    filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
+    if dataset == 'test': filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
     length = np.sum(filter)
     vars=['btag','eta','M','phi','pT']
     inputs = {}
@@ -35,6 +34,8 @@ def idxs_to_var(branches,dataset):
             inputs[var] = np.zeros((length,10))
             inputs[var][:,0] += 1
             inputs[var][:,1] += 1
+            if dataset == 'test':
+                inputs[var][:,6] += 1
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
         else:
             inputs[var] = np.zeros((length,10))
@@ -44,6 +45,11 @@ def idxs_to_var(branches,dataset):
             inputs[var][:,3] += ak.Array(branches['ljet2'+var][filter]).to_numpy()
             inputs[var][:,4] += ak.Array(branches['ljet3'+var][filter]).to_numpy()
             inputs[var][:,5] += ak.Array(branches['ljet4'+var][filter]).to_numpy()
+            if dataset == 'test':
+                inputs[var][:,6] += ak.Array(branches['bjet3'+var][filter]).to_numpy()
+                inputs[var][:,7] += ak.Array(branches['ljet5'+var][filter]).to_numpy()
+                inputs[var][:,8] += ak.Array(branches['ljet6'+var][filter]).to_numpy()
+                inputs[var][:,9] += ak.Array(branches['ljet7'+var][filter]).to_numpy()
             (inputs[var])[inputs[var]==-10]=0.
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
     mask = (inputs['pT']>0)

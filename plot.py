@@ -9,6 +9,7 @@ import vector
 import os
 import yaml
 import h5py
+import pickle
 
 def get_device():
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -704,8 +705,8 @@ if __name__ == "__main__":
     results = get_results(file,samples_sig,samples_bkg,idmap,models=None)
     dir_out = 'results'
     if (not os.path.exists(dir_out)): os.system(f'mkdir {dir_out}')
-    with h5py.File(f'{dir_out}/results.h5', 'w') as out_file: 
-        out_file.create_dataset('results', data=results)
+    with open(f'{dir_out}/results.h5', 'wb') as f:
+        pickle.dump(results, f) 
 
     print('AUC top_Maxscore_label : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Maxscore_label'))
     print('AUC top_Matched : ', get_AUC_topMAX(results,'Stop_FS_1000000',sample='stop',label='top_Matched'))
