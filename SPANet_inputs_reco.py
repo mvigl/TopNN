@@ -9,7 +9,7 @@ import os
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
 parser.add_argument('--split', help='train,test,val',default='test')
-parser.add_argument('--out_dir', help='out_dir',default='H5_ete_spanet_stop_FS')
+parser.add_argument('--out_dir', help='out_dir',default='H5_spanet_stop_FS')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
@@ -88,23 +88,6 @@ def idxs_to_var(branches,dataset):
     (targets['ltb'])[single_b]=-1
     targets['ltl'][:] = 7
 
-    met = {
-        'MET': split_data(length,branches['MET'][filter].to_numpy(),dataset=dataset),
-        'METsig': split_data(length,branches['METsig'][filter].to_numpy(),dataset=dataset),
-        'METphi': split_data(length,branches['METphi'][filter].to_numpy(),dataset=dataset),
-        'MET_Soft': split_data(length,branches['MET_Soft'][filter].to_numpy(),dataset=dataset),
-        'MET_Jet': split_data(length,branches['MET_Jet'][filter].to_numpy(),dataset=dataset),
-        'MET_Ele': split_data(length,branches['MET_Ele'][filter].to_numpy(),dataset=dataset),
-        'MET_Muon': split_data(length,branches['MET_Muon'][filter].to_numpy(),dataset=dataset),
-        'mT_METI': split_data(length,branches['mT_METI'][filter].to_numpy(),dataset=dataset),
-        'dR_bb': split_data(length,branches['dR_bb'][filter].to_numpy(),dataset=dataset),
-        'dphi_METI': split_data(length,branches['dphi_METI'][filter].to_numpy(),dataset=dataset),
-        'MT2_bb': split_data(length,branches['MT2_bb'][filter].to_numpy(),dataset=dataset),
-        'MT2_b1l1_b2': split_data(length,branches['MT2_b1l1_b2'][filter].to_numpy(),dataset=dataset),
-        'MT2_b2l1_b1': split_data(length,branches['MT2_b2l1_b1'][filter].to_numpy(),dataset=dataset),
-        'MT2_min': split_data(length,branches['MT2_min'][filter].to_numpy(),dataset=dataset),
-    }
-
     truth_info = {
         'truth_top_min_dR': split_data(length,branches['truth_top_min_dR'][filter].to_numpy(),dataset=dataset),
         'truth_top_min_dR_m': split_data(length,branches['truth_top_min_dR_m'][filter].to_numpy(),dataset=dataset),
@@ -119,15 +102,11 @@ def idxs_to_var(branches,dataset):
         'WeightEvents': split_data(length,branches['WeightEvents'][filter].to_numpy(),dataset=dataset),
         'is_matched': split_data(length,(branches['multiplets'][filter,0,-1]==1).to_numpy(),dataset=dataset)
     }
-    return mask,inputs,targets,truth_info,met
+    return mask,inputs,targets,truth_info
 
-def get_data(branches,vars=['eta','M','phi','pT'],dataset='train',sig=True):
-    mask,inputs,targets,truth_info,met = idxs_to_var(branches,dataset)
-    if sig:
-        signal = np.ones(len(mask))
-    else:
-        signal = np.zeros(len(mask))    
-    return mask,inputs,targets,truth_info,met,signal
+def get_data(branches,vars=['eta','M','phi','pT'],dataset='train'):
+    mask,inputs,targets,truth_info = idxs_to_var(branches,dataset)
+    return mask,inputs,targets,truth_info
 
 def merge(d1,d2):
     merged_dict = {}
@@ -211,54 +190,30 @@ if __name__ == '__main__':
             print('reading : ',filename)
             with uproot.open({filename: "stop1L_NONE;1"}) as tree:
                 branches = tree.arrays(Features)
-                mask_i,inputs_i,targets_i,out_truth_info_i,met_i,signal_i = get_data(branches,dataset=dataset)
+                mask_i,inputs_i,targets_i,out_truth_info_i = get_data(branches,dataset=dataset)
                 if i==0:
                     mask = mask_i
                     inputs = inputs_i
                     targets = targets_i
                     out_truth_info = out_truth_info_i
-                    met = met_i
-                    signal = signal_i
                 else:
                     mask = np.concatenate((mask,mask_i),axis=0)
                     inputs = merge(inputs,inputs_i)
                     targets = merge(targets,targets_i)
                     out_truth_info = merge(out_truth_info,out_truth_info_i)
-                    met = merge(met,met_i)
-                    signal = np.concatenate((signal,signal_i),axis=0)
                 i+=1
             out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
             out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
             with h5py.File(out_f, 'w') as out_file: 
-                classifications_group = out_file.create_group('CLASSIFICATIONS')
-                event = inputs_group.create_group(f'EVENT')
-                event.create_dataset('signal', data=signal)
-
                 inputs_group = out_file.create_group('INPUTS')
-                Momenta = inputs_group.create_group(f'Momenta')
-                Momenta.create_dataset('MASK', data=mask)
-                Momenta.create_dataset('btag', data=inputs['btag'])
-                Momenta.create_dataset('qtag', data=inputs['qtag'])
-                Momenta.create_dataset('etag', data=inputs['etag'])
-                Momenta.create_dataset('eta', data=inputs['eta'])
-                Momenta.create_dataset('mass', data=inputs['M'])
-                Momenta.create_dataset('phi', data=inputs['phi'])
-                Momenta.create_dataset('pt', data=inputs['pT'])
-               
-                Met = inputs_group.create_group(f'Met')     
-                Met.create_dataset('METsig', data=met['METsig'])
-                Met.create_dataset('METphi', data=met['METphi'])
-                Met.create_dataset('MET_Soft', data=met['MET_Soft'])
-                Met.create_dataset('MET_Jet', data=met['MET_Jet'])
-                Met.create_dataset('MET_Ele', data=met['MET_Ele'])
-                Met.create_dataset('MET_Muon', data=met['MET_Muon'])
-                Met.create_dataset('mT_METI', data=met['mT_METI'])
-                Met.create_dataset('MT2_bb', data=met['MT2_bb'])
-                Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'])
-                Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'])
-                Met.create_dataset('MT2_min', data=met['MT2_min']) 
-                
+                source = inputs_group.create_group(f'Source')
+                source.create_dataset('MASK', data=mask)
+                source.create_dataset('btag', data=inputs['btag'])
+                source.create_dataset('eta', data=inputs['eta'])
+                source.create_dataset('mass', data=inputs['M'])
+                source.create_dataset('phi', data=inputs['phi'])
+                source.create_dataset('pt', data=inputs['pT'])
                 targets_group = out_file.create_group('TARGETS')
                 ht = targets_group.create_group(f'ht')
                 ht.create_dataset('b', data=targets['htb'],dtype='i4')
@@ -268,17 +223,7 @@ if __name__ == '__main__':
                 lt.create_dataset('b', data=targets['ltb'],dtype='i4')
                 lt.create_dataset('l', data=targets['ltl'],dtype='i4')
 
-                regressions_group = out_file.create_group('REGRESSIONS')
-                regression = regressions_group.create_group(f'EVENT')
-                match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
-                regression.create_dataset('notop', data=(match==-2).astype(int))
-                regression.create_dataset('ltop', data=(match==-1).astype(int))
-                regression.create_dataset('0b0l', data=(match==0).astype(int))
-                regression.create_dataset('0b1l', data=(match==1).astype(int))
-                regression.create_dataset('0b2l', data=(match==2).astype(int))
-                regression.create_dataset('1b0l', data=(match==3).astype(int))
-                regression.create_dataset('1b1l', data=(match==4).astype(int))
-                regression.create_dataset('1b2l', data=(match==5).astype(int))
+                event_group = out_file.create_group('REGRESSIONS')
 
                 truth_info_group = out_file.create_group('truth_info')
                 for info in out_truth_info.keys():
