@@ -281,6 +281,8 @@ if __name__ == '__main__':
                 Met.create_dataset('MET_Ele', data=met['MET_Ele'])
                 Met.create_dataset('MET_Muon', data=met['MET_Muon'])
                 Met.create_dataset('mT_METl', data=met['mT_METl'])
+                Met.create_dataset('dR_bb', data=met['dR_bb'])
+                Met.create_dataset('dphi_METl', data=met['dphi_METl'])
                 Met.create_dataset('MT2_bb', data=met['MT2_bb'])
                 Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'])
                 Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'])
