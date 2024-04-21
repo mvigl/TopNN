@@ -256,7 +256,7 @@ if __name__ == '__main__':
             out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
             with h5py.File(out_f, 'w') as out_file: 
                 classifications_group = out_file.create_group('CLASSIFICATIONS')
-                event = inputs_group.create_group(f'EVENT')
+                event = classifications_group.create_group(f'EVENT')
                 event.create_dataset('signal', data=signal)
 
                 inputs_group = out_file.create_group('INPUTS')
