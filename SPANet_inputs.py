@@ -43,9 +43,11 @@ def idxs_to_var(branches,dataset):
             inputs[var][:,3] += 1
             inputs[var][:,4] += 1
             inputs[var][:,5] += 1  
+            inputs[var] = split_data(length,inputs[var],dataset=dataset)
         elif var == 'etag':
             inputs[var] = np.zeros((length,10))
             inputs[var][:,7] += 1
+            inputs[var] = split_data(length,inputs[var],dataset=dataset)
         else:
             inputs[var] = np.zeros((length,10))
             inputs[var][:,0] += ak.Array(branches['bjet1'+var][filter]).to_numpy()
