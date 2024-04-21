@@ -272,7 +272,8 @@ if __name__ == '__main__':
                 Momenta.create_dataset('phi', data=inputs['phi'])
                 Momenta.create_dataset('pt', data=inputs['pT'])
                
-                Met = inputs_group.create_group(f'Met')     
+                Met = inputs_group.create_group(f'Met')  
+                Met.create_dataset('MET', data=met['MET'])   
                 Met.create_dataset('METsig', data=met['METsig'])
                 Met.create_dataset('METphi', data=met['METphi'])
                 Met.create_dataset('MET_Soft', data=met['MET_Soft'])
