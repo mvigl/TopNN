@@ -233,9 +233,11 @@ if __name__ == '__main__':
         for line in f:
             filename = line.strip()
             print('reading : ',filename)
+            sig=False
+            if '_Signal_' in filename: sig=True
             with uproot.open({filename: "stop1L_NONE;1"}) as tree:
                 branches = tree.arrays(Features)
-                mask_i,inputs_i,targets_i,out_truth_info_i,met_i,signal_i = get_data(branches,dataset=dataset)
+                mask_i,inputs_i,targets_i,out_truth_info_i,met_i,signal_i = get_data(branches,dataset=dataset,sig=sig)
                 if i==0:
                     mask = mask_i
                     inputs = inputs_i
