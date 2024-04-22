@@ -8,7 +8,7 @@ import os
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='data/root/train_list_testing.txt')
-parser.add_argument('--split', help='train,test,val',default='test')
+parser.add_argument('--split', help='train,test,val',default='train')
 parser.add_argument('--out_dir', help='out_dir',default='H5_ete_spanet_stop_all_small')
 args = parser.parse_args()
 
@@ -261,6 +261,9 @@ if __name__ == '__main__':
                 classifications_group = out_file.create_group('CLASSIFICATIONS')
                 event = classifications_group.create_group(f'EVENT')
                 event.create_dataset('signal', data=signal, dtype='int64')
+                match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
+                match += 2
+                event.create_dataset('match', data=match,dtype='int64')
 
                 inputs_group = out_file.create_group('INPUTS')
                 Momenta = inputs_group.create_group(f'Momenta')
@@ -300,24 +303,6 @@ if __name__ == '__main__':
 
                 regressions_group = out_file.create_group('REGRESSIONS')
                 regression = regressions_group.create_group(f'EVENT')
-                match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
-                event.create_dataset('notop', data=(match==-2),dtype='int64')
-                event.create_dataset('ltop', data=(match==-1),dtype='int64')
-                event.create_dataset('0b0l', data=(match==0),dtype='int64')
-                event.create_dataset('0b1l', data=(match==1),dtype='int64')
-                event.create_dataset('0b2l', data=(match==2),dtype='int64')
-                event.create_dataset('1b0l', data=(match==3),dtype='int64')
-                event.create_dataset('1b1l', data=(match==4),dtype='int64')
-                event.create_dataset('1b2l', data=(match==5),dtype='int64')
-
-                #regression.create_dataset('notop', data=(match==-2)+1,dtype='float32')
-                #regression.create_dataset('ltop', data=(match==-1)+1,dtype='float32')
-                #regression.create_dataset('0b0l', data=(match==0)+1,dtype='float32')
-                #regression.create_dataset('0b1l', data=(match==1)+1,dtype='float32')
-                #regression.create_dataset('0b2l', data=(match==2)+1,dtype='float32')
-                #regression.create_dataset('1b0l', data=(match==3)+1,dtype='float32')
-                #regression.create_dataset('1b1l', data=(match==4)+1,dtype='float32')
-                #regression.create_dataset('1b2l', data=(match==5)+1,dtype='float32')
 
                 truth_info_group = out_file.create_group('truth_info')
                 for info in out_truth_info.keys():
