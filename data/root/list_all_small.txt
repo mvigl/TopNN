@@ -60,4 +60,3 @@
 /raven/u/mvigl/Stop/data/MCRun2_mc20a/mc20_13TeV.364304.stop1L.mc20a_NONE.root
 /raven/u/mvigl/Stop/data/MCRun2_mc20a/mc20_13TeV.364305.stop1L.mc20a_NONE.root
 /raven/u/mvigl/Stop/data/MCRun2_mc20a/mc20_13TeV.364336.stop1L.mc20a_NONE.root
-
