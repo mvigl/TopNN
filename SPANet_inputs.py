@@ -8,7 +8,7 @@ import os
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='data/root/train_list_testing.txt')
-parser.add_argument('--split', help='train,test,val',default='test')
+parser.add_argument('--split', help='train,test,val',default='train')
 parser.add_argument('--out_dir', help='out_dir',default='H5_ete_spanet_stop_all_small')
 args = parser.parse_args()
 
@@ -27,6 +27,7 @@ def idxs_to_var(branches,dataset):
     #filter =  (ak.Array(branches['multiplets'])[:,0,-1]==1)
     #if dataset == 'test': 
     filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
+    not_matched =  (ak.Array(branches['multiplets'])[filter,0,-1]!=1)
     length = np.sum(filter)
     vars=['btag','qtag','etag','eta','M','phi','pT']
     inputs = {}
@@ -63,6 +64,9 @@ def idxs_to_var(branches,dataset):
             (inputs[var])[inputs[var]==-10]=0.
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
     mask = (inputs['pT']>0)
+    inputs['btag'][mask==False]=0.
+    inputs['qtag'][mask==False]=0.
+    inputs['etag'][mask==False]=0.
 
     targets = {}
     targets['htb'] = -np.ones((length))
@@ -83,6 +87,12 @@ def idxs_to_var(branches,dataset):
     targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
     targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
 
+    targets['htb'][not_matched] = -1
+    targets['q1'][not_matched] = -1
+    targets['q2'][not_matched] = -1
+    targets['ltb'][not_matched] = -1
+    targets['ltl'][not_matched] = -1
+
     targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
     targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
     targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
@@ -90,6 +100,7 @@ def idxs_to_var(branches,dataset):
     single_b = ((mask[:,0]*mask[:,1])==False)
     (targets['ltb'])[single_b]=-1
     targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
+    targets['ltl'][(mask[:,7]==False)]=-1
 
     met = {
         'MET': split_data(length,branches['MET'][filter].to_numpy(),dataset=dataset),
