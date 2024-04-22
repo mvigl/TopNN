@@ -7,8 +7,8 @@ import h5py
 import os
 
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
-parser.add_argument('--split', help='train,test,val',default='train')
+parser.add_argument('--filelist', help='data',default='data/root/train_list_testing.txt')
+parser.add_argument('--split', help='train,test,val',default='test')
 parser.add_argument('--out_dir', help='out_dir',default='H5_ete_spanet_stop_all_small')
 args = parser.parse_args()
 
@@ -24,8 +24,9 @@ def split_data(length,array,dataset='test'):
         return 0       
 
 def idxs_to_var(branches,dataset):
-    filter =  (ak.Array(branches['multiplets'])[:,0,-1]==1)
-    if dataset == 'test': filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
+    #filter =  (ak.Array(branches['multiplets'])[:,0,-1]==1)
+    #if dataset == 'test': 
+    filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
     length = np.sum(filter)
     vars=['btag','qtag','etag','eta','M','phi','pT']
     inputs = {}
@@ -68,7 +69,7 @@ def idxs_to_var(branches,dataset):
     targets['q1'] = -np.ones((length))
     targets['q2'] = -np.ones((length))
     targets['ltb'] = -np.ones((length))
-    targets['ltl'] = -np.ones((length))
+    targets['ltl'] = np.ones((length))*7
 
     targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,0]))] = 0
     targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,1]))] = 1
@@ -88,7 +89,7 @@ def idxs_to_var(branches,dataset):
     targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
     single_b = ((mask[:,0]*mask[:,1])==False)
     (targets['ltb'])[single_b]=-1
-    targets['ltl'][:] = 7
+    targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
 
     met = {
         'MET': split_data(length,branches['MET'][filter].to_numpy(),dataset=dataset),
@@ -259,11 +260,11 @@ if __name__ == '__main__':
             with h5py.File(out_f, 'w') as out_file: 
                 classifications_group = out_file.create_group('CLASSIFICATIONS')
                 event = classifications_group.create_group(f'EVENT')
-                event.create_dataset('signal', data=signal)
+                event.create_dataset('signal', data=signal, dtype='int64')
 
                 inputs_group = out_file.create_group('INPUTS')
                 Momenta = inputs_group.create_group(f'Momenta')
-                Momenta.create_dataset('MASK', data=mask)
+                Momenta.create_dataset('MASK', data=mask, dtype='bool')
                 Momenta.create_dataset('btag', data=inputs['btag'])
                 Momenta.create_dataset('qtag', data=inputs['qtag'])
                 Momenta.create_dataset('etag', data=inputs['etag'])
@@ -273,41 +274,50 @@ if __name__ == '__main__':
                 Momenta.create_dataset('pt', data=inputs['pT'])
                
                 Met = inputs_group.create_group(f'Met')  
-                Met.create_dataset('MET', data=met['MET'])   
-                Met.create_dataset('METsig', data=met['METsig'])
-                Met.create_dataset('METphi', data=met['METphi'])
-                Met.create_dataset('MET_Soft', data=met['MET_Soft'])
-                Met.create_dataset('MET_Jet', data=met['MET_Jet'])
-                Met.create_dataset('MET_Ele', data=met['MET_Ele'])
-                Met.create_dataset('MET_Muon', data=met['MET_Muon'])
-                Met.create_dataset('mT_METl', data=met['mT_METl'])
-                Met.create_dataset('dR_bb', data=met['dR_bb'])
-                Met.create_dataset('dphi_METl', data=met['dphi_METl'])
-                Met.create_dataset('MT2_bb', data=met['MT2_bb'])
-                Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'])
-                Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'])
-                Met.create_dataset('MT2_min', data=met['MT2_min']) 
+                Met.create_dataset('MET', data=met['MET'],dtype='float32')   
+                Met.create_dataset('METsig', data=met['METsig'],dtype='float32')
+                Met.create_dataset('METphi', data=met['METphi'],dtype='float32')
+                Met.create_dataset('MET_Soft', data=met['MET_Soft'],dtype='float32')
+                Met.create_dataset('MET_Jet', data=met['MET_Jet'],dtype='float32')
+                Met.create_dataset('MET_Ele', data=met['MET_Ele'],dtype='float32')
+                Met.create_dataset('MET_Muon', data=met['MET_Muon'],dtype='float32')
+                Met.create_dataset('mT_METl', data=met['mT_METl'],dtype='float32')
+                Met.create_dataset('dR_bb', data=met['dR_bb'],dtype='float32')
+                Met.create_dataset('dphi_METl', data=met['dphi_METl'],dtype='float32')
+                Met.create_dataset('MT2_bb', data=met['MT2_bb'],dtype='float32')
+                Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'],dtype='float32')
+                Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'],dtype='float32')
+                Met.create_dataset('MT2_min', data=met['MT2_min'],dtype='float32') 
                 
                 targets_group = out_file.create_group('TARGETS')
                 ht = targets_group.create_group(f'ht')
-                ht.create_dataset('b', data=targets['htb'],dtype='i4')
-                ht.create_dataset('q1', data=targets['q1'],dtype='i4')
-                ht.create_dataset('q2', data=targets['q2'],dtype='i4')
+                ht.create_dataset('b', data=targets['htb'],dtype='int64')
+                ht.create_dataset('q1', data=targets['q1'],dtype='int64')
+                ht.create_dataset('q2', data=targets['q2'],dtype='int64')
                 lt = targets_group.create_group(f'lt')
-                lt.create_dataset('b', data=targets['ltb'],dtype='i4')
-                lt.create_dataset('l', data=targets['ltl'],dtype='i4')
+                lt.create_dataset('b', data=targets['ltb'],dtype='int64')
+                lt.create_dataset('l', data=targets['ltl'],dtype='int64')
 
                 regressions_group = out_file.create_group('REGRESSIONS')
                 regression = regressions_group.create_group(f'EVENT')
                 match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
-                regression.create_dataset('notop', data=(match==-2).astype(float))
-                regression.create_dataset('ltop', data=(match==-1).astype(float))
-                regression.create_dataset('0b0l', data=(match==0).astype(float))
-                regression.create_dataset('0b1l', data=(match==1).astype(float))
-                regression.create_dataset('0b2l', data=(match==2).astype(float))
-                regression.create_dataset('1b0l', data=(match==3).astype(float))
-                regression.create_dataset('1b1l', data=(match==4).astype(float))
-                regression.create_dataset('1b2l', data=(match==5).astype(float))
+                event.create_dataset('notop', data=(match==-2),dtype='int64')
+                event.create_dataset('ltop', data=(match==-1),dtype='int64')
+                event.create_dataset('0b0l', data=(match==0),dtype='int64')
+                event.create_dataset('0b1l', data=(match==1),dtype='int64')
+                event.create_dataset('0b2l', data=(match==2),dtype='int64')
+                event.create_dataset('1b0l', data=(match==3),dtype='int64')
+                event.create_dataset('1b1l', data=(match==4),dtype='int64')
+                event.create_dataset('1b2l', data=(match==5),dtype='int64')
+
+                #regression.create_dataset('notop', data=(match==-2)+1,dtype='float32')
+                #regression.create_dataset('ltop', data=(match==-1)+1,dtype='float32')
+                #regression.create_dataset('0b0l', data=(match==0)+1,dtype='float32')
+                #regression.create_dataset('0b1l', data=(match==1)+1,dtype='float32')
+                #regression.create_dataset('0b2l', data=(match==2)+1,dtype='float32')
+                #regression.create_dataset('1b0l', data=(match==3)+1,dtype='float32')
+                #regression.create_dataset('1b1l', data=(match==4)+1,dtype='float32')
+                #regression.create_dataset('1b2l', data=(match==5)+1,dtype='float32')
 
                 truth_info_group = out_file.create_group('truth_info')
                 for info in out_truth_info.keys():

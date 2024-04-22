@@ -1,0 +1,2 @@
+/Users/matthiasvigl/Documents/Physics/Stop/analysis/data/MCRun2_Signal_FS_Stop_mc20a/mc20_13TeV.523673.stop1L.mc20a_NONE.root
+/Users/matthiasvigl/Documents/Physics/Stop/analysis/data/MCRun2_mc20a/mc20_13TeV.346343.stop1L.mc20a_NONE.root
