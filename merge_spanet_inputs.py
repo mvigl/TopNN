@@ -38,8 +38,8 @@ def read_file(file):
         htb = h5fw['TARGETS']['ht']['b'][:]
         q1 = h5fw['TARGETS']['ht']['q1'][:]
         q2 = h5fw['TARGETS']['ht']['q2'][:]
-        ltb = h5fw['TARGETS']['lt']['ltb'][:]
-        ltl = h5fw['TARGETS']['lt']['ltl'][:]
+        ltb = h5fw['TARGETS']['lt']['b'][:]
+        ltl = h5fw['TARGETS']['lt']['l'][:]
         truth_info = {}
         for info in h5fw['truth_info'].keys():
             truth_info[info] = h5fw['truth_info'][info]
