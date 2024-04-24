@@ -94,6 +94,7 @@ for file in filelist:
                     merged[key][sub_key] = data[key][sub_key]
             else:
                 merged[key] = np.concatenate((merged[key],data[key]),axis=0)
+    i+=1            
 
 out_f = '/raven/u/mvigl/Stop/run/pre/H5_ete_spanet_stop_all/spanet_inputs_train.h5'
 with h5py.File(out_f, 'w') as out_file: 
