@@ -83,8 +83,9 @@ filelist = ['/raven/u/mvigl/Stop/run/pre/H5_ete_spanet_stop_FS/spanet_inputs_tra
             '/raven/u/mvigl/Stop/run/pre/H5_ete_spanet_stop_mc20e/spanet_inputs_train.h5',
             '/raven/u/mvigl/Stop/run/pre/H5_ete_spanet_stop_mc23/spanet_inputs_train.h5',
 ]
+merged = {}
 for file in filelist:
-    merged = {}
+    print('reading : ',file)
     data = read_file(file)
     for key in data:
         if i==0 : merged[key] = data[key]
