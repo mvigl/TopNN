@@ -272,6 +272,10 @@ if __name__ == '__main__':
                 event.create_dataset('signal', data=signal, dtype='int64')
                 match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
                 match += 2
+                only_sig_match = True
+                if only_sig_match:
+                    if sig == False:
+                        match = -1
                 event.create_dataset('match', data=match,dtype='int64')
 
                 inputs_group = out_file.create_group('INPUTS')
