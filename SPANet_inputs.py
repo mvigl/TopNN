@@ -275,7 +275,7 @@ if __name__ == '__main__':
                 only_sig_match = True
                 if only_sig_match:
                     if sig == False:
-                        match = -np.ones(len(match))
+                        match[match!=0] = -1
                 event.create_dataset('match', data=match,dtype='int64')
 
                 inputs_group = out_file.create_group('INPUTS')
