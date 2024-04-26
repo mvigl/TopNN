@@ -8,8 +8,8 @@ import os
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='data/root/list_sig_FS_testing.txt')
-parser.add_argument('--split', help='train,test,val',default='test')
-parser.add_argument('--out_dir', help='out_dir',default='H5_ete_spanet_stop_FS')
+parser.add_argument('--split', help='train,test,val',default='train')
+parser.add_argument('--out_dir', help='out_dir',default='SPANet_all_8_cat')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
@@ -36,8 +36,7 @@ def idxs_to_var(branches,dataset):
             inputs[var] = np.zeros((length,10))
             inputs[var][:,0] += 1
             inputs[var][:,1] += 1
-            if dataset == 'test':
-                inputs[var][:,6] += 1
+            inputs[var][:,6] += 1
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
         elif var == 'qtag':
             inputs[var] = np.zeros((length,10))
@@ -59,8 +58,7 @@ def idxs_to_var(branches,dataset):
             inputs[var][:,4] += ak.Array(branches['ljet3'+var][filter]).to_numpy()
             inputs[var][:,5] += ak.Array(branches['ljet4'+var][filter]).to_numpy()
             inputs[var][:,7] += ak.Array(branches['lep1'+var][filter]).to_numpy()
-            if dataset == 'test':
-                inputs[var][:,6] += ak.Array(branches['bjet3'+var][filter]).to_numpy()
+            inputs[var][:,6] += ak.Array(branches['bjet3'+var][filter]).to_numpy()
             (inputs[var])[inputs[var]==-10]=0.
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
     mask = (inputs['pT']>0)
