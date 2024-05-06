@@ -15,9 +15,9 @@ args = parser.parse_args()
 def split_data(length,array,dataset='test'):
     idx_train = int(length*0.95)
     if dataset=='train': return array[:idx_train] 
-    if dataset=='test': 
-        if length-idx_train> 200000: return array[length-200000:] 
-        else: return array[idx_train:]    
+    if dataset=='test': return array[idx_train:]    
+        #if length-idx_train> 200000: return array[length-200000:] 
+        #else: return array[idx_train:]    
     if dataset=='full': return array[:]  
     else:       
         print('choose: train, val, test')
@@ -221,7 +221,7 @@ inputs = [  'bjet_pT',
             'bjet_M',
             'jet1_M',
             'jet2_M',
-]
+            ]
 
 variables = ['truth_top_min_dR',
             'truth_top_min_dR_m',
@@ -272,7 +272,7 @@ if __name__ == '__main__':
                 event.create_dataset('signal', data=signal, dtype='int64')
                 match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
                 match += 2
-                only_sig_match = True
+                only_sig_match = False
                 if only_sig_match:
                     if sig == False:
                         match[match!=0] = -1
