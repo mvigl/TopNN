@@ -154,7 +154,7 @@ def get_data(branches,vars=['eta','M','phi','pT'],dataset='train',sig=True,numbe
     mask,inputs,targets,truth_info,met = idxs_to_var(branches,dataset)
     if sig:
         signal = np.ones(len(mask))
-        with open('/Users/matthiasvigl/Documents/Physics/Stop/analysis/data/stop_samples.yaml') as file:
+        with open('data/stop_masses.yaml') as file:
             map = yaml.load(file, Loader=yaml.FullLoader)['samples'] 
         m1=(map[number])[0]
         m2=(map[number])[1]
