@@ -5,6 +5,7 @@ import argparse
 import pickle
 import h5py
 import os
+import yaml
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='data/root/list_sig_FS_testing.txt')
@@ -139,16 +140,30 @@ def idxs_to_var(branches,dataset):
         'WeightEvents_trigger_mu_single': split_data(length,branches['WeightEvents_trigger_mu_single'][filter].to_numpy(),dataset=dataset),
         'xsec': split_data(length,branches['xsec'][filter].to_numpy(),dataset=dataset),
         'WeightLumi': split_data(length,branches['WeightLumi'][filter].to_numpy(),dataset=dataset),
+        'nbjet': split_data(length,branches['nbjet'][filter].to_numpy(),dataset=dataset),
+        'nljet': split_data(length,branches['nljet'][filter].to_numpy(),dataset=dataset),
+        'njet': split_data(length,branches['njet'][filter].to_numpy(),dataset=dataset),
+        'nlep': split_data(length,branches['nlep'][filter].to_numpy(),dataset=dataset),
+        'nVx': split_data(length,branches['nVx'][filter].to_numpy(),dataset=dataset),
+        'EventNumber': split_data(length,branches['EventNumber'][filter].to_numpy(),dataset=dataset),
         'is_matched': split_data(length,(branches['multiplets'][filter,0,-1]==1).to_numpy(),dataset=dataset)
     }
     return mask,inputs,targets,truth_info,met
 
-def get_data(branches,vars=['eta','M','phi','pT'],dataset='train',sig=True):
+def get_data(branches,vars=['eta','M','phi','pT'],dataset='train',sig=True,number=3456):
     mask,inputs,targets,truth_info,met = idxs_to_var(branches,dataset)
     if sig:
         signal = np.ones(len(mask))
+        with open('/Users/matthiasvigl/Documents/Physics/Stop/analysis/data/stop_samples.yaml') as file:
+            map = yaml.load(file, Loader=yaml.FullLoader)['samples'] 
+        m1=(map[number])[0]
+        m2=(map[number])[1]
+        truth_info['M1'] = np.ones(len(mask))*m1
+        truth_info['M2'] = np.ones(len(mask))*m2
     else:
         signal = np.zeros(len(mask))    
+        truth_info['M1'] = -1
+        truth_info['M2'] = -1
     return mask,inputs,targets,truth_info,met,signal
 
 def merge(d1,d2):
@@ -227,6 +242,12 @@ Features = ['multiplets',
             'MT2_b1l1_b2',
             'MT2_b2l1_b1',
             'MT2_min',
+            'nbjet',
+            'nljet',
+            'njet',
+            'nlep',
+            'nVx',
+            'EventNumber',
             ]
 
 inputs = [  'bjet_pT',
@@ -264,6 +285,12 @@ variables = ['truth_top_min_dR',
             'WeightEvents_trigger_mu_single',
             'xsec',
             'WeightLumi',
+            'nbjet',
+            'nljet',
+            'njet',
+            'nlep',
+            'nVx',
+            'EventNumber',
             ]
 
 if __name__ == '__main__':
@@ -276,8 +303,9 @@ if __name__ == '__main__':
             sig=False
             if '_Signal_' in filename: sig=True
             with uproot.open({filename: "stop1L_NONE;1"}) as tree:
+                number = number = filename[(filename.index("TeV.")+4):(filename.index(".stop1L"))]
                 branches = tree.arrays(Features)
-                mask_i,inputs_i,targets_i,out_truth_info_i,met_i,signal_i = get_data(branches,dataset=dataset,sig=sig)
+                mask_i,inputs_i,targets_i,out_truth_info_i,met_i,signal_i = get_data(branches,dataset=dataset,sig=sig,number=number)
                 if i==0:
                     mask = mask_i
                     inputs = inputs_i
