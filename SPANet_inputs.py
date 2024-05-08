@@ -396,7 +396,7 @@ def save_single(args):
                     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
                     sub_dir = f'{out_dir}{sub_dir}'
                     if (not os.path.exists(sub_dir)): os.system(f'mkdir {sub_dir}')
-                    out_f = f'{out_dir}{sub_dir}{out_f}'
+                    out_f = f'{sub_dir}{out_f}'
                     with h5py.File(out_f, 'w') as out_file: 
                         classifications_group = out_file.create_group('CLASSIFICATIONS')
                         event = classifications_group.create_group(f'EVENT')
