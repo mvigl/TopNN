@@ -162,8 +162,8 @@ def get_data(branches,vars=['eta','M','phi','pT'],dataset='train',sig=True,numbe
         truth_info['M2'] = np.ones(len(mask))*m2
     else:
         signal = np.zeros(len(mask))    
-        truth_info['M1'] = -1
-        truth_info['M2'] = -1
+        truth_info['M1'] = -1*np.ones(len(mask))
+        truth_info['M2'] = -1*np.ones(len(mask))
     return mask,inputs,targets,truth_info,met,signal
 
 def merge(d1,d2):
