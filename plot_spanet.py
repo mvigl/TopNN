@@ -167,7 +167,7 @@ matching= {
     0:'no top',
 }
 
-def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo='SPANet',thr=0.2):
+def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo='SPANet',thr=0.):
     if obj=='top': b=np.linspace(0,400,40)
     elif obj=='W': b=np.linspace(0,140,40)
     elif obj=='top_pair': b=np.linspace(0,400,40)
@@ -271,6 +271,8 @@ def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo
     if (obs=='detection_probability') or (obs=='prediction_probability'): 
         ax.semilogy()
     #ax.semilogy()    
+    out_dir = f'Categories'
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     if ((algo == 'SPANet') and (obs!='detection_probability')): fig.savefig(f'Categories/Cand_{obj}_{obs}_{algo}_thr_{thr}.png')
     else: fig.savefig(f'Categories/Cand_{obj}_{obs}_{algo}.png')
 #for obj in ['top','W']:
