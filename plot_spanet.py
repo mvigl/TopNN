@@ -1,13 +1,17 @@
 import h5py
 import numpy as np
 import vector
-import awkward as ak
 import os
-import torch
 import matplotlib.pyplot as plt
-import math
 import vector 
 from sklearn.metrics import roc_curve,auc
+import argparse
+
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('--data', help='data',default='data/root/list_sig_FS_testing.txt')
+parser.add_argument('--evals', help='evals',default='data/root/list_sig_FS_testing.txt')
+args = parser.parse_args()
+
 
 def get_observable(pt,phi,eta,mass,predictions,detection_probabilities,thr=0.,reco='top',obs='mass'):
     pt = pt[np.arange(len(predictions))[:, np.newaxis], predictions]
@@ -99,9 +103,8 @@ def get_observable_matched(pt,phi,eta,mass,targets,reco='top',obs='mass'):
         return 0
     return observable
 
-#with h5py.File('H5_ete_spanet_stop_all_small/spanet_inputs_test.h5','r') as h5fw :
-with h5py.File('../SPANet/data/Ete_stop_all/spanet_inputs_test.h5','r') as h5fw :    
-    with h5py.File('../SPANet/evals_output/evals_Ete_all_8_cat.h5','r') as evals :
+with h5py.File(args.data,'r') as h5fw :    
+    with h5py.File(args.evals,'r') as evals :
         print(h5fw['CLASSIFICATIONS']['EVENT'].keys())
         print(h5fw['INPUTS'].keys())
         met = h5fw['INPUTS']['Met']['MET'][:]
