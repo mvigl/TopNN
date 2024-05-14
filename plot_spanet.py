@@ -304,7 +304,7 @@ def get_auc(labels,signal,weights,masses,m1=1000,m2=100,region='all'):
     ax.hist(signal[:,1],bins=np.linspace(0,1,40),weights=w_sig,density=False,label='sig',histtype='step')
     ax.legend()
     ax.set_title(f'm1: {m1} m2: {m2} AUC : {Auc_sig}')
-    ax.set_ylim(0.00001,10)
+    #ax.set_ylim(0.00001,10)
     ax.semilogy()
     out_dir = f'signals'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
