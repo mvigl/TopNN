@@ -275,16 +275,10 @@ def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     if ((algo == 'SPANet') and (obs!='detection_probability')): fig.savefig(f'Categories/Cand_{obj}_{obs}_{algo}_thr_{thr}.png')
     else: fig.savefig(f'Categories/Cand_{obj}_{obs}_{algo}.png')
-#for obj in ['top','W']:
-#    for obs in ['mass','pt']:
-#        for thr in [0,0.1,0.2,0.3,0.5]:
-#            plot_categories(obj=obj,obs=obs,algo='SPANet',thr=thr)  
-#        plot_categories(obj=obj,obs=obs,algo='baseline')  
-#        plot_categories(obj=obj,obs=obs,algo='truth')  
-#        plot_categories(obj=obj,obs=obs,algo='matching')  
+
 
 def get_auc(labels,signal,weights,masses,m1=1000,m2=100,region='all'):
-    if np.sum(labels*(masses[0]==m1)*(masses[1]==m2))==0: return
+    if np.sum(labels*(masses[0]==m1)*(masses[1]==m2))==0: return -1
     if region == 'all':
         w_bkg = 1*weights*(labels==0)
         w_sig = weights*labels*(masses[0]==m1)*(masses[1]==m2)
@@ -316,8 +310,9 @@ def get_auc(labels,signal,weights,masses,m1=1000,m2=100,region='all'):
     out_dir = f'signals/{region}'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     fig.savefig(f'signals/{region}/SvsB_{m1}_{m2}.png')
+    return Auc_sig
 
-def plot_single_categories(match=match_category,match_max=match_max,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.2,category=5,
+def plot_single_categories(match=match_category,match_max=match_max,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
                            colors=[  '#1f77b4',
                                      '#ff7f0e',
                                      '#2ca02c',
@@ -481,7 +476,6 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     fig.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}.png')
 
-
 def get_match_plot(match_pred,sample='sig',density=True):
     fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
     for i in range(8):
@@ -500,60 +494,70 @@ colors = prop_cycle.by_key()['color']
 
 if __name__ == "__main__":
     
-    plot_categories(obj='top',obs='prediction_probability',algo='SPANet')
-    plot_categories(obj='top',obs='detection_probability',algo='SPANet')
-    get_match_plot(match_pred,sample='sig',density=False)
-    get_match_plot(match_pred,sample='bkg',density=False)
-    get_match_plot(match_pred,sample='sig',density=True)
-    get_match_plot(match_pred,sample='bkg',density=True)
+    if False:
+        plot_categories(obj='top',obs='prediction_probability',algo='SPANet')
+        plot_categories(obj='top',obs='detection_probability',algo='SPANet')
+        get_match_plot(match_pred,sample='sig',density=False)
+        get_match_plot(match_pred,sample='bkg',density=False)
+        get_match_plot(match_pred,sample='sig',density=True)
+        get_match_plot(match_pred,sample='bkg',density=True)
 
-    fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels,signal[:,1],drop_intermediate=True)
-    Auc_sig = auc(fpr_sig,tpr_sig)
-    fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
-    ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=1*weights*(labels==0),density=True,label='bkg',histtype='step')
-    ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=weights*labels,density=True,label='sig',histtype='step')
-    ax.legend()
-    ax.set_title(f'all - AUC : {Auc_sig}')
-    ax.set_ylim(0.01,100)
-    ax.semilogy()
-    fig.savefig(f'SvsB.png')
+        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels,signal[:,1],drop_intermediate=True)
+        Auc_sig = auc(fpr_sig,tpr_sig)
+        fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
+        ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=1*weights*(labels==0),density=True,label='bkg',histtype='step')
+        ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=weights*labels,density=True,label='sig',histtype='step')
+        ax.legend()
+        ax.set_title(f'all - AUC : {Auc_sig}')
+        ax.set_ylim(0.01,100)
+        ax.semilogy()
+        fig.savefig(f'SvsB.png')
 
-    fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[(met>230)*(bees>1)],signal[(met>230)*(bees>1),1])
-    Auc_sig = auc(fpr_sig,tpr_sig)
-    fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
-    ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=1*weights*(labels==0)*(met>230)*(bees>1),density=True,label='bkg',histtype='step')
-    ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=labels*weights*(met>230)*(bees>1),density=True,label='sig',histtype='step')
-    ax.legend()
-    ax.set_title(f'2b - AUC : {Auc_sig}')
-    ax.set_ylim(0.01,100)
-    ax.semilogy()
-    fig.savefig(f'SvsB_met230_2b.png')
+        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[(met>230)*(bees>1)],signal[(met>230)*(bees>1),1])
+        Auc_sig = auc(fpr_sig,tpr_sig)
+        fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
+        ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=1*weights*(labels==0)*(met>230)*(bees>1),density=True,label='bkg',histtype='step')
+        ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=labels*weights*(met>230)*(bees>1),density=True,label='sig',histtype='step')
+        ax.legend()
+        ax.set_title(f'2b - AUC : {Auc_sig}')
+        ax.set_ylim(0.01,100)
+        ax.semilogy()
+        fig.savefig(f'SvsB_met230_2b.png')
 
-    fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[(met>230)*(bees==1)],signal[(met>230)*(bees==1),1])
-    Auc_sig = auc(fpr_sig,tpr_sig)
+        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[(met>230)*(bees==1)],signal[(met>230)*(bees==1),1])
+        Auc_sig = auc(fpr_sig,tpr_sig)
 
-    fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
-    ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=1*weights*(labels==0)*(met>230)*(bees==1),density=True,label='bkg',histtype='step')
-    ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=weights*labels*(met>230)*(bees==1),density=True,label='sig',histtype='step')
-    ax.legend()
-    ax.set_title(f'1b - AUC : {Auc_sig}')
-    ax.set_ylim(0.01,100)
-    ax.semilogy()
-    fig.savefig(f'SvsB_met230_1b.png')
+        fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
+        ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=1*weights*(labels==0)*(met>230)*(bees==1),density=True,label='bkg',histtype='step')
+        ax.hist(signal[:,1],bins=np.linspace(0,1,100),weights=weights*labels*(met>230)*(bees==1),density=True,label='sig',histtype='step')
+        ax.legend()
+        ax.set_title(f'1b - AUC : {Auc_sig}')
+        ax.set_ylim(0.01,100)
+        ax.semilogy()
+        fig.savefig(f'SvsB_met230_1b.png')
 
-    for sample in ['sig','bkg']:
-        for category in [0,1,2,3,4,5,6,7]:
-            for obj in ['top','W']:
-                for obs in ['mass','pt']:
-                    if (obj=='W' and obs=='pt'): continue
-                    plot_single_categories(sample=sample,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
+        for sample in ['sig','bkg']:
+            for category in [0,1,2,3,4,5,6,7]:
+                for obj in ['top','W']:
+                    for obs in ['mass','pt']:
+                        if (obj=='W' and obs=='pt'): continue
+                        plot_single_categories(sample=sample,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
 
-    #stop            
+    #stop      
+    aucs = {}      
     for m1 in masses_one:
         for m2 in masses_two:
             for region in ['all','1b','2b']:
                 print(region,m1,m2)
-                get_auc(labels,signal,weights,masses,m1=m1,m2=m2,region=region)     
+                aucs[f'{region}_{m1}_{m2}'] = get_auc(labels,signal,weights,masses,m1=m1,m2=m2,region=region)     
+    out_f = 'auc_mass_grid.h5'
+    with h5py.File(out_f, 'w') as out_file: 
+        for region in ['all','1b','2b']:
+            group = out_file.create_group(f'{region}')
+            for m1 in masses_one:
+                for m2 in masses_two:
+                    group.create_dataset(f'{m1}_{m2}', data=aucs[f'{region}_{m1}_{m2}'])  
+                      
     #dm
     for region in ['all','1b','2b']:
         get_auc(labels,signal,weights,masses,m1=0,m2=0,region=region)                       
