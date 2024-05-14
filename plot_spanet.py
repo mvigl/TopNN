@@ -283,17 +283,20 @@ def get_auc(labels,signal,weights,masses,m1=1000,m2=100,region='all'):
     if region == 'all':
         w_bkg = 1*weights*(labels==0)
         w_sig = weights*labels*(masses[0]==m1)*(masses[1]==m2)
-        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels,signal[:,1],drop_intermediate=True)
+        filter = ((masses[0]==m1)*(masses[1]==m2)+(labels==0)).astype(bool)
+        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[filter],signal[filter,1],drop_intermediate=True)
         Auc_sig = auc(fpr_sig,tpr_sig)
     elif region == '1b':    
         w_bkg = 1*weights*(labels==0)*(met>230)*(bees==1)
         w_sig = weights*labels*(masses[0]==m1)*(masses[1]==m2)*(met>230)*(bees==1)
-        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[(met>230)*(bees==1)],signal[(met>230)*(bees==1),1],drop_intermediate=True)
+        filter = (((masses[0]==m1)*(masses[1]==m2)+(labels==0))*(met>230)*(bees==1)).astype(bool)
+        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[filter],signal[filter,1],drop_intermediate=True)
         Auc_sig = auc(fpr_sig,tpr_sig)
     elif region == '2b':    
         w_bkg = 1*weights*(labels==0)*(met>230)*(bees>1)
         w_sig = weights*labels*(masses[0]==m1)*(masses[1]==m2)*(met>230)*(bees>1) 
-        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[(met>230)*(bees>1)],signal[(met>230)*(bees>1),1],drop_intermediate=True)
+        filter = (((masses[0]==m1)*(masses[1]==m2)+(labels==0))*(met>230)*(bees>1)).astype(bool)
+        fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels[filter],signal[filter,1],drop_intermediate=True)
         Auc_sig = auc(fpr_sig,tpr_sig)
     fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
     #WeightEvents
@@ -539,9 +542,13 @@ if __name__ == "__main__":
                 for obs in ['mass','pt']:
                     if (obj=='W' and obs=='pt'): continue
                     plot_single_categories(sample=sample,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
-                
+
+    #stop            
     for m1 in masses_one:
         for m2 in masses_two:
             for region in ['all','1b','2b']:
                 print(region,m1,m2)
-                get_auc(labels,signal,weights,masses,m1=m1,m2=m2,region=region)            
+                get_auc(labels,signal,weights,masses,m1=m1,m2=m2,region=region)     
+    #dm
+    for region in ['all','1b','2b']:
+        get_auc(labels,signal,weights,masses,m1=0,m2=0,region=region)                       
