@@ -151,7 +151,6 @@ def idxs_to_var(branches,dataset):
         'EventNumber': split_data(length,branches['EventNumber'][filter].to_numpy(),dataset=dataset),
         'is_matched': split_data(length,(branches['multiplets'][filter,0,-1]==1).to_numpy(),dataset=dataset)
     }
-    print(truth_info['truth_topp_match'])
     return mask,inputs,targets,truth_info,met
 
 def get_data(branches,vars=['eta','M','phi','pT'],dataset='train',sig=True,number=3456):
