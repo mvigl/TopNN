@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='data/root/list_sig_FS_testing.txt')
 parser.add_argument('--split', help='train,test,val',default='train')
 parser.add_argument('--out_dir', help='out_dir',default='SPANet_all_8_cat')
-parser.add_argument('--combine',  action='store_true', help='combine', default=False)
+parser.add_argument('--combine',  action='store_true', help='combine', default=True)
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
@@ -30,6 +30,7 @@ def idxs_to_var(branches,dataset):
     #if dataset == 'test': 
     filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
     not_matched =  (ak.Array(branches['multiplets'])[filter,0,-1]!=1)
+    not_matched_l =  (((ak.Array(branches['truth_topp_match'])[filter].to_numpy()==-1)+(ak.Array(branches['truth_topm_match'])[filter].to_numpy()==-1))==0)
     length = np.sum(filter)
     vars=['btag','qtag','etag','eta','M','phi','pT']
     inputs = {}
@@ -77,7 +78,8 @@ def idxs_to_var(branches,dataset):
 
     targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,0]))] = 0
     targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,1]))] = 1
-    targets['ltb'] = np.abs(targets['htb']-1)
+    targets['ltb'] = targets['htb']+1
+    targets['ltb'][targets['ltb']==2] = 0
     targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
     targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
     targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
@@ -90,15 +92,15 @@ def idxs_to_var(branches,dataset):
     targets['htb'][not_matched] = -1
     targets['q1'][not_matched] = -1
     targets['q2'][not_matched] = -1
-    targets['ltb'][not_matched] = -1
-    targets['ltl'][not_matched] = -1
+    targets['ltb'][not_matched_l] = -1
+    targets['ltl'][not_matched_l] = -1
 
     targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
     targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
     targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
     targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
     single_b = ((mask[:,0]*mask[:,1])==False)
-    (targets['ltb'])[single_b]=-1
+    (targets['ltb'])[single_b*(not_matched==False)]=-1
     targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
     targets['ltl'][(mask[:,7]==False)]=-1
 
@@ -328,13 +330,12 @@ def save_combined(args):
                     classifications_group = out_file.create_group('CLASSIFICATIONS')
                     event = classifications_group.create_group(f'EVENT')
                     event.create_dataset('signal', data=signal, dtype='int64')
-                    match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
-                    match += 2
-                    only_sig_match = False
-                    if only_sig_match:
-                        if sig == False:
-                            match[match!=0] = -1
-                    event.create_dataset('match', data=match,dtype='int64')
+                    match_p = out_truth_info['truth_topp_match']
+                    match_m = out_truth_info['truth_topm_match']
+                    match_p += 2
+                    match_m += 2
+                    event.create_dataset('match_p', data=match_p,dtype='int64')
+                    event.create_dataset('match_m', data=match_m,dtype='int64')
 
                     inputs_group = out_file.create_group('INPUTS')
                     Momenta = inputs_group.create_group(f'Momenta')
@@ -401,13 +402,12 @@ def save_single(args):
                         classifications_group = out_file.create_group('CLASSIFICATIONS')
                         event = classifications_group.create_group(f'EVENT')
                         event.create_dataset('signal', data=signal, dtype='int64')
-                        match = np.maximum(out_truth_info['truth_topp_match'],out_truth_info['truth_topm_match'])
-                        match += 2
-                        only_sig_match = False
-                        if only_sig_match:
-                            if sig == False:
-                                match[match!=0] = -1
-                        event.create_dataset('match', data=match,dtype='int64')
+                        match_p = out_truth_info['truth_topp_match']
+                        match_m = out_truth_info['truth_topm_match']
+                        match_p += 2
+                        match_m += 2
+                        event.create_dataset('match_p', data=match_p,dtype='int64')
+                        event.create_dataset('match_m', data=match_m,dtype='int64')
 
                         inputs_group = out_file.create_group('INPUTS')
                         Momenta = inputs_group.create_group(f'Momenta')
