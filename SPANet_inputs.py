@@ -332,10 +332,11 @@ def save_combined(args):
                 event.create_dataset('signal', data=signal, dtype='int64')
                 match_p = out_truth_info['truth_topp_match']
                 match_m = out_truth_info['truth_topm_match']
-                match_p += 2
-                match_m += 2
-                event.create_dataset('match_p', data=match_p,dtype='int64')
-                event.create_dataset('match_m', data=match_m,dtype='int64')
+                match_p += 1
+                match_m += 1
+                match = np.maximum(match_p,match_m)
+                match[match==-1]=0 
+                event.create_dataset('match', data=match,dtype='int64')
 
                 inputs_group = out_file.create_group('INPUTS')
                 Momenta = inputs_group.create_group(f'Momenta')
