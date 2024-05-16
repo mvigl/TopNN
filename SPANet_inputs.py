@@ -100,7 +100,7 @@ def idxs_to_var(branches,dataset):
     targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
     targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
     single_b = ((mask[:,0]*mask[:,1])==False)
-    (targets['ltb'])[single_b*(not_matched==False)]=-1
+    (targets['ltb'])[single_b*(targets['htb']!=-1)]=-1
     targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
     targets['ltl'][(mask[:,7]==False)]=-1
 
