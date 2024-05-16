@@ -323,62 +323,62 @@ def save_combined(args):
                         met = merge(met,met_i)
                         signal = np.concatenate((signal,signal_i),axis=0)
                     i+=1
-                out_dir = f'{args.out_dir}/'
-                if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-                out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
-                with h5py.File(out_f, 'w') as out_file: 
-                    classifications_group = out_file.create_group('CLASSIFICATIONS')
-                    event = classifications_group.create_group(f'EVENT')
-                    event.create_dataset('signal', data=signal, dtype='int64')
-                    match_p = out_truth_info['truth_topp_match']
-                    match_m = out_truth_info['truth_topm_match']
-                    match_p += 2
-                    match_m += 2
-                    event.create_dataset('match_p', data=match_p,dtype='int64')
-                    event.create_dataset('match_m', data=match_m,dtype='int64')
+            out_dir = f'{args.out_dir}/'
+            if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+            out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
+            with h5py.File(out_f, 'w') as out_file: 
+                classifications_group = out_file.create_group('CLASSIFICATIONS')
+                event = classifications_group.create_group(f'EVENT')
+                event.create_dataset('signal', data=signal, dtype='int64')
+                match_p = out_truth_info['truth_topp_match']
+                match_m = out_truth_info['truth_topm_match']
+                match_p += 2
+                match_m += 2
+                event.create_dataset('match_p', data=match_p,dtype='int64')
+                event.create_dataset('match_m', data=match_m,dtype='int64')
 
-                    inputs_group = out_file.create_group('INPUTS')
-                    Momenta = inputs_group.create_group(f'Momenta')
-                    Momenta.create_dataset('MASK', data=mask, dtype='bool')
-                    Momenta.create_dataset('btag', data=inputs['btag'])
-                    Momenta.create_dataset('qtag', data=inputs['qtag'])
-                    Momenta.create_dataset('etag', data=inputs['etag'])
-                    Momenta.create_dataset('eta', data=inputs['eta'])
-                    Momenta.create_dataset('mass', data=inputs['M'])
-                    Momenta.create_dataset('phi', data=inputs['phi'])
-                    Momenta.create_dataset('pt', data=inputs['pT'])
+                inputs_group = out_file.create_group('INPUTS')
+                Momenta = inputs_group.create_group(f'Momenta')
+                Momenta.create_dataset('MASK', data=mask, dtype='bool')
+                Momenta.create_dataset('btag', data=inputs['btag'])
+                Momenta.create_dataset('qtag', data=inputs['qtag'])
+                Momenta.create_dataset('etag', data=inputs['etag'])
+                Momenta.create_dataset('eta', data=inputs['eta'])
+                Momenta.create_dataset('mass', data=inputs['M'])
+                Momenta.create_dataset('phi', data=inputs['phi'])
+                Momenta.create_dataset('pt', data=inputs['pT'])
 
-                    Met = inputs_group.create_group(f'Met')  
-                    Met.create_dataset('MET', data=met['MET'],dtype='float32')   
-                    Met.create_dataset('METsig', data=met['METsig'],dtype='float32')
-                    Met.create_dataset('METphi', data=met['METphi'],dtype='float32')
-                    Met.create_dataset('MET_Soft', data=met['MET_Soft'],dtype='float32')
-                    Met.create_dataset('MET_Jet', data=met['MET_Jet'],dtype='float32')
-                    Met.create_dataset('MET_Ele', data=met['MET_Ele'],dtype='float32')
-                    Met.create_dataset('MET_Muon', data=met['MET_Muon'],dtype='float32')
-                    Met.create_dataset('mT_METl', data=met['mT_METl'],dtype='float32')
-                    Met.create_dataset('dR_bb', data=met['dR_bb'],dtype='float32')
-                    Met.create_dataset('dphi_METl', data=met['dphi_METl'],dtype='float32')
-                    Met.create_dataset('MT2_bb', data=met['MT2_bb'],dtype='float32')
-                    Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'],dtype='float32')
-                    Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'],dtype='float32')
-                    Met.create_dataset('MT2_min', data=met['MT2_min'],dtype='float32') 
+                Met = inputs_group.create_group(f'Met')  
+                Met.create_dataset('MET', data=met['MET'],dtype='float32')   
+                Met.create_dataset('METsig', data=met['METsig'],dtype='float32')
+                Met.create_dataset('METphi', data=met['METphi'],dtype='float32')
+                Met.create_dataset('MET_Soft', data=met['MET_Soft'],dtype='float32')
+                Met.create_dataset('MET_Jet', data=met['MET_Jet'],dtype='float32')
+                Met.create_dataset('MET_Ele', data=met['MET_Ele'],dtype='float32')
+                Met.create_dataset('MET_Muon', data=met['MET_Muon'],dtype='float32')
+                Met.create_dataset('mT_METl', data=met['mT_METl'],dtype='float32')
+                Met.create_dataset('dR_bb', data=met['dR_bb'],dtype='float32')
+                Met.create_dataset('dphi_METl', data=met['dphi_METl'],dtype='float32')
+                Met.create_dataset('MT2_bb', data=met['MT2_bb'],dtype='float32')
+                Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'],dtype='float32')
+                Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'],dtype='float32')
+                Met.create_dataset('MT2_min', data=met['MT2_min'],dtype='float32') 
 
-                    targets_group = out_file.create_group('TARGETS')
-                    ht = targets_group.create_group(f'ht')
-                    ht.create_dataset('b', data=targets['htb'],dtype='int64')
-                    ht.create_dataset('q1', data=targets['q1'],dtype='int64')
-                    ht.create_dataset('q2', data=targets['q2'],dtype='int64')
-                    lt = targets_group.create_group(f'lt')
-                    lt.create_dataset('b', data=targets['ltb'],dtype='int64')
-                    lt.create_dataset('l', data=targets['ltl'],dtype='int64')
+                targets_group = out_file.create_group('TARGETS')
+                ht = targets_group.create_group(f'ht')
+                ht.create_dataset('b', data=targets['htb'],dtype='int64')
+                ht.create_dataset('q1', data=targets['q1'],dtype='int64')
+                ht.create_dataset('q2', data=targets['q2'],dtype='int64')
+                lt = targets_group.create_group(f'lt')
+                lt.create_dataset('b', data=targets['ltb'],dtype='int64')
+                lt.create_dataset('l', data=targets['ltl'],dtype='int64')
 
-                    regressions_group = out_file.create_group('REGRESSIONS')
-                    regression = regressions_group.create_group(f'EVENT')
+                regressions_group = out_file.create_group('REGRESSIONS')
+                regression = regressions_group.create_group(f'EVENT')
 
-                    truth_info_group = out_file.create_group('truth_info')
-                    for info in out_truth_info.keys():
-                        truth_info_group.create_dataset(info, data=out_truth_info[info])
+                truth_info_group = out_file.create_group('truth_info')
+                for info in out_truth_info.keys():
+                    truth_info_group.create_dataset(info, data=out_truth_info[info])
 
 def save_single(args):
         with open(args.filelist) as f:
