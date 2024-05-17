@@ -370,9 +370,9 @@ def save_combined(args):
                 Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'],dtype='float32')
                 Met.create_dataset('MT2_min', data=met['MT2_min'],dtype='float32') 
                 Met.create_dataset('HT', data=met['HT'],dtype='float32') 
-                Met.create_dataset('nbjet', data=met['nbjet'],dtype='float32') 
-                Met.create_dataset('nljet', data=met['nljet'],dtype='float32') 
-                Met.create_dataset('nVx', data=met['nVx'],dtype='float32') 
+                Met.create_dataset('nbjet', data=met['nbjet'],dtype='int64') 
+                Met.create_dataset('nljet', data=met['nljet'],dtype='int64') 
+                Met.create_dataset('nVx', data=met['nVx'],dtype='int64')
 
                 targets_group = out_file.create_group('TARGETS')
                 ht = targets_group.create_group(f'ht')
@@ -414,10 +414,11 @@ def save_single(args):
                         event.create_dataset('signal', data=signal, dtype='int64')
                         match_p = out_truth_info['truth_topp_match']
                         match_m = out_truth_info['truth_topm_match']
-                        match_p += 2
-                        match_m += 2
-                        event.create_dataset('match_p', data=match_p,dtype='int64')
-                        event.create_dataset('match_m', data=match_m,dtype='int64')
+                        match_p += 1
+                        match_m += 1
+                        match = np.maximum(match_p,match_m)
+                        match[match==-1]=0 
+                        event.create_dataset('match', data=match,dtype='int64')
 
                         inputs_group = out_file.create_group('INPUTS')
                         Momenta = inputs_group.create_group(f'Momenta')
@@ -446,9 +447,9 @@ def save_single(args):
                         Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'],dtype='float32')
                         Met.create_dataset('MT2_min', data=met['MT2_min'],dtype='float32') 
                         Met.create_dataset('HT', data=met['HT'],dtype='float32') 
-                        Met.create_dataset('nbjet', data=met['nbjet'],dtype='float32') 
-                        Met.create_dataset('nljet', data=met['nljet'],dtype='float32') 
-                        Met.create_dataset('nVx', data=met['nVx'],dtype='float32')
+                        Met.create_dataset('nbjet', data=met['nbjet'],dtype='int64') 
+                        Met.create_dataset('nljet', data=met['nljet'],dtype='int64') 
+                        Met.create_dataset('nVx', data=met['nVx'],dtype='int64')
 
                         targets_group = out_file.create_group('TARGETS')
                         ht = targets_group.create_group(f'ht')
