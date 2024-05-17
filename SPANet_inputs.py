@@ -119,6 +119,10 @@ def idxs_to_var(branches,dataset):
         'MT2_b1l1_b2': split_data(length,branches['MT2_b1l1_b2'][filter].to_numpy(),dataset=dataset),
         'MT2_b2l1_b1': split_data(length,branches['MT2_b2l1_b1'][filter].to_numpy(),dataset=dataset),
         'MT2_min': split_data(length,branches['MT2_min'][filter].to_numpy(),dataset=dataset),
+        'HT': split_data(length,branches['HT'][filter].to_numpy(),dataset=dataset),
+        'nbjet': split_data(length,branches['nbjet'][filter].to_numpy(),dataset=dataset),
+        'nljet': split_data(length,branches['nljet'][filter].to_numpy(),dataset=dataset),
+        'nVx': split_data(length,branches['nVx'][filter].to_numpy(),dataset=dataset),
     }
 
     truth_info = {
@@ -245,6 +249,7 @@ Features = ['multiplets',
             'MT2_b1l1_b2',
             'MT2_b2l1_b1',
             'MT2_min',
+            'HT',
             'nbjet',
             'nljet',
             'njet',
@@ -364,6 +369,10 @@ def save_combined(args):
                 Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'],dtype='float32')
                 Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'],dtype='float32')
                 Met.create_dataset('MT2_min', data=met['MT2_min'],dtype='float32') 
+                Met.create_dataset('HT', data=met['HT'],dtype='float32') 
+                Met.create_dataset('nbjet', data=met['nbjet'],dtype='float32') 
+                Met.create_dataset('nljet', data=met['nljet'],dtype='float32') 
+                Met.create_dataset('nVx', data=met['nVx'],dtype='float32') 
 
                 targets_group = out_file.create_group('TARGETS')
                 ht = targets_group.create_group(f'ht')
@@ -436,6 +445,10 @@ def save_single(args):
                         Met.create_dataset('MT2_b1l1_b2', data=met['MT2_b1l1_b2'],dtype='float32')
                         Met.create_dataset('MT2_b2l1_b1', data=met['MT2_b2l1_b1'],dtype='float32')
                         Met.create_dataset('MT2_min', data=met['MT2_min'],dtype='float32') 
+                        Met.create_dataset('HT', data=met['HT'],dtype='float32') 
+                        Met.create_dataset('nbjet', data=met['nbjet'],dtype='float32') 
+                        Met.create_dataset('nljet', data=met['nljet'],dtype='float32') 
+                        Met.create_dataset('nVx', data=met['nVx'],dtype='float32')
 
                         targets_group = out_file.create_group('TARGETS')
                         ht = targets_group.create_group(f'ht')
