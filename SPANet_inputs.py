@@ -103,7 +103,7 @@ def split_data(length,array,dataset='test'):
         print('choose: train, val, test')
         return 0       
 
-def idxs_to_var(branches,dataset):
+def idxs_to_var(branches,dataset,sig,bkg_targets=False):
 
     # dummy filter, here is all events
     filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
@@ -156,46 +156,55 @@ def idxs_to_var(branches,dataset):
 
     # fill the reconstruction targets
     targets = {}
-    targets['htb'] = -np.ones((length))
-    targets['q1'] = -np.ones((length))
-    targets['q2'] = -np.ones((length))
-    targets['ltb'] = -np.ones((length))
-    targets['ltl'] = np.ones((length))*7
-    # mutiplets have this structure: (bjetidx,ljetidx,ljetidx), and the truth matched are always in the first column(s) - but we only need one had-top for 1L
-    # if more had-top per event are needed then this code should change a bit to loop over the first 2 multiplets
-    # bjetIdxs_saved is just bjetidx1,bjetidx2
-    # ljetIdxs_saved is just ljetidx1,ljetidx2,ljetidx3,ljetidx4
-    # so check which index is in the first multiplet and map it to the (bjet1,bjet2,ljet1,ljet2,ljet3,ljet4,lep,bjet3,0,0) input structure built before
-    targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,0]))] = 0
-    targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,1]))] = 1
-    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
-    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
-    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
-    targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
-    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
-    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
-    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
-    targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
+    if ((sig==False) and (bkg_targets==False)):
+        targets['htb'] = -np.ones((length))
+        targets['q1'] = -np.ones((length))
+        targets['q2'] = -np.ones((length))
+        targets['ltb'] = -np.ones((length))
+        targets['ltl'] = -np.ones((length))
+    else:
+        targets['htb'] = -np.ones((length))
+        targets['q1'] = -np.ones((length))
+        targets['q2'] = -np.ones((length))
+        targets['ltb'] = -np.ones((length))
+        targets['ltl'] = np.ones((length))*7
+        # mutiplets have this structure: (bjetidx,ljetidx,ljetidx), and the truth matched are always in the first column(s) - but we only need one had-top for 1L
+        # if more had-top per event are needed then this code should change a bit to loop over the first 2 multiplets
+        # bjetIdxs_saved is just [bjetidx1,bjetidx2]
+        # ljetIdxs_saved is just [ljetidx1,ljetidx2,ljetidx3,ljetidx4]
+        # so check which index is in the first multiplet and map it to the (bjet1,bjet2,ljet1,ljet2,ljet3,ljet4,lep,bjet3,0,0) input structure built before
+        targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,0]))] = 0
+        targets['htb'][(ak.Array(branches['multiplets'][filter,0,0])==ak.Array(branches['bjetIdxs_saved'][filter,1]))] = 1
+        targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
+        targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
+        targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
+        targets['q1'][(ak.Array(branches['multiplets'][filter,0,1])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
+        targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,0]))] = 2
+        targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,1]))] = 3
+        targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,2]))] = 4
+        targets['q2'][(ak.Array(branches['multiplets'][filter,0,2])==ak.Array(branches['ljetIdxs_saved'][filter,3]))] = 5
 
-    targets['htb'][not_matched] = -1
-    targets['q1'][not_matched] = -1
-    targets['q2'][not_matched] = -1
-    #assign the leading bjet (not already matched to had-top) to lep-top
-    targets['ltb'] = targets['htb']+1
-    targets['ltb'][targets['ltb']==2] = 0
-    targets['ltb'][not_matched_l] = -1
-    targets['ltl'][not_matched_l] = -1
+        # restore -1 value for not matched multiplets
+        targets['htb'][not_matched] = -1
+        targets['q1'][not_matched] = -1
+        targets['q2'][not_matched] = -1
+        # assign the leading bjet (not already matched to had-top) to lep-top
+        targets['ltb'] = targets['htb']+1
+        targets['ltb'][targets['ltb']==2] = 0
+        # restore -1 value for not matched lep-top
+        targets['ltb'][not_matched_l] = -1
+        targets['ltl'][not_matched_l] = -1
 
-    targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
-    targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
-    targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
-    targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
-    single_b = ((mask[:,0]*mask[:,1])==False)
-    (targets['ltb'])[single_b*(targets['htb']!=-1)]=-1
-    targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
-    targets['ltl'][(mask[:,7]==False)]=-1
+        targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
+        targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
+        targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
+        targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
+        single_b = ((mask[:,0]*mask[:,1])==False)
+        (targets['ltb'])[single_b*(targets['htb']!=-1)]=-1
+        targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
+        targets['ltl'][(mask[:,7]==False)]=-1
 
-    #fill the global features
+    # fill the global features
     met = {
         'MET': split_data(length,branches['MET'][filter].to_numpy(),dataset=dataset),
         'METsig': split_data(length,branches['METsig'][filter].to_numpy(),dataset=dataset),
@@ -217,7 +226,7 @@ def idxs_to_var(branches,dataset):
         'nVx': split_data(length,branches['nVx'][filter].to_numpy(),dataset=dataset),
     }
 
-    #fill some aux info
+    # fill some aux info
     truth_info = {
         'truth_top_min_dR': split_data(length,branches['truth_top_min_dR'][filter].to_numpy(),dataset=dataset),
         'truth_top_min_dR_m': split_data(length,branches['truth_top_min_dR_m'][filter].to_numpy(),dataset=dataset),
@@ -251,10 +260,10 @@ def idxs_to_var(branches,dataset):
     return mask,inputs,targets,truth_info,met
 
 def get_data(branches,massgrid,dataset='train',sig=True,number=3456):
-    mask,inputs,targets,truth_info,met = idxs_to_var(branches,dataset)
+    mask,inputs,targets,truth_info,met = idxs_to_var(branches,dataset,sig)
     if sig:
         signal = np.ones(len(mask))
-        #signal mass info
+        # signal mass info
         with open(massgrid) as file:
             map = yaml.load(file, Loader=yaml.FullLoader)['samples'] 
         m1=(map[number])[0]
@@ -302,7 +311,7 @@ def save_combined(args):
                     i+=1
             out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-            out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
+            out_f = out_dir + f'/spanet_inputs_{dataset}_no_bkg_reco.h5'
             with h5py.File(out_f, 'w') as out_file: 
                 classifications_group = out_file.create_group('CLASSIFICATIONS')
                 event = classifications_group.create_group(f'EVENT')
