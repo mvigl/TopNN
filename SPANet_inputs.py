@@ -162,6 +162,11 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
         targets['q2'] = -np.ones((length))
         targets['ltb'] = -np.ones((length))
         targets['ltl'] = -np.ones((length))
+        targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
+        targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
+        targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
+        targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
+        targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
     else:
         targets['htb'] = -np.ones((length))
         targets['q1'] = -np.ones((length))
