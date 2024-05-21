@@ -18,8 +18,8 @@ def get_observable(pt,phi,eta,mass,predictions,detection_probabilities,thr=0.,re
     phi = phi[np.arange(len(predictions))[:, np.newaxis], predictions]
     eta = eta[np.arange(len(predictions))[:, np.newaxis], predictions]
     mass = mass[np.arange(len(predictions))[:, np.newaxis], predictions]
-    for v in [pt,phi,eta,mass]:
-        v[detection_probabilities<thr,2] = 0
+    #for v in [pt,phi,eta,mass]:
+    #    v[detection_probabilities<thr,2] = 0
     b= vector.array(
         {
             "pt": pt[:,0],
@@ -133,11 +133,13 @@ with h5py.File(args.data,'r') as h5fw :
         labels = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
         match_pred = evals['match'][:]
         match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:]
-        predictions = evals['predictions_ht'][0]
-        predictions_probabilities = np.nan_to_num(evals['assignment_probabilities'][0])
-        detection_probabilities = evals['detection_probabilities'][0]
+        predictions = evals['predictions_ht'][:]
+        predictions_probabilities = np.nan_to_num(evals['assignment_probabilities_ht'][:])
+        detection_probabilities = evals['detection_probabilities_ht'][:]
+        predictions_probabilities_lt = np.nan_to_num(evals['assignment_probabilities_lt'][:])
+        detection_probabilities_lt = evals['detection_probabilities_lt'][:]
         masks = h5fw['INPUTS']['Momenta']['MASK'][:]
-        targets = evals['targets_ht'][0]
+        targets = evals['targets_ht'][:]
         masks_in = h5fw['INPUTS']['Momenta']['MASK'][:]
         print(h5fw['truth_info'].keys())
         masses = np.array([h5fw['truth_info']['M1'][:],h5fw['truth_info']['M2'][:]])
@@ -150,24 +152,27 @@ with h5py.File(args.data,'r') as h5fw :
         truth_top_min_dR_m_jj = h5fw['truth_info']['truth_top_min_dR_m_jj'][:]/1000
         truth_topp_match = h5fw['truth_info']['truth_topp_match'][:]
         truth_topm_match = h5fw['truth_info']['truth_topm_match'][:]
-        match_category = np.maximum(truth_topp_match,truth_topm_match)+2
+        match_category = np.maximum(truth_topp_match,truth_topm_match)+1
+        match_category[match_category==-1]=0
 
 match_max = np.argmax(match_pred,axis=-1)
 masses_one = np.unique(masses[0])[1:]
 masses_two = np.unique(masses[1])[1:]
+print(np.unique(match_category))
+print(np.unique(match_pred))
+print(np.unique(match_label))
 
 matching= {
-    7: 'hadronic top w/ matched b-jet and 2 l-jets',
-    6: 'hadronic top w/ matched b-jet and 1 l-jets',
-    5: 'hadronic top w/ matched b-jet',
-    4: 'hadronic top w/ no matched b-jet and 2 l-jets',
-    3: 'hadronic top w/ no matched b-jet and 1 l-jet',
-    2: 'hadronic top w/ no matched jets',
-    1:'leptonic top',
-    0:'no top',
+    6: 'hadronic top w/ matched b-jet and 2 l-jets',
+    5: 'hadronic top w/ matched b-jet and 1 l-jets',
+    4: 'hadronic top w/ matched b-jet',
+    3: 'hadronic top w/ no matched b-jet and 2 l-jets',
+    2: 'hadronic top w/ no matched b-jet and 1 l-jet',
+    1: 'hadronic top w/ no matched jets',
+    0: 'no had top',
 }
 
-def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo='SPANet',thr=0.):
+def plot_categories(match=match_label,sample='stop',obj='top',obs='mass',algo='SPANet',thr=0.):
     if obj=='top': b=np.linspace(0,400,40)
     elif obj=='W': b=np.linspace(0,140,40)
     elif obj=='top_pair': b=np.linspace(0,400,40)
@@ -199,18 +204,23 @@ def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo
         if obs=='detection_probability': 
             observable = detection_probabilities
             b=np.linspace(0,1,100)
+        elif obs=='detection_probability_lt': 
+            observable = detection_probabilities_lt
+            b=np.linspace(0,1,100)    
         elif obs=='prediction_probability': 
             observable = predictions_probabilities
-            b=np.linspace(0.,1,40)    
+            b=np.linspace(0.,1,40)
+        elif obs=='prediction_probability_lt': 
+            observable = predictions_probabilities_lt
+            b=np.linspace(0.,1,40)        
         elif obs=='truth_top_pt': observable = truth_top_pt
         elif obs=='truth_top_min_dR_m': observable = truth_top_min_dR_m
         else: observable = get_observable(pt,phi,eta,mass,predictions,detection_probabilities,thr=thr,reco=obj,obs=obs) 
     elif algo == 'truth': observable = observable_truth
     observable[observable<0]=0.        
-    if algo == 'matching': observable[truth_topp_match<4]=-100.
+    if algo == 'matching': observable[match_label<4]=-100.
     
     ax.hist([     
-                    observable,
                     observable,
                     observable,
                     observable,
@@ -228,7 +238,6 @@ def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo
                         1*(match==4),
                         1*(match==5),
                         1*(match==6),
-                        1*(match==7),
                     ],
                     stacked=stacked,
                     label=[
@@ -239,10 +248,9 @@ def plot_categories(match=match_category,sample='stop',obj='top',obs='mass',algo
                         f'{matching[4]}',
                         f'{matching[5]}',
                         f'{matching[6]}',
-                        f'{matching[7]}',
                     ],    
                 )
-    if obs not in ['mass','detection_probability','prediction_probability']:
+    if obs not in ['mass','detection_probability','prediction_probability','detection_probability_lt','prediction_probability_lt']:
         observable_truth[observable_truth<0]=0.   
         ax.hist([     
                         observable_truth,
@@ -312,7 +320,7 @@ def get_auc(labels,signal,weights,masses,m1=1000,m2=100,region='all'):
     fig.savefig(f'signals/{region}/SvsB_{m1}_{m2}.png')
     return Auc_sig
 
-def plot_single_categories(match=match_category,match_max=match_max,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
+def plot_single_categories(match=match_label,match_max=match_max,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
                            colors=[  '#1f77b4',
                                      '#ff7f0e',
                                      '#2ca02c',
@@ -368,7 +376,7 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
     label = np.ones_like(observable)
     if sample == 'sig': label = (labels==1)
     elif sample == 'bkg': label = (labels==0)
-    if algo == 'matching': observable[truth_topp_match<4]=-100.
+    if algo == 'matching': observable[match_label<4]=-100.
     ax.hist([     
                     observable_truth,
                     ],
@@ -384,7 +392,7 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
                     ],    
                     lw=2
                 )
-    if category > 5:
+    if category > 4:
         ax.hist([     
                     observable_match,
                     ],
@@ -425,7 +433,6 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
                     observable,
                     observable,
                     observable,
-                    observable,
                     ],
                     bins=b,
                     alpha=0.8,
@@ -437,10 +444,9 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
                         1*weights*(match_max==category)*(match==4)*(label),
                         1*weights*(match_max==category)*(match==5)*(label),
                         1*weights*(match_max==category)*(match==6)*(label),
-                        1*weights*(match_max==category)*(match==7)*(label),
                     ],
                     stacked=stacked,
-                    color=colors[:8],
+                    color=colors[:7],
                     label=[
                         f'{matching[0]}',
                         f'{matching[1]}',
@@ -449,7 +455,6 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
                         f'{matching[4]}',
                         f'{matching[5]}',
                         f'{matching[6]}',
-                        f'{matching[7]}',
                     ],    
                 )
     ax.set_ylabel('Events (a.u.)')
@@ -459,8 +464,8 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
     elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
     elif obs=='truth_top_min_dR_m': ax.set_xlabel('true top Mass [GeV]',loc='right')
     if obs=='TopNN_score': ax.legend(fontsize=8,loc='upper left')
-    else: ax.legend(fontsize=4,loc='upper right')
-    if (obs=='detection_probability') or (obs=='prediction_probability'): 
+    else: ax.legend(fontsize=8,loc='upper right')
+    if obs in ['detection_probability','prediction_probability','prediction_probability_lt','detection_probability_lt']: 
         ax.semilogy()
     #ax.semilogy()    
 
@@ -476,16 +481,16 @@ def plot_single_categories(match=match_category,match_max=match_max,sample='sig'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     fig.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}.png')
 
-def get_match_plot(match_pred,sample='sig',density=True):
+def get_match_plot(match_max,sample='sig',density=True):
     fig, ax = plt.subplots(figsize=(4, 3), dpi=600)
-    for i in range(8):
+    for i in range(7):
         w=1*(match_label==i)
         if sample == 'sig': w*=(labels==1)
         elif sample == 'bkg': w*=(labels==0)
-        ax.hist(np.argmax(match_pred,axis=-1),bins=np.linspace(-0.5,7.5,9),weights=w,density=density,histtype='step',label=f'{matching[i]}')
+        ax.hist(match_max,bins=np.linspace(-0.5,7.5,9),weights=w,density=density,histtype='step',label=f'{matching[i]}')
     #ax.semilogy()
     if density: ax.set_ylim(0,1)
-    ax.legend(fontsize=2,loc='upper left')    
+    ax.legend(fontsize=4,loc='upper left')    
     if density: fig.savefig(f'match_{sample}_norm.png')
     else: fig.savefig(f'match_{sample}.png')
 
@@ -494,13 +499,15 @@ colors = prop_cycle.by_key()['color']
 
 if __name__ == "__main__":
     
-    if False:
+    if True:
         plot_categories(obj='top',obs='prediction_probability',algo='SPANet')
         plot_categories(obj='top',obs='detection_probability',algo='SPANet')
-        get_match_plot(match_pred,sample='sig',density=False)
-        get_match_plot(match_pred,sample='bkg',density=False)
-        get_match_plot(match_pred,sample='sig',density=True)
-        get_match_plot(match_pred,sample='bkg',density=True)
+        plot_categories(obj='top',obs='prediction_probability_lt',algo='SPANet')
+        plot_categories(obj='top',obs='detection_probability_lt',algo='SPANet')
+        get_match_plot(match_max,sample='sig',density=False)
+        get_match_plot(match_max,sample='bkg',density=False)
+        get_match_plot(match_max,sample='sig',density=True)
+        get_match_plot(match_max,sample='bkg',density=True)
 
         fpr_sig, tpr_sig, thresholds_sig = roc_curve(labels,signal[:,1],drop_intermediate=True)
         Auc_sig = auc(fpr_sig,tpr_sig)
@@ -537,7 +544,7 @@ if __name__ == "__main__":
         fig.savefig(f'SvsB_met230_1b.png')
 
         for sample in ['sig','bkg']:
-            for category in [0,1,2,3,4,5,6,7]:
+            for category in [6,3,0,1,2,4,5]:
                 for obj in ['top','W']:
                     for obs in ['mass','pt']:
                         if (obj=='W' and obs=='pt'): continue
@@ -560,4 +567,4 @@ if __name__ == "__main__":
                       
     #dm
     for region in ['all','1b','2b']:
-        get_auc(labels,signal,weights,masses,m1=0,m2=0,region=region)                       
+        get_auc(labels,signal,weights,masses,m1=0,m2=0,region=region)                    

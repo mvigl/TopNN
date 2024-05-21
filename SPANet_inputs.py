@@ -12,6 +12,7 @@ parser.add_argument('--filelist', help='data',default='data/root/list_sig_FS_tes
 parser.add_argument('--split', help='train,test,val',default='test')
 parser.add_argument('--out_dir', help='out_dir',default='SPANet_all_8_cat')
 parser.add_argument('--combine',  action='store_true', help='combine', default=True)
+parser.add_argument('--bkg_targets',  action='store_true', help='bkg_targets', default=True)
 parser.add_argument('--massgrid', help='massgrid',default='/raven/u/mvigl/Stop/TopNN/data/stop_masses.yaml')
 args = parser.parse_args()
 
@@ -156,6 +157,7 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
 
     # fill the reconstruction targets
     targets = {}
+    # deafault is not reco targets for bkg samples (truth matching was devoleped for 1L so might not be well defined for bkg - to be checked)
     if ((sig==False) and (bkg_targets==False)):
         targets['htb'] = -np.ones((length))
         targets['q1'] = -np.ones((length))
@@ -199,6 +201,8 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
         # restore -1 value for not matched lep-top
         targets['ltb'][not_matched_l] = -1
         targets['ltl'][not_matched_l] = -1
+        (targets['ltb'])[not_matched] = -1 # if no had-top then don't reconstruct the lep-top (truth matching not well defined!!!!)
+        (targets['ltl'])[not_matched] = -1 # if no had-top then don't reconstruct the lep-top (truth matching not well defined!!!!)
 
         targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
         targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
@@ -264,8 +268,8 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
     }
     return mask,inputs,targets,truth_info,met
 
-def get_data(branches,massgrid,dataset='train',sig=True,number=3456):
-    mask,inputs,targets,truth_info,met = idxs_to_var(branches,dataset,sig)
+def get_data(branches,massgrid,dataset='train',sig=True,number=3456,bkg_targets=False):
+    mask,inputs,targets,truth_info,met = idxs_to_var(branches,dataset,sig,bkg_targets)
     if sig:
         signal = np.ones(len(mask))
         # signal mass info
@@ -298,7 +302,7 @@ def save_combined(args):
                 with uproot.open({filename: "stop1L_NONE;1"}) as tree:
                     number = number = filename[(filename.index("TeV.")+4):(filename.index(".stop1L"))]
                     branches = tree.arrays(Features)
-                    mask_i,inputs_i,targets_i,out_truth_info_i,met_i,signal_i = get_data(branches,args.massgrid,dataset=dataset,sig=sig,number=number)
+                    mask_i,inputs_i,targets_i,out_truth_info_i,met_i,signal_i = get_data(branches,args.massgrid,dataset=dataset,sig=sig,number=number,bkg_targets=args.bkg_targets)
                     if i==0:
                         mask = mask_i
                         inputs = inputs_i
@@ -316,7 +320,8 @@ def save_combined(args):
                     i+=1
             out_dir = f'{args.out_dir}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-            out_f = out_dir + f'/spanet_inputs_{dataset}_no_bkg_reco.h5'
+            if args.bkg_targets: out_f = out_dir + f'/spanet_inputs_{dataset}.h5'
+            else: out_f = out_dir + f'/spanet_inputs_{dataset}_no_bkg_reco.h5'
             with h5py.File(out_f, 'w') as out_file: 
                 classifications_group = out_file.create_group('CLASSIFICATIONS')
                 event = classifications_group.create_group(f'EVENT')
@@ -387,9 +392,10 @@ def save_single(args):
                 with uproot.open({filename: "stop1L_NONE;1"}) as tree:
                     number = number = filename[(filename.index("TeV.")+4):(filename.index(".stop1L"))]
                     sub_dir = filename[(filename.index("/MC")):(filename.index("/mc2"))]
-                    out_f = filename[(filename.index("/mc2")):].replace(".root",f"_{dataset}.h5")
+                    if args.bkg_targets: out_f = filename[(filename.index("/mc2")):].replace(".root",f"_{dataset}.h5")
+                    else: out_f = filename[(filename.index("/mc2")):].replace(".root",f"_{dataset}_no_bkg_reco.h5")
                     branches = tree.arrays(Features)
-                    mask,inputs,targets,out_truth_info,met,signal = get_data(branches,args.massgrid,dataset=dataset,sig=sig,number=number)
+                    mask,inputs,targets,out_truth_info,met,signal = get_data(branches,args.massgrid,dataset=dataset,sig=sig,number=number,bkg_targets=args.bkg_targets)
                     out_dir = f'{args.out_dir}/'
                     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
                     sub_dir = f'{out_dir}{sub_dir}'
@@ -464,4 +470,3 @@ if __name__ == '__main__':
     else: 
         # loop over all list of files and save multiple .h5 file
         save_single(args)
-        
