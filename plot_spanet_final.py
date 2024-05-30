@@ -392,7 +392,9 @@ matching= {
     0: 'no had top',
 }
 
-def plot_single_categories(match=match_label,out=out,y=y,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
+def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
+                            w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
+                            match=match_label,out=out,y=y,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
                            colors=[  '#1f77b4',
                                      '#ff7f0e',
                                      '#2ca02c',
@@ -446,6 +448,33 @@ def plot_single_categories(match=match_label,out=out,y=y,sample='sig',obj='top',
                         f'Reco (priority to lep top)',
                     ],    
                 )
+    elif obj == 'W':  
+        ax.hist([     
+                    target_w,
+                    w_mass,
+                    w,
+                    max_idxs_multi_w_mass,
+                    w_mass_min,
+                    ],
+                    bins=b,
+                    alpha=0.8,
+                    weights=[
+                        1*(match==category)*(label),
+                        1*(match==category)*(label),
+                        1*(match==category)*(label),
+                        1*(match==category)*(label),
+                        1*(match==category)*(label),
+                    ],
+                    stacked=False,
+                    color=colors[:7],
+                    label=[
+                        f'Truth matched',
+                        f'Reco (priority from detection prob)',
+                        f'Default algo (based on assignment prob)',
+                        f'Reco (priority to had top)',
+                        f'Reco (priority to lep top)',
+                    ],    
+                )    
     ax.set_ylabel('Events (a.u.)')
     if obj=='top': ax.set_xlabel(f'top cand {obs} [GeV]',loc='right')
     elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
