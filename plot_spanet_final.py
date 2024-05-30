@@ -490,7 +490,7 @@ if __name__ == "__main__":
     w = get_observable(pt,phi,eta,mass,out[1],masks,thr=0.,reco='W',obs='mass')
     target_w = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='W',obs='mass')
 
-    for sample in ['sig','bkg']:
+    for sample in ['all','sig','bkg']:
         for category in [6,3,0,1,2,4,5]:
             for obj in ['top','W']:
                 for obs in ['mass','pt']:
