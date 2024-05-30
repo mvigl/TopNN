@@ -271,7 +271,7 @@ onnx.checker.check_model(onnx_model)
 with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :   
     samples = np.arange(len(h5fw['INPUTS']['Momenta']['pt'][:]))
     np.random.shuffle(samples)
-    samples = samples[:10000]
+    samples = samples[:1000000]
     pt = h5fw['INPUTS']['Momenta']['pt'][:][samples]
     eta = h5fw['INPUTS']['Momenta']['eta'][:][samples]
     phi = h5fw['INPUTS']['Momenta']['phi'][:][samples]
@@ -407,7 +407,7 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
                                      '#17becf']):
     
     if obj=='top': b=np.linspace(0,400,40)
-    elif obj=='W': b=np.linspace(0,140,40)
+    elif obj=='W': b=np.linspace(40,140,40)
     elif obj=='top_pair': b=np.linspace(0,400,40)
     elif obj=='W_pair': b=np.linspace(0,140,40)
     if obs=='TopNN_score': b=np.linspace(0,1,40)
