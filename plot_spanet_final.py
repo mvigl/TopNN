@@ -478,10 +478,10 @@ colors = prop_cycle.by_key()['color']
 if __name__ == "__main__":
 
     with h5py.File('/u/mvigl/Stop/run/Plotting/results/results.h5','r') as evals :
-        baseline_top_pt = evals['top_pt'][:][samples]
-        baseline_top_mass = evals['top_mass'][:][samples]
-        baseline_W_pt = evals['W_pt'][:][samples]
-        baseline_W_mass = evals['W_mass'][:][samples]
+        baseline_top_pt = evals['top_pt'][:]#[samples]
+        baseline_top_mass = evals['top_mass'][:]#[samples]
+        baseline_W_pt = evals['W_pt'][:]#[samples]
+        baseline_W_mass = evals['W_mass'][:]#[samples]
     
     had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min = get_best(outputs)
     lep_top = np.concatenate((lep_top,np.ones(len(lep_top)).reshape(len(lep_top),-1)*7),axis=-1).astype(int)
