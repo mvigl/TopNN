@@ -447,8 +447,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
         ax.hist(target_ltop,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0],lw=2)
         ax.hist(lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
         ax.hist(ltop,weights=1*(targets_lt[:,0]!=-1),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
-        ax.hist(max_idxs_multi_lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
-        ax.hist(lep_top_mass_min,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
+        ax.hist(lep_top_mass_min,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
+        ax.hist(max_idxs_multi_lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
     else: 
         return    
     ax.set_ylabel('Events (a.u.)')
