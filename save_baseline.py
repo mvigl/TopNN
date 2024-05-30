@@ -130,7 +130,7 @@ variables = ['counts',
 #-1 for leptonic decaying top or if topp(topn) doesn't exist
 
 
-def get_inputs(file,samples,idmap):
+def get_inputs(file,samples):
     
     with h5py.File(file, 'r') as f:
         i=0
