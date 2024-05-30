@@ -273,6 +273,9 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_input
     np.random.shuffle(samples)
     #samples = samples[:1000000]
     samples = samples[:10000]
+    #y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:][samples]
+    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
+    samples = (y==1)
     pt = h5fw['INPUTS']['Momenta']['pt'][:][samples]
     eta = h5fw['INPUTS']['Momenta']['eta'][:][samples]
     phi = h5fw['INPUTS']['Momenta']['phi'][:][samples]
@@ -315,7 +318,6 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_input
                     h5fw['INPUTS']['Met']['nVx'][:][samples]]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
     Met_mask = np.ones((len(Momenta_mask),1)).astype(bool)
 
-    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:][samples]
 print('Momenta_data : ', Momenta_data.shape)  
 print('Momenta_mask : ', Momenta_mask.shape)  
 print('Met_data : ', Met_data.shape)    
