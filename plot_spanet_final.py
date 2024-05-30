@@ -505,8 +505,8 @@ if __name__ == "__main__":
 
     for sample in ['all','sig','bkg']:
         for category in [6,3,0,1,2,4,5]:
-            for obj in ['top','W']:
-                for obs in ['mass','pt']:
+            for obj in ['top','W','ltop']:
+                for obs in ['mass']:#,'pt']:
                     if (obj=='W' and obs=='pt'): continue
                     plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                                            w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
