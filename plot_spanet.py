@@ -567,4 +567,4 @@ if __name__ == "__main__":
                       
     #dm
     for region in ['all','1b','2b']:
-        get_auc(labels,signal,weights,masses,m1=0,m2=0,region=region)                    
+        get_auc(labels,signal,weights,masses,m1=0,m2=0,region=region)
