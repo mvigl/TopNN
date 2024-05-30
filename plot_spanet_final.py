@@ -422,59 +422,17 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     elif sample == 'bkg': label = (y==0)
 
     if obj == 'top':  
-        ax.hist([     
-                    target_top,
-                    had_top_mass,
-                    top,
-                    max_idxs_multi_had_top_mass,
-                    had_top_mass_min,
-                    ],
-                    bins=b,
-                    alpha=0.8,
-                    weights=[
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                    ],
-                    stacked=False,
-                    color=colors[:5],
-                    label=[
-                        f'Truth matched',
-                        f'Reco (priority from detection prob)',
-                        f'Default algo (based on assignment prob)',
-                        f'Reco (priority to had top)',
-                        f'Reco (priority to lep top)',
-                    ],    
-                )
+        ax.hist(target_top,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
+        ax.hist(had_top_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
+        ax.hist(top,weights=1*(match==category)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
+        ax.hist(max_idxs_multi_had_top_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
+        ax.hist(had_top_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
     elif obj == 'W':  
-        ax.hist([     
-                    target_w,
-                    w_mass,
-                    w,
-                    max_idxs_multi_w_mass,
-                    w_mass_min,
-                    ],
-                    bins=b,
-                    alpha=0.8,
-                    weights=[
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                        1*(match==category)*(label),
-                    ],
-                    stacked=False,
-                    color=colors[:5],
-                    label=[
-                        f'Truth matched',
-                        f'Reco (priority from detection prob)',
-                        f'Default algo (based on assignment prob)',
-                        f'Reco (priority to had top)',
-                        f'Reco (priority to lep top)',
-                    ],    
-                )    
+        ax.hist(target_w,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
+        ax.hist(w_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
+        ax.hist(w,weights=1*(match==category)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
+        ax.hist(max_idxs_multi_w_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
+        ax.hist(w_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
     ax.set_ylabel('Events (a.u.)')
     if obj=='top': ax.set_xlabel(f'top cand {obs} [GeV]',loc='right')
     elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
