@@ -7,17 +7,15 @@ import h5py
 import os
 
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('--filelist', help='data',default='train_list_testing.txt')
-parser.add_argument('--split', help='train,test,val',default='train')
+parser.add_argument('--filelist', help='data',default='list_all.txt')
+parser.add_argument('--split', help='train,test,val',default='test')
 parser.add_argument('--out_dir', help='out_dir',default='H5_samples')
 args = parser.parse_args()
 
 def split_data(length,array,dataset='test'):
     idx_train = int(length*0.95)
     if dataset=='train': return array[:idx_train] 
-    if dataset=='test': 
-        if length-idx_train> 200000: return array[length-200000:] 
-        else: return array[idx_train:]    
+    if dataset=='test': return array[idx_train:] 
     if dataset=='full': return array[:]  
     else:       
         print('choose: train, val, test')
@@ -163,8 +161,7 @@ variables = ['counts',
             'WeightEvents',
             ]
 
-dataset = args.dataset
-out_dir = f'{args.out_dir}_{dataset}/'
+dataset = args.split
 with open(args.filelist) as f:
     for line in f:
         filename = line.strip()
@@ -172,12 +169,14 @@ with open(args.filelist) as f:
         with uproot.open({filename: "stop1L_NONE;1"}) as tree:
             branches = tree.arrays(Features)
             multiplets,labels,out_truth_info = get_data(branches,dataset=dataset)
+            out_dir = f'{args.out_dir}_{dataset}/'
             if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+            dir_index = filename.index("/mc2")
             data_index = filename.index("/MC")
+            out_2 = out_dir + (filename[data_index:dir_index])
+            if (not os.path.exists(out_2)): os.system(f'mkdir {out_2}')
             out_dir = out_dir + (filename[data_index:]).replace(".root",f"_{dataset}.h5")
             with h5py.File(out_dir, 'w') as out_file: 
                 out_file.create_dataset('multiplets', data=multiplets,compression="gzip")
                 out_file.create_dataset('labels', data=labels.reshape(-1),dtype='i4',compression="gzip")
                 out_file.create_dataset('variables', data=out_truth_info,compression="gzip")
-
-    
