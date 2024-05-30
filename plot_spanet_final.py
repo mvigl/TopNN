@@ -269,6 +269,7 @@ onnx_model = onnx.load("/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx")
 onnx.checker.check_model(onnx_model)
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :   
+    samples = np.random.shuffle(np.arange(len(h5fw['INPUTS']['Momenta']['pt'][:])))[:10000]
     pt = h5fw['INPUTS']['Momenta']['pt'][:]
     eta = h5fw['INPUTS']['Momenta']['eta'][:]
     phi = h5fw['INPUTS']['Momenta']['phi'][:]
@@ -371,6 +372,7 @@ def get_best(outputs):
     return had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min
 
 ort_sess = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx")
+
 outputs = ort_sess.run(None, {'Momenta_data': Momenta_data,
                               'Momenta_mask': Momenta_mask,
                               'Met_data': Met_data,
