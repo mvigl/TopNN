@@ -276,6 +276,7 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_input
     #y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:][samples]
     y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
     samples = (y==1)
+    y = y[samples]
     pt = h5fw['INPUTS']['Momenta']['pt'][:][samples]
     eta = h5fw['INPUTS']['Momenta']['eta'][:][samples]
     phi = h5fw['INPUTS']['Momenta']['phi'][:][samples]
