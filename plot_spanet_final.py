@@ -474,7 +474,7 @@ colors = prop_cycle.by_key()['color']
 
 if __name__ == "__main__":
 
-    with h5py.File('results.h5','r') as evals :
+    with h5py.File('/u/mvigl/Stop/run/Plotting/results/results.h5','r') as evals :
         baseline_top_pt = evals['top_pt'][:][samples]
         baseline_top_mass = evals['top_mass'][:][samples]
         baseline_W_pt = evals['W_pt'][:][samples]
