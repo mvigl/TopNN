@@ -399,7 +399,7 @@ matching= {
 def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                             w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
                             lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
-                            baseline_top_mass,baseline_W_mass,
+                            baseline_top_mass,baseline_W_mass,targets_lt,
                             match=match_label,out=out,y=y,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
                            colors=[  '#1f77b4',
                                      '#ff7f0e',
@@ -423,6 +423,7 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     elif obs=='pt': b=np.linspace(0,1000,40)
     fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
     plt.title(f'{algo} {matching[category]} {sample}')
+    if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
     
     label = np.ones_like(top)
     if sample == 'sig': label = (y==1)
@@ -443,15 +444,17 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
         ax.hist(w_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
         ax.hist(baseline_W_mass,weights=1*(match==category)*(label),histtype='step',label='Reco baseline',density=False,bins=b,color=colors[5])
     elif obj == 'leptop':  
-        if category > 4: ax.hist(target_ltop,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
-        ax.hist(lep_top_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
-        ax.hist(ltop,weights=1*(match==category)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
-        ax.hist(max_idxs_multi_lep_top_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
-        ax.hist(lep_top_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
+        ax.hist(target_ltop,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
+        ax.hist(lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
+        ax.hist(ltop,weights=1*(targets_lt[:,0]!=-1),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
+        ax.hist(max_idxs_multi_lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
+        ax.hist(lep_top_mass_min,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
+    else: 
+        return    
     ax.set_ylabel('Events (a.u.)')
     if obj=='top': ax.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
     elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
-    elif obj=='leptop': ax.set_xlabel(f'leo top cand {obs} [GeV]',loc='right')
+    elif obj=='leptop': ax.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
     elif obs=='TopNN_score': ax.set_xlabel('top cand score',loc='right')
     elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
     elif obs=='truth_top_min_dR_m': ax.set_xlabel('true top Mass [GeV]',loc='right')
@@ -512,10 +515,11 @@ if __name__ == "__main__":
             for obj in ['top','W','leptop']:
                 for obs in ['mass']:#,'pt']:
                     if (obj=='W' and obs=='pt'): continue
+                    if (obj=='leptop' and category!=6): continue
                     plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                                            w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
                                            lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
-                                           baseline_top_mass,baseline_W_mass,
+                                           baseline_top_mass,baseline_W_mass,targets_lt,
                                             sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
 
    
