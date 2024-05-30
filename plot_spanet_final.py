@@ -446,8 +446,9 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
         ax.hist(max_idxs_multi_lep_top_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(lep_top_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
     ax.set_ylabel('Events (a.u.)')
-    if obj=='top': ax.set_xlabel(f'top cand {obs} [GeV]',loc='right')
+    if obj=='top': ax.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
     elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
+    elif obj=='leptop': ax.set_xlabel(f'leo top cand {obs} [GeV]',loc='right')
     elif obs=='TopNN_score': ax.set_xlabel('top cand score',loc='right')
     elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
     elif obs=='truth_top_min_dR_m': ax.set_xlabel('true top Mass [GeV]',loc='right')
@@ -505,7 +506,7 @@ if __name__ == "__main__":
 
     for sample in ['all','sig','bkg']:
         for category in [6,3,0,1,2,4,5]:
-            for obj in ['top','W','ltop']:
+            for obj in ['top','W','leptop']:
                 for obs in ['mass']:#,'pt']:
                     if (obj=='W' and obs=='pt'): continue
                     plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
