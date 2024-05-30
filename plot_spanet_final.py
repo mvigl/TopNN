@@ -254,7 +254,7 @@ def get_observable_leptop(pt,phi,eta,mass,predictions,mask_predictions=None,dete
     return observable
 
 session = onnxruntime.InferenceSession(
-    "/Users/matthiasvigl/Documents/Physics/Stop/TopReco/spanet.onnx", 
+    "/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx", 
     providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
 )
 
