@@ -413,7 +413,7 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
                                      '#17becf']):
     
     if obj=='top': b=np.linspace(50,400,60)
-    elif obj=='leptop': b=np.linspace(50,400,60)
+    elif obj=='leptop': b=np.linspace(0,400,60)
     elif obj=='W': b=np.linspace(0,200,40)
     elif obj=='top_pair': b=np.linspace(0,400,40)
     elif obj=='W_pair': b=np.linspace(0,140,40)
@@ -430,21 +430,21 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     elif sample == 'bkg': label = (y==0)
 
     if obj == 'top':  
-        if category > 4: ax.hist(target_top,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
+        if category > 4: ax.hist(target_top,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0],lw=2)
         ax.hist(had_top_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
         ax.hist(top,weights=1*(match==category)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
         ax.hist(max_idxs_multi_had_top_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(had_top_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
         ax.hist(baseline_top_mass,weights=1*(match==category)*(label),histtype='step',label='Reco baseline',density=False,bins=b,color=colors[5])
     elif obj == 'W':  
-        if category > 4: ax.hist(target_w,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
+        if category > 4: ax.hist(target_w,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0],lw=2)
         ax.hist(w_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
         ax.hist(w,weights=1*(match==category)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
         ax.hist(max_idxs_multi_w_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(w_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
         ax.hist(baseline_W_mass,weights=1*(match==category)*(label),histtype='step',label='Reco baseline',density=False,bins=b,color=colors[5])
     elif obj == 'leptop':  
-        ax.hist(target_ltop,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
+        ax.hist(target_ltop,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0],lw=2)
         ax.hist(lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
         ax.hist(ltop,weights=1*(targets_lt[:,0]!=-1),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
         ax.hist(max_idxs_multi_lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
@@ -474,7 +474,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     out_dir = f'Categories/Single_Categories/{obj}/{obs}/{sample}'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-    fig.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}.png')
+    if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}.png')
+    else: fig.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}.png')
 
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
