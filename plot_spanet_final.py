@@ -406,7 +406,7 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
                                      '#bcbd22',
                                      '#17becf']):
     
-    if obj=='top': b=np.linspace(0,400,40)
+    if obj=='top': b=np.linspace(50,400,40)
     elif obj=='W': b=np.linspace(40,140,40)
     elif obj=='top_pair': b=np.linspace(0,400,40)
     elif obj=='W_pair': b=np.linspace(0,140,40)
