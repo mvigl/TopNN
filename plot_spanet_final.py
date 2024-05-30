@@ -370,7 +370,7 @@ def get_best(outputs):
 
     return had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min
 
-ort_sess = ort.InferenceSession("/Users/matthiasvigl/Documents/Physics/Stop/TopReco/spanet_log_norm.onnx")
+ort_sess = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx")
 outputs = ort_sess.run(None, {'Momenta_data': Momenta_data,
                               'Momenta_mask': Momenta_mask,
                               'Met_data': Met_data,
