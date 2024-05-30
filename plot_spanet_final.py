@@ -395,6 +395,7 @@ matching= {
 def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                             w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
                             lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
+                            baseline_top_mass,baseline_W_mass,
                             match=match_label,out=out,y=y,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
                            colors=[  '#1f77b4',
                                      '#ff7f0e',
@@ -429,12 +430,14 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
         ax.hist(top,weights=1*(match==category)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
         ax.hist(max_idxs_multi_had_top_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(had_top_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
+        ax.hist(baseline_top_mass,weights=1*(match==category)*(label),histtype='step',label='Reco baseline',density=False,bins=b,color=colors[5])
     elif obj == 'W':  
         if category > 4: ax.hist(target_w,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
         ax.hist(w_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
         ax.hist(w,weights=1*(match==category)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
         ax.hist(max_idxs_multi_w_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(w_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
+        ax.hist(baseline_W_mass,weights=1*(match==category)*(label),histtype='step',label='Reco baseline',density=False,bins=b,color=colors[5])
     elif obj == 'leptop':  
         if category > 4: ax.hist(target_ltop,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0])
         ax.hist(lep_top_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
@@ -469,6 +472,12 @@ prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
 
 if __name__ == "__main__":
+
+    with h5py.File('results.h5','r') as evals :
+        baseline_top_pt = evals['top_pt'][:][samples]
+        baseline_top_mass = evals['top_mass'][:][samples]
+        baseline_W_pt = evals['W_pt'][:][samples]
+        baseline_W_mass = evals['W_mass'][:][samples]
     
     had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min = get_best(outputs)
     lep_top = np.concatenate((lep_top,np.ones(len(lep_top)).reshape(len(lep_top),-1)*7),axis=-1).astype(int)
@@ -501,6 +510,7 @@ if __name__ == "__main__":
                     plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                                            w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
                                            lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
+                                           baseline_top_mass,baseline_W_mass,
                                             sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
 
    
