@@ -439,7 +439,7 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
                         1*(match==category)*(label),
                     ],
                     stacked=False,
-                    color=colors[:7],
+                    color=colors[:5],
                     label=[
                         f'Truth matched',
                         f'Reco (priority from detection prob)',
