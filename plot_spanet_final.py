@@ -269,7 +269,9 @@ onnx_model = onnx.load("/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx")
 onnx.checker.check_model(onnx_model)
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :   
-    samples = np.random.shuffle(np.arange(len(h5fw['INPUTS']['Momenta']['pt'][:])))[:10000]
+    samples = np.arange(len(h5fw['INPUTS']['Momenta']['pt'][:]))
+    np.random.shuffle(samples)
+    samples = samples[:10000]
     pt = h5fw['INPUTS']['Momenta']['pt'][samples]
     eta = h5fw['INPUTS']['Momenta']['eta'][samples]
     phi = h5fw['INPUTS']['Momenta']['phi'][samples]
