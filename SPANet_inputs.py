@@ -8,9 +8,9 @@ import os
 import yaml
 
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('--filelist', help='data',default='data/root/list_sig_FS_testing.txt')
-parser.add_argument('--split', help='train,test,val',default='test')
-parser.add_argument('--out_dir', help='out_dir',default='SPANet_all_8_cat')
+parser.add_argument('--filelist', help='data',default='data/root/list_all.txt')
+parser.add_argument('--split', help='train,test,val',default='train')
+parser.add_argument('--out_dir', help='out_dir',default='SPANet_all_8_cat_final')
 parser.add_argument('--combine',  action='store_true', help='combine', default=True)
 parser.add_argument('--bkg_targets',  action='store_true', help='bkg_targets', default=True)
 parser.add_argument('--massgrid', help='massgrid',default='/raven/u/mvigl/Stop/TopNN/data/stop_masses.yaml')
