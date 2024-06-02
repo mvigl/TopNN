@@ -149,6 +149,7 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
             inputs[var][:,7] += ak.Array(branches['lep1'+var][filter]).to_numpy()
             inputs[var][:,6] += ak.Array(branches['bjet3'+var][filter]).to_numpy()
             (inputs[var])[inputs[var]==-999]=0.
+            (inputs[var])[inputs[var]==-10]=0.
             inputs[var] = split_data(length,inputs[var],dataset=dataset)
     mask = (inputs['pT']>0)
     inputs['btag'][mask==False]=0.
