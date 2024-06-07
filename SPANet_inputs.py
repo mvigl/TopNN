@@ -267,6 +267,9 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
         'EventNumber': split_data(length,branches['EventNumber'][filter].to_numpy(),dataset=dataset),
         'is_matched': split_data(length,(branches['multiplets'][filter,0,-1]==1).to_numpy(),dataset=dataset)
     }
+    truth_info['training_weights'] = np.abs(truth_info['WeightEvents'])
+    for w in ['WeightEventsbTag','WeightEventselSF','WeightEventsJVT','WeightEventsmuSF','WeightEventsPU','WeightEventsSF_global','WeightEvents_trigger_ele_single','WeightEvents_trigger_mu_single']:
+        truth_info['training_weights']*=truth_info[w]
     return mask,inputs,targets,truth_info,met
 
 def get_data(branches,massgrid,dataset='train',sig=True,number=3456,bkg_targets=False):
@@ -366,6 +369,8 @@ def save_combined(args):
                 Met.create_dataset('nbjet', data=met['nbjet'],dtype='int64') 
                 Met.create_dataset('nljet', data=met['nljet'],dtype='int64') 
                 Met.create_dataset('nVx', data=met['nVx'],dtype='int64')
+                Met.create_dataset('M1', data=out_truth_info['M1'],dtype='float32')   
+                Met.create_dataset('M2', data=out_truth_info['M2'],dtype='float32')   
 
                 targets_group = out_file.create_group('TARGETS')
                 ht = targets_group.create_group(f'ht')
@@ -378,6 +383,10 @@ def save_combined(args):
 
                 regressions_group = out_file.create_group('REGRESSIONS')
                 regression = regressions_group.create_group(f'EVENT')
+
+                weights_group = out_file.create_group('WEIGHTS')
+                weights = weights_group.create_group(f'EVENT')
+                weights.create_dataset('event_weights',data=out_truth_info['training_weights'],dtype='float32')
 
                 truth_info_group = out_file.create_group('truth_info')
                 for info in out_truth_info.keys():
@@ -445,6 +454,8 @@ def save_single(args):
                         Met.create_dataset('nbjet', data=met['nbjet'],dtype='int64') 
                         Met.create_dataset('nljet', data=met['nljet'],dtype='int64') 
                         Met.create_dataset('nVx', data=met['nVx'],dtype='int64')
+                        Met.create_dataset('M1', data=out_truth_info['M1'],dtype='float32')   
+                        Met.create_dataset('M2', data=out_truth_info['M2'],dtype='float32')   
 
                         targets_group = out_file.create_group('TARGETS')
                         ht = targets_group.create_group(f'ht')
@@ -457,6 +468,10 @@ def save_single(args):
 
                         regressions_group = out_file.create_group('REGRESSIONS')
                         regression = regressions_group.create_group(f'EVENT')
+
+                        weights_group = out_file.create_group('WEIGHTS')
+                        weights = weights_group.create_group(f'EVENT')
+                        weights.create_dataset('event_weights',data=out_truth_info['training_weights'],dtype='float32')
 
                         truth_info_group = out_file.create_group('truth_info')
                         for info in out_truth_info.keys():
