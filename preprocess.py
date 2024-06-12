@@ -163,20 +163,24 @@ variables = ['counts',
 
 dataset = args.split
 with open(args.filelist) as f:
+    i=0
+    out_dir = f'{args.out_dir}_{dataset}/'
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     for line in f:
         filename = line.strip()
         print('reading : ',filename)
         with uproot.open({filename: "stop1L_NONE;1"}) as tree:
-            branches = tree.arrays(Features)
-            multiplets,labels,out_truth_info = get_data(branches,dataset=dataset)
-            out_dir = f'{args.out_dir}_{dataset}/'
-            if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-            dir_index = filename.index("/mc2")
-            data_index = filename.index("/MC")
-            out_2 = out_dir + (filename[data_index:dir_index])
-            if (not os.path.exists(out_2)): os.system(f'mkdir {out_2}')
-            out_dir = out_dir + (filename[data_index:]).replace(".root",f"_{dataset}.h5")
-            with h5py.File(out_dir, 'w') as out_file: 
-                out_file.create_dataset('multiplets', data=multiplets,compression="gzip")
-                out_file.create_dataset('labels', data=labels.reshape(-1),dtype='i4',compression="gzip")
-                out_file.create_dataset('variables', data=out_truth_info,compression="gzip")
+            if i==0:
+                branches = tree.arrays(Features)
+                multiplets,labels,out_truth_info = get_data(branches,dataset=dataset)
+            else:
+                branches = tree.arrays(Features)
+                multiplets_i,labels_i,out_truth_info_i = get_data(branches,dataset=dataset)
+                multiplets=np.concatenate((multiplets,multiplets_i),axis=0)
+                labels=np.concatenate((labels,labels_i),axis=0)
+                out_truth_info=np.concatenate((out_truth_info,out_truth_info_i),axis=0)
+        i+=1
+    with h5py.File(f'{out_dir}multiplets_{dataset}.h5', 'w') as out_file: 
+        out_file.create_dataset('multiplets', data=multiplets,compression="gzip")
+        out_file.create_dataset('labels', data=labels.reshape(-1),dtype='i4',compression="gzip")
+        out_file.create_dataset('variables', data=out_truth_info,compression="gzip")
