@@ -7,6 +7,9 @@ import onnxruntime as ort
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import awkward as ak
+import onnxruntime
+from sklearn.metrics import roc_curve,auc
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--data', help='data',default='data/root/list_sig_FS_testing.txt')
@@ -16,6 +19,34 @@ args = parser.parse_args()
 from typing import List
 import numba
 from numba import njit
+
+variables = ['counts',
+            'truth_top_min_dR',
+            'truth_top_min_dR_m',
+            'truth_top_min_dR_jj',
+            'truth_top_min_dR_m_jj',
+            'truth_topp_match',
+            'truth_topm_match',
+            'truth_topp_pt',
+            'truth_topm_pt',
+            'truth_Wp_pt',
+            'truth_Wm_pt',
+            'WeightEvents',
+            ]
+
+inputs_baseline = [  'bjet_pT',
+            'jet1_pT',
+            'jet2_pT',
+            'bjet_eta',
+            'jet1_eta',
+            'jet2_eta',
+            'bjet_phi',
+            'jet1_phi',
+            'jet2_phi',
+            'bjet_M',
+            'jet1_M',
+            'jet2_M',
+]
 
 TArray = np.ndarray
 
@@ -269,54 +300,48 @@ onnx_model = onnx.load("/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx")
 onnx.checker.check_model(onnx_model)
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :   
-    samples = np.arange(len(h5fw['INPUTS']['Momenta']['pt'][:]))
-    np.random.shuffle(samples)
-    #samples = samples[:1000000]
-    samples = samples[:10000]
-    #y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:][samples]
+    #y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
     y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
-    samples = (y==1)
-    y = y[samples]
-    pt = h5fw['INPUTS']['Momenta']['pt'][:][samples]
-    eta = h5fw['INPUTS']['Momenta']['eta'][:][samples]
-    phi = h5fw['INPUTS']['Momenta']['phi'][:][samples]
-    mass = h5fw['INPUTS']['Momenta']['mass'][:][samples]
-    masks = h5fw['INPUTS']['Momenta']['MASK'][:][samples]
-    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:][samples],h5fw['TARGETS']['ht']['q1'][:][samples],h5fw['TARGETS']['ht']['q2'][:][samples]))
-    targets_lt = h5fw['TARGETS']['lt']['b'][:][samples]
+    pt = h5fw['INPUTS']['Momenta']['pt'][:]
+    eta = h5fw['INPUTS']['Momenta']['eta'][:]
+    phi = h5fw['INPUTS']['Momenta']['phi'][:]
+    mass = h5fw['INPUTS']['Momenta']['mass'][:]
+    masks = h5fw['INPUTS']['Momenta']['MASK'][:]
+    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:],h5fw['TARGETS']['ht']['q1'][:],h5fw['TARGETS']['ht']['q2'][:]))
+    targets_lt = h5fw['TARGETS']['lt']['b'][:]
     targets_lt = targets_lt.reshape((len(targets_lt),-1))
     targets_lt = np.concatenate((targets_lt,np.ones(len(targets_lt)).reshape(len(targets_lt),-1)*7),axis=-1).astype(int)
-    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:][samples]
-    nbs = h5fw['truth_info']['nbjet'][:][samples]
-    is_matched = h5fw['truth_info']['is_matched'][:][samples]
+    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:]
+    nbs = h5fw['truth_info']['nbjet'][:]
+    is_matched = h5fw['truth_info']['is_matched'][:]
      
-    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:][samples],
-                    h5fw['INPUTS']['Momenta']['pt'][:][samples],
-                    h5fw['INPUTS']['Momenta']['eta'][:][samples],
-                    h5fw['INPUTS']['Momenta']['phi'][:][samples],
-                    h5fw['INPUTS']['Momenta']['btag'][:][samples],
-                    h5fw['INPUTS']['Momenta']['qtag'][:][samples],
-                    h5fw['INPUTS']['Momenta']['etag'][:][samples]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
-    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:][samples]).astype(bool)
+    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:],
+                    h5fw['INPUTS']['Momenta']['pt'][:],
+                    h5fw['INPUTS']['Momenta']['eta'][:],
+                    h5fw['INPUTS']['Momenta']['phi'][:],
+                    h5fw['INPUTS']['Momenta']['btag'][:],
+                    h5fw['INPUTS']['Momenta']['qtag'][:],
+                    h5fw['INPUTS']['Momenta']['etag'][:]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
+    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:]).astype(bool)
 
-    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:][samples],
-                    h5fw['INPUTS']['Met']['METsig'][:][samples],
-                    h5fw['INPUTS']['Met']['METphi'][:][samples],
-                    h5fw['INPUTS']['Met']['MET_Soft'][:][samples],
-                    h5fw['INPUTS']['Met']['MET_Jet'][:][samples],
-                    h5fw['INPUTS']['Met']['MET_Ele'][:][samples],
-                    h5fw['INPUTS']['Met']['MET_Muon'][:][samples],
-                    h5fw['INPUTS']['Met']['mT_METl'][:][samples],
-                    h5fw['INPUTS']['Met']['dR_bb'][:][samples],
-                    h5fw['INPUTS']['Met']['dphi_METl'][:][samples],
-                    h5fw['INPUTS']['Met']['MT2_bb'][:][samples],
-                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:][samples],
-                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:][samples],
-                    h5fw['INPUTS']['Met']['MT2_min'][:][samples],
-                    h5fw['INPUTS']['Met']['HT'][:][samples],
-                    h5fw['INPUTS']['Met']['nbjet'][:][samples],
-                    h5fw['INPUTS']['Met']['nljet'][:][samples],
-                    h5fw['INPUTS']['Met']['nVx'][:][samples]]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
+    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:],
+                    h5fw['INPUTS']['Met']['METsig'][:],
+                    h5fw['INPUTS']['Met']['METphi'][:],
+                    h5fw['INPUTS']['Met']['MET_Soft'][:],
+                    h5fw['INPUTS']['Met']['MET_Jet'][:],
+                    h5fw['INPUTS']['Met']['MET_Ele'][:],
+                    h5fw['INPUTS']['Met']['MET_Muon'][:],
+                    h5fw['INPUTS']['Met']['mT_METl'][:],
+                    h5fw['INPUTS']['Met']['dR_bb'][:],
+                    h5fw['INPUTS']['Met']['dphi_METl'][:],
+                    h5fw['INPUTS']['Met']['MT2_bb'][:],
+                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:],
+                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:],
+                    h5fw['INPUTS']['Met']['MT2_min'][:],
+                    h5fw['INPUTS']['Met']['HT'][:],
+                    h5fw['INPUTS']['Met']['nbjet'][:],
+                    h5fw['INPUTS']['Met']['nljet'][:],
+                    h5fw['INPUTS']['Met']['nVx'][:]]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
     Met_mask = np.ones((len(Momenta_mask),1)).astype(bool)
 
 print('Momenta_data : ', Momenta_data.shape)  
@@ -330,7 +355,26 @@ inputs['Momenta_mask'] = Momenta_mask
 inputs['Met_data'] = Met_data
 inputs['Met_mask'] = Met_mask
 
-inputs.keys()
+def baseline_target_vars(pt,targets):
+    pt = pt[np.arange(len(targets))[:, np.newaxis], targets]
+    return pt
+
+with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5",'r') as h5fw :   
+    counts = np.array(h5fw['variables'][:,variables.index('counts')])
+    multiplets = h5fw['multiplets'][:]
+    vars = h5fw['variables'][:]
+    labels = h5fw['labels'][:]
+
+ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx")
+outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
+
+multiplets_evt = (ak.unflatten(multiplets, counts.astype(int)))
+labels_evt = ((ak.unflatten(ak.Array(labels), counts.astype(int)))[:,0]==1)
+max_baseline = np.array(ak.max(ak.unflatten(ak.Array(outputs_baseline[0]), counts.astype(int)),axis=1)).reshape(-1)
+max_baseline_idx = (ak.argmax(ak.unflatten(ak.Array(outputs_baseline[0]), counts.astype(int)),axis=1))
+triplets_baseline = multiplets_evt[max_baseline_idx][:,:,2]>0
+pair_baseline = multiplets_evt[max_baseline_idx][:,:,2]==0
+target_pt_baseline = baseline_target_vars(pt,targets)
 
 def get_best(outputs):
     #priority to had top
@@ -377,7 +421,7 @@ def get_best(outputs):
 
     return had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min
 
-ort_sess = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx")
+ort_sess = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_v2_log_norm.onnx")
 
 outputs = ort_sess.run(None, {'Momenta_data': Momenta_data,
                               'Momenta_mask': Momenta_mask,
@@ -480,47 +524,81 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
 
+def get_auc(targets,predictions,title):
+    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets),predictions)
+    Auc_sig = auc(fpr_sig,tpr_sig)
+    plt.plot(fpr_sig,tpr_sig,label=f'auc : {Auc_sig:.2f}')
+    plt.title(f'{title}')
+    plt.legend()
+    plt.savefig(f'{title}.pdf')
+
+def get_auc_vs(targets_spanet,predictions_spanet,targets_base,predictions_base,title):
+    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_spanet),predictions_spanet)
+    Auc_sig_spanet = auc(fpr_sig,tpr_sig)
+    plt.plot(fpr_sig,tpr_sig,label=f'spanet auc : {Auc_sig_spanet:.2f}')
+    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_base),predictions_base)
+    Auc_sig_base = auc(fpr_sig,tpr_sig)
+    plt.plot(fpr_sig,tpr_sig,label=f'baseline auc : {Auc_sig_base:.2f}')
+    plt.title(f'{title}')
+    plt.legend()
+    plt.savefig(f'{title}.pdf')
+
 if __name__ == "__main__":
 
-    with h5py.File('/u/mvigl/Stop/run/Plotting/results/results.h5','r') as evals :
-        baseline_top_pt = evals['top_pt'][:]#[samples]
-        baseline_top_mass = evals['top_mass'][:]#[samples]
-        baseline_W_pt = evals['W_pt'][:]#[samples]
-        baseline_W_mass = evals['W_mass'][:]#[samples]
-    
+    get_auc(labels,outputs_baseline[0],'baseline_auc')
+    get_auc_vs(labels_evt,(outputs[-1][:,-1]+(outputs[-1][:,-2])),labels_evt,max_baseline,'tagging_5_6_spanet_vs_baseline')
+    get_auc_vs(labels_evt[y==1],(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==1],labels_evt[y==1],max_baseline[y==1],'tagging_5_6_spanet_vs_baseline_sig')
+    get_auc_vs(labels_evt[y==0],(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==0],labels_evt[y==0],max_baseline[y==0],'tagging_5_6_spanet_vs_baseline_bkg')
+
+    print('baseline accuracy on pairs : ', np.sum((np.sum(target_pt_baseline[(match_label==5)][:,:2]==(np.array(multiplets_evt[max_baseline_idx][:,:,:2]).reshape(-1,2)[(match_label==5)]),axis=-1)==2)*pair_baseline[(match_label==5)])/np.sum(match_label==5))
+    print('baseline accuracy on triplets : ', np.sum(
+    ((np.sum(target_pt_baseline[(match_label==6)][:,:3]==(np.array(multiplets_evt[max_baseline_idx][:,:,:3]).reshape(-1,3)[(match_label==6)]),axis=-1)==3)
+    +(np.sum(target_pt_baseline[(match_label==6)][:,[0,2,1]]==(np.array(multiplets_evt[max_baseline_idx][:,:,:3]).reshape(-1,3)[(match_label==6)]),axis=-1)==3))
+    )/np.sum(match_label==6))
+
     had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min = get_best(outputs)
     lep_top = np.concatenate((lep_top,np.ones(len(lep_top)).reshape(len(lep_top),-1)*7),axis=-1).astype(int)
     max_idxs_multi_lep_top = np.concatenate((max_idxs_multi_lep_top,np.ones(len(max_idxs_multi_lep_top)).reshape(len(max_idxs_multi_lep_top),-1)*7),axis=-1).astype(int)
     lep_top_min = np.concatenate((lep_top_min,np.ones(len(lep_top_min)).reshape(len(lep_top_min),-1)*7),axis=-1).astype(int)
-
-    had_top_mass = get_observable(pt,phi,eta,mass,had_top,masks,thr=0.,reco='top',obs='mass')
-    had_top_mass_min = get_observable(pt,phi,eta,mass,had_top_min,masks,thr=0.,reco='top',obs='mass')
-    max_idxs_multi_had_top_mass = get_observable(pt,phi,eta,mass,max_idxs_multi_had_top,masks,thr=0.,reco='top',obs='mass')
-    top = get_observable(pt,phi,eta,mass,out[1],masks,thr=0.,reco='top',obs='mass')
-    target_top = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='top',obs='mass')
     
-    w_mass = get_observable(pt,phi,eta,mass,had_top,masks,thr=0.,reco='W',obs='mass')
-    w_mass_min = get_observable(pt,phi,eta,mass,had_top_min,masks,thr=0.,reco='W',obs='mass')
-    max_idxs_multi_w_mass = get_observable(pt,phi,eta,mass,max_idxs_multi_had_top,masks,thr=0.,reco='W',obs='mass')
-    w = get_observable(pt,phi,eta,mass,out[1],masks,thr=0.,reco='W',obs='mass')
-    target_w = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='W',obs='mass')
+    print('spanet accuracy on triplets : ', np.sum((np.sum(had_top[(match_label==6)][:,:3]==(targets[:,:3])[(match_label==6)],axis=-1)==3))/np.sum(match_label==6) )
+    print('spanet accuracy on pairs : ', np.sum((np.sum(had_top[(match_label==5)][:,[0,1]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+       +(np.sum(had_top[(match_label==5)][:,[1,0]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+       +(np.sum(had_top[(match_label==5)][:,[0,2]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+       +(np.sum(had_top[(match_label==5)][:,[2,0]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+       +(np.sum(had_top[(match_label==5)][:,[1,2]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+       +(np.sum(had_top[(match_label==5)][:,[2,1]]==(targets[:,:2])[(match_label==5)],axis=-1)==2))/np.sum(match_label==5) )
 
-    lep_top_mass = get_observable_leptop(pt,phi,eta,mass,lep_top,masks,thr=0.,reco='top',obs='mass')
-    lep_top_mass_min = get_observable_leptop(pt,phi,eta,mass,lep_top_min,masks,thr=0.,reco='top',obs='mass')
-    max_idxs_multi_lep_top_mass = get_observable_leptop(pt,phi,eta,mass,max_idxs_multi_lep_top,masks,thr=0.,reco='top',obs='mass')
-    ltop = get_observable_leptop(pt,phi,eta,mass,np.concatenate((out[0],np.ones(len(out[0])).reshape(len(out[0]),-1)*7),axis=-1).astype(int),masks,thr=0.,reco='top',obs='mass')
-    target_ltop = get_observable_leptop(pt,phi,eta,mass,targets_lt,masks,thr=0.,reco='top',obs='mass')
+    if False:
 
-    for sample in ['all','sig','bkg']:
-        for category in [6,3,0,1,2,4,5]:
-            for obj in ['top','W','leptop']:
-                for obs in ['mass']:#,'pt']:
-                    if (obj=='W' and obs=='pt'): continue
-                    if (obj=='leptop' and category!=6): continue
-                    plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
-                                           w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
-                                           lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
-                                           baseline_top_mass,baseline_W_mass,targets_lt,
-                                            sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
+        had_top_mass = get_observable(pt,phi,eta,mass,had_top,masks,thr=0.,reco='top',obs='mass')
+        had_top_mass_min = get_observable(pt,phi,eta,mass,had_top_min,masks,thr=0.,reco='top',obs='mass')
+        max_idxs_multi_had_top_mass = get_observable(pt,phi,eta,mass,max_idxs_multi_had_top,masks,thr=0.,reco='top',obs='mass')
+        top = get_observable(pt,phi,eta,mass,out[1],masks,thr=0.,reco='top',obs='mass')
+        target_top = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='top',obs='mass')
+
+        w_mass = get_observable(pt,phi,eta,mass,had_top,masks,thr=0.,reco='W',obs='mass')
+        w_mass_min = get_observable(pt,phi,eta,mass,had_top_min,masks,thr=0.,reco='W',obs='mass')
+        max_idxs_multi_w_mass = get_observable(pt,phi,eta,mass,max_idxs_multi_had_top,masks,thr=0.,reco='W',obs='mass')
+        w = get_observable(pt,phi,eta,mass,out[1],masks,thr=0.,reco='W',obs='mass')
+        target_w = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='W',obs='mass')
+
+        lep_top_mass = get_observable_leptop(pt,phi,eta,mass,lep_top,masks,thr=0.,reco='top',obs='mass')
+        lep_top_mass_min = get_observable_leptop(pt,phi,eta,mass,lep_top_min,masks,thr=0.,reco='top',obs='mass')
+        max_idxs_multi_lep_top_mass = get_observable_leptop(pt,phi,eta,mass,max_idxs_multi_lep_top,masks,thr=0.,reco='top',obs='mass')
+        ltop = get_observable_leptop(pt,phi,eta,mass,np.concatenate((out[0],np.ones(len(out[0])).reshape(len(out[0]),-1)*7),axis=-1).astype(int),masks,thr=0.,reco='top',obs='mass')
+        target_ltop = get_observable_leptop(pt,phi,eta,mass,targets_lt,masks,thr=0.,reco='top',obs='mass')
+
+        for sample in ['all','sig','bkg']:
+            for category in [6,3,0,1,2,4,5]:
+                for obj in ['top','W','leptop']:
+                    for obs in ['mass']:#,'pt']:
+                        if (obj=='W' and obs=='pt'): continue
+                        if (obj=='leptop' and category!=6): continue
+                        plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
+                                               w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
+                                               lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
+                                               baseline_top_mass,baseline_W_mass,targets_lt,
+                                                sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
 
    
