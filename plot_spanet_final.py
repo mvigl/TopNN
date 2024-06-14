@@ -548,7 +548,7 @@ if __name__ == "__main__":
     get_auc(labels,outputs_baseline[0],'baseline_auc')
     get_auc_vs(np.array(labels_evt).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2])),labels_evt,max_baseline,'tagging_5_6_spanet_vs_baseline')
     get_auc_vs(np.array(labels_evt[y==1]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==1],np.array(labels_evt[y==1]).astype(int),max_baseline[y==1],'tagging_5_6_spanet_vs_baseline_sig')
-    get_auc_vs(np.array(labels_evt[y==0]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==0],np.array(labels_evt[y==0]).astype(int),max_baseline[y==0],'tagging_5_6_spanet_vs_baseline_bkg')
+    #get_auc_vs(np.array(labels_evt[y==0]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==0],np.array(labels_evt[y==0]).astype(int),max_baseline[y==0],'tagging_5_6_spanet_vs_baseline_bkg')
 
     print('baseline accuracy on pairs : ', np.sum((np.sum(target_pt_baseline[(match_label==5)][:,:2]==(np.array(multiplets_evt[max_baseline_idx][:,:,:2]).reshape(-1,2)[(match_label==5)]),axis=-1)==2)*pair_baseline[(match_label==5)])/np.sum(match_label==5))
     print('baseline accuracy on triplets : ', np.sum(
