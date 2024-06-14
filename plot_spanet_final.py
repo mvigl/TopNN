@@ -525,7 +525,7 @@ prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
 
 def get_auc(targets,predictions,title):
-    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets),predictions)
+    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets).reshape(-1),predictions.reshape(-1))
     Auc_sig = auc(fpr_sig,tpr_sig)
     plt.plot(fpr_sig,tpr_sig,label=f'auc : {Auc_sig:.2f}')
     plt.title(f'{title}')
@@ -533,10 +533,10 @@ def get_auc(targets,predictions,title):
     plt.savefig(f'{title}.pdf')
 
 def get_auc_vs(targets_spanet,predictions_spanet,targets_base,predictions_base,title):
-    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_spanet),predictions_spanet)
+    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_spanet).reshape(-1),predictions_spanet.reshape(-1))
     Auc_sig_spanet = auc(fpr_sig,tpr_sig)
     plt.plot(fpr_sig,tpr_sig,label=f'spanet auc : {Auc_sig_spanet:.2f}')
-    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_base),predictions_base)
+    fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_base).reshape(-1),predictions_base.reshape(-1))
     Auc_sig_base = auc(fpr_sig,tpr_sig)
     plt.plot(fpr_sig,tpr_sig,label=f'baseline auc : {Auc_sig_base:.2f}')
     plt.title(f'{title}')
