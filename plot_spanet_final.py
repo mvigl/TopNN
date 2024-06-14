@@ -301,47 +301,47 @@ onnx.checker.check_model(onnx_model)
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :   
     #y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
-    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
-    pt = h5fw['INPUTS']['Momenta']['pt'][:]
-    eta = h5fw['INPUTS']['Momenta']['eta'][:]
-    phi = h5fw['INPUTS']['Momenta']['phi'][:]
-    mass = h5fw['INPUTS']['Momenta']['mass'][:]
-    masks = h5fw['INPUTS']['Momenta']['MASK'][:]
-    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:],h5fw['TARGETS']['ht']['q1'][:],h5fw['TARGETS']['ht']['q2'][:]))
-    targets_lt = h5fw['TARGETS']['lt']['b'][:]
+    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:40689]
+    pt = h5fw['INPUTS']['Momenta']['pt'][:40689]
+    eta = h5fw['INPUTS']['Momenta']['eta'][:40689]
+    phi = h5fw['INPUTS']['Momenta']['phi'][:40689]
+    mass = h5fw['INPUTS']['Momenta']['mass'][:40689]
+    masks = h5fw['INPUTS']['Momenta']['MASK'][:40689]
+    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:40689],h5fw['TARGETS']['ht']['q1'][:40689],h5fw['TARGETS']['ht']['q2'][:40689]))
+    targets_lt = h5fw['TARGETS']['lt']['b'][:40689]
     targets_lt = targets_lt.reshape((len(targets_lt),-1))
     targets_lt = np.concatenate((targets_lt,np.ones(len(targets_lt)).reshape(len(targets_lt),-1)*7),axis=-1).astype(int)
-    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:]
-    nbs = h5fw['truth_info']['nbjet'][:]
-    is_matched = h5fw['truth_info']['is_matched'][:]
+    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:40689]
+    nbs = h5fw['truth_info']['nbjet'][:40689]
+    is_matched = h5fw['truth_info']['is_matched'][:40689]
      
-    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:],
-                    h5fw['INPUTS']['Momenta']['pt'][:],
-                    h5fw['INPUTS']['Momenta']['eta'][:],
-                    h5fw['INPUTS']['Momenta']['phi'][:],
-                    h5fw['INPUTS']['Momenta']['btag'][:],
-                    h5fw['INPUTS']['Momenta']['qtag'][:],
-                    h5fw['INPUTS']['Momenta']['etag'][:]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
-    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:]).astype(bool)
+    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:40689],
+                    h5fw['INPUTS']['Momenta']['pt'][:40689],
+                    h5fw['INPUTS']['Momenta']['eta'][:40689],
+                    h5fw['INPUTS']['Momenta']['phi'][:40689],
+                    h5fw['INPUTS']['Momenta']['btag'][:40689],
+                    h5fw['INPUTS']['Momenta']['qtag'][:40689],
+                    h5fw['INPUTS']['Momenta']['etag'][:40689]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
+    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:40689]).astype(bool)
 
-    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:],
-                    h5fw['INPUTS']['Met']['METsig'][:],
-                    h5fw['INPUTS']['Met']['METphi'][:],
-                    h5fw['INPUTS']['Met']['MET_Soft'][:],
-                    h5fw['INPUTS']['Met']['MET_Jet'][:],
-                    h5fw['INPUTS']['Met']['MET_Ele'][:],
-                    h5fw['INPUTS']['Met']['MET_Muon'][:],
-                    h5fw['INPUTS']['Met']['mT_METl'][:],
-                    h5fw['INPUTS']['Met']['dR_bb'][:],
-                    h5fw['INPUTS']['Met']['dphi_METl'][:],
-                    h5fw['INPUTS']['Met']['MT2_bb'][:],
-                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:],
-                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:],
-                    h5fw['INPUTS']['Met']['MT2_min'][:],
-                    h5fw['INPUTS']['Met']['HT'][:],
-                    h5fw['INPUTS']['Met']['nbjet'][:],
-                    h5fw['INPUTS']['Met']['nljet'][:],
-                    h5fw['INPUTS']['Met']['nVx'][:]]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
+    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:40689],
+                    h5fw['INPUTS']['Met']['METsig'][:40689],
+                    h5fw['INPUTS']['Met']['METphi'][:40689],
+                    h5fw['INPUTS']['Met']['MET_Soft'][:40689],
+                    h5fw['INPUTS']['Met']['MET_Jet'][:40689],
+                    h5fw['INPUTS']['Met']['MET_Ele'][:40689],
+                    h5fw['INPUTS']['Met']['MET_Muon'][:40689],
+                    h5fw['INPUTS']['Met']['mT_METl'][:40689],
+                    h5fw['INPUTS']['Met']['dR_bb'][:40689],
+                    h5fw['INPUTS']['Met']['dphi_METl'][:40689],
+                    h5fw['INPUTS']['Met']['MT2_bb'][:40689],
+                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:40689],
+                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:40689],
+                    h5fw['INPUTS']['Met']['MT2_min'][:40689],
+                    h5fw['INPUTS']['Met']['HT'][:40689],
+                    h5fw['INPUTS']['Met']['nbjet'][:40689],
+                    h5fw['INPUTS']['Met']['nljet'][:40689],
+                    h5fw['INPUTS']['Met']['nVx'][:40689]]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
     Met_mask = np.ones((len(Momenta_mask),1)).astype(bool)
 
 print('Momenta_data : ', Momenta_data.shape)  
@@ -360,10 +360,10 @@ def baseline_target_vars(pt,targets):
     return pt
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5",'r') as h5fw :   
-    counts = np.array(h5fw['variables'][:,variables.index('counts')])
-    multiplets = h5fw['multiplets'][:]
-    vars = h5fw['variables'][:]
-    labels = h5fw['labels'][:]
+    counts = np.array(h5fw['variables'][:40689,variables.index('counts')])
+    multiplets = h5fw['multiplets'][:np.sum(counts)]
+    vars = h5fw['variables'][:np.sum(counts)]
+    labels = h5fw['labels'][:np.sum(counts)]
 
 ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx")
 outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
