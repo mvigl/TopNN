@@ -361,9 +361,9 @@ def baseline_target_vars(pt,targets):
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5",'r') as h5fw :   
     counts = np.array(h5fw['variables'][:40689,variables.index('counts')])
-    multiplets = h5fw['multiplets'][:np.sum(counts)]
-    vars = h5fw['variables'][:np.sum(counts)]
-    labels = h5fw['labels'][:np.sum(counts)]
+    multiplets = h5fw['multiplets'][:np.sum(counts).astype(int)]
+    vars = h5fw['variables'][:np.sum(counts).astype(int)]
+    labels = h5fw['labels'][:np.sum(counts).astype(int)]
 
 ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx")
 outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
