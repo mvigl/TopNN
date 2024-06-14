@@ -365,7 +365,7 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5"
     vars = h5fw['variables'][:np.sum(counts).astype(int)]
     labels = h5fw['labels'][:np.sum(counts).astype(int)]
 
-ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx")
+ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/baseline.onnx")
 outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
 
 multiplets_evt = (ak.unflatten(multiplets, counts.astype(int)))
