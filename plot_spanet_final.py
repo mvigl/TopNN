@@ -286,7 +286,7 @@ def get_observable_leptop(pt,phi,eta,mass,predictions,mask_predictions=None,dete
 
 session = onnxruntime.InferenceSession(
     "/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx", 
-    providers=['CPUExecutionProvider']
+    providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
 )
 
 print("Inputs:", [input.name for input in session.get_inputs()])
@@ -365,8 +365,7 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5"
     vars = h5fw['variables'][:np.sum(counts).astype(int)]
     labels = h5fw['labels'][:np.sum(counts).astype(int)]
 
-ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx", 
-    providers=['CPUExecutionProvider'])
+ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx")
 outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
 
 multiplets_evt = (ak.unflatten(multiplets, counts.astype(int)))
@@ -422,8 +421,7 @@ def get_best(outputs):
 
     return had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min
 
-ort_sess = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_v2_log_norm.onnx", 
-    providers=['CPUExecutionProvider'])
+ort_sess = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_v2_log_norm.onnx")
 
 outputs = ort_sess.run(None, {'Momenta_data': Momenta_data,
                               'Momenta_mask': Momenta_mask,
