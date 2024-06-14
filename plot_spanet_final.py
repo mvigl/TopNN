@@ -546,6 +546,8 @@ def get_auc_vs(targets_spanet,predictions_spanet,targets_base,predictions_base,t
 if __name__ == "__main__":
 
     get_auc(labels,outputs_baseline[0],'baseline_auc')
+    print(labels_evt)
+    print((outputs[-1][:,-1]+(outputs[-1][:,-2])))
     get_auc_vs(labels_evt,(outputs[-1][:,-1]+(outputs[-1][:,-2])),labels_evt,max_baseline,'tagging_5_6_spanet_vs_baseline')
     print(labels_evt[y==1])
     print((outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==1])
