@@ -115,7 +115,7 @@ def run_in_batches(model_path, Momenta_data,Momenta_mask,Met_data,Met_mask, batc
                 'Met_data': Met_data[start_idx:end_idx],
                 'Met_mask': Met_mask[start_idx:end_idx]
             }
-            (batch_inputs['Met_data'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=masses_slice[j]
+            (batch_inputs['Met_data'][:,:,-2:])[np.sum(Met_data[start_idx:end_idx,:,-2:]==[-1,-1],axis=-1)==2]=masses_slice[j]
             outputs[mass] = ort_sess.run(None, {'Momenta_data': batch_inputs['Momenta_data'],
                               'Momenta_mask': batch_inputs['Momenta_mask'],
                               'Met_data': batch_inputs['Met_data'],
@@ -152,7 +152,6 @@ masses_slice = [[500,1],[500,100],[500,200],[500,300],
                 [1400,1],[1400,100],[1400,200],[1400,300],[1400,400],[1400,500],[1400,600],[1400,700],[1400,800],
                 [1500,1],[1500,100],[1500,200],[1500,300],[1500,400],[1500,500],[1500,600],[1500,700],[1500,800],
                 [1600,1],[1600,100],[1600,200],[1600,300],[1600,400],[1600,500],[1600,600],[1600,700],[1600,800]]
-outputs = run_in_batches("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx", Momenta_data,Momenta_mask,Met_data,Met_mask,batch_size,masses,masses_slice)
 
 if __name__ == "__main__":
 
