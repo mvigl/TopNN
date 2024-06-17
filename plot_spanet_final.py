@@ -361,11 +361,14 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5"
     vars = h5fw['variables'][:]
     labels = h5fw['labels'][:]
 
-ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/baseline.onnx")
-outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
+#ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/baseline.onnx")
+#outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
 
-with open('evals_baseline_test.pkl', 'wb') as pickle_file:
-    pickle.dump(outputs_baseline, pickle_file)   
+#with open('evals_baseline_test.pkl', 'wb') as pickle_file:
+#    pickle.dump(outputs_baseline, pickle_file)   
+
+with open('evals_baseline_test.pkl', 'rb') as pickle_file:
+    outputs_baseline = pickle.load(pickle_file)        
 
 multiplets_evt = (ak.unflatten(multiplets, counts.astype(int)))
 labels_evt = ((ak.unflatten(ak.Array(labels), counts.astype(int)))[:,0]==1)
@@ -668,6 +671,11 @@ if __name__ == "__main__":
 
 
         had_top_mass_0 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=0.,reco='top',obs='mass')
+        w_mass_0 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=0.,reco='top',obs='mass')
+
+        had_top_mass_1 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=-1.,reco='top',obs='mass')
+        w_mass_1 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=-1.,reco='top',obs='mass')
+
         for sample in ['all','sig','bkg']:
             for category in [6,3,5]:
                 for obj in ['top','W']:
@@ -675,10 +683,15 @@ if __name__ == "__main__":
                         if (obj=='W' and obs=='pt'): continue
                         if (obj=='leptop' and category!=6): continue
                         plot_single_categories(had_top_mass_0,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
-                                               w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
+                                               w_mass_0,w_mass_min,max_idxs_multi_w_mass,w,target_w,
                                                lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
                                                baseline_top_mass,baseline_W_mass,targets_lt,
                                                 sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_0')  
+                        plot_single_categories(had_top_mass_1,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
+                                               w_mass_1,w_mass_min,max_idxs_multi_w_mass,w,target_w,
+                                               lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
+                                               baseline_top_mass,baseline_W_mass,targets_lt,
+                                                sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_all')  
 
         
         #for sample in ['all','sig','bkg']:
