@@ -355,10 +355,10 @@ def baseline_target_vars(pt,targets):
     return pt
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5",'r') as h5fw :   
-    counts = np.array(h5fw['variables'][:40689,variables.index('counts')])
-    multiplets = h5fw['multiplets'][:np.sum(counts).astype(int)]
-    vars = h5fw['variables'][:np.sum(counts).astype(int)]
-    labels = h5fw['labels'][:np.sum(counts).astype(int)]
+    counts = np.array(h5fw['variables'][:,variables.index('counts')])
+    multiplets = h5fw['multiplets'][:]
+    vars = h5fw['variables'][:]
+    labels = h5fw['labels'][:]
 
 ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/baseline.onnx")
 outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
@@ -447,10 +447,13 @@ def run_in_batches(model_path, Momenta_data,Momenta_mask,Met_data,Met_mask, batc
 
 
 
-batch_size = 200000  # Adjust batch size based on your memory constraints
-outputs = run_in_batches("/raven/u/mvigl/TopReco/SPANet/spanet_v2_log_norm.onnx", Momenta_data,Momenta_mask,Met_data,Met_mask, batch_size)
-with open('evals_test.pkl', 'wb') as pickle_file:
-    pickle.dump(outputs, pickle_file)    
+#batch_size = 200000  # Adjust batch size based on your memory constraints
+#outputs = run_in_batches("/raven/u/mvigl/TopReco/SPANet/spanet_v2_log_norm.onnx", Momenta_data,Momenta_mask,Met_data,Met_mask, batch_size)
+#with open('evals_test.pkl', 'wb') as pickle_file:
+#    pickle.dump(outputs, pickle_file)   
+#  
+with open('evals_test.pkl', 'rb') as pickle_file:
+    outputs = pickle.load(pickle_file)    
 out = extract_predictions(outputs[:2])
 
 matching= {
