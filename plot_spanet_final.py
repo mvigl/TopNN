@@ -370,6 +370,47 @@ max_baseline_idx = (ak.argmax(ak.unflatten(ak.Array(outputs_baseline[0]), counts
 triplets_baseline = multiplets_evt[max_baseline_idx][:,:,2]>0
 pair_baseline = multiplets_evt[max_baseline_idx][:,:,2]==0
 target_pt_baseline = baseline_target_vars(pt,targets)
+baseline_preds = multiplets_evt[max_baseline_idx]
+
+def get_observable_baseline(baseline_preds,reco='top',obs='mass'):
+    b= vector.array(
+        {
+            "pt": baseline_preds[:,:,inputs_baseline.index('bjet_pT')],
+            "phi": baseline_preds[:,:,inputs_baseline.index('bjet_phi')],
+            "eta": baseline_preds[:,:,inputs_baseline.index('bjet_eta')],
+            "M": baseline_preds[:,:,inputs_baseline.index('bjet_M')],
+        }
+    )
+    j1 = vector.array(
+        {
+            "pt": baseline_preds[:,:,inputs_baseline.index('jet1_pT')],
+            "phi": baseline_preds[:,:,inputs_baseline.index('jet1_phi')],
+            "eta": baseline_preds[:,:,inputs_baseline.index('jet1_eta')],
+            "M":baseline_preds[:,:,inputs_baseline.index('jet1_M')],
+        }
+    )
+    j2 = vector.array(
+        {
+            "pt": baseline_preds[:,:,inputs_baseline.index('jet2_pT')],
+            "phi": baseline_preds[:,:,inputs_baseline.index('jet2_phi')],
+            "eta": baseline_preds[:,:,inputs_baseline.index('jet2_eta')],
+            "M":baseline_preds[:,:,inputs_baseline.index('jet2_M')],
+        }
+    )
+    if reco == 'top': obj = b+(j1+j2)
+    elif reco == 'W': obj = (j1+j2)
+    elif reco == 'W_pair': obj = (j1)
+    elif reco == 'top_pair': obj = b+(j1)
+    else: 
+        print('choose reco: top, W')
+        return 0
+    if obs=='mass': observable = obj.mass
+    elif obs=='pt': observable = obj.pt
+    else: 
+        print('choose observable: mass')
+        return 0
+    return observable
+
 
 def get_best(outputs):
     #priority to had top
@@ -597,19 +638,21 @@ if __name__ == "__main__":
        +(np.sum(had_top[(match_label==5)][:,[1,2]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
        +(np.sum(had_top[(match_label==5)][:,[2,1]]==(targets[:,:2])[(match_label==5)],axis=-1)==2))/np.sum(match_label==5) )
 
-    if False:
+    if True:
 
         had_top_mass = get_observable(pt,phi,eta,mass,had_top,masks,thr=0.,reco='top',obs='mass')
         had_top_mass_min = get_observable(pt,phi,eta,mass,had_top_min,masks,thr=0.,reco='top',obs='mass')
         max_idxs_multi_had_top_mass = get_observable(pt,phi,eta,mass,max_idxs_multi_had_top,masks,thr=0.,reco='top',obs='mass')
         top = get_observable(pt,phi,eta,mass,out[1],masks,thr=0.,reco='top',obs='mass')
         target_top = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='top',obs='mass')
+        baseline_top_mass = get_observable_baseline(baseline_preds,reco='top',obs='mass')
 
         w_mass = get_observable(pt,phi,eta,mass,had_top,masks,thr=0.,reco='W',obs='mass')
         w_mass_min = get_observable(pt,phi,eta,mass,had_top_min,masks,thr=0.,reco='W',obs='mass')
         max_idxs_multi_w_mass = get_observable(pt,phi,eta,mass,max_idxs_multi_had_top,masks,thr=0.,reco='W',obs='mass')
         w = get_observable(pt,phi,eta,mass,out[1],masks,thr=0.,reco='W',obs='mass')
         target_w = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='W',obs='mass')
+        baseline_W_mass = get_observable_baseline(baseline_preds,reco='W',obs='mass')
 
         lep_top_mass = get_observable_leptop(pt,phi,eta,mass,lep_top,masks,thr=0.,reco='top',obs='mass')
         lep_top_mass_min = get_observable_leptop(pt,phi,eta,mass,lep_top_min,masks,thr=0.,reco='top',obs='mass')
