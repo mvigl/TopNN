@@ -10,6 +10,7 @@ import argparse
 import awkward as ak
 import onnxruntime
 from sklearn.metrics import roc_curve,auc
+import pickle
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--data', help='data',default='data/root/list_sig_FS_testing.txt')
@@ -48,140 +49,111 @@ inputs_baseline = [  'bjet_pT',
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :
     
-    pt = h5fw['INPUTS']['Momenta']['pt'][:110000]
-    eta = h5fw['INPUTS']['Momenta']['eta'][:110000]
-    phi = h5fw['INPUTS']['Momenta']['phi'][:110000]
-    mass = h5fw['INPUTS']['Momenta']['mass'][:110000]
-    masks = h5fw['INPUTS']['Momenta']['MASK'][:110000]
-    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:110000],h5fw['TARGETS']['ht']['q1'][:110000],h5fw['TARGETS']['ht']['q2'][:110000]))
-    targets_lt = h5fw['TARGETS']['lt']['b'][:110000]
+    pt = h5fw['INPUTS']['Momenta']['pt'][:]
+    eta = h5fw['INPUTS']['Momenta']['eta'][:]
+    phi = h5fw['INPUTS']['Momenta']['phi'][:]
+    mass = h5fw['INPUTS']['Momenta']['mass'][:]
+    masks = h5fw['INPUTS']['Momenta']['MASK'][:]
+    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:],h5fw['TARGETS']['ht']['q1'][:],h5fw['TARGETS']['ht']['q2'][:]))
+    targets_lt = h5fw['TARGETS']['lt']['b'][:]
     targets_lt = targets_lt.reshape((len(targets_lt),-1))
     targets_lt = np.concatenate((targets_lt,np.ones(len(targets_lt)).reshape(len(targets_lt),-1)*7),axis=-1).astype(int)
-    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:110000]
-    nbs = h5fw['truth_info']['nbjet'][:110000]
-    is_matched = h5fw['truth_info']['is_matched'][:110000]
+    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:]
+    nbs = h5fw['truth_info']['nbjet'][:]
+    is_matched = h5fw['truth_info']['is_matched'][:]
      
-    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:110000],
-                    h5fw['INPUTS']['Momenta']['pt'][:110000],
-                    h5fw['INPUTS']['Momenta']['eta'][:110000],
-                    h5fw['INPUTS']['Momenta']['phi'][:110000],
-                    h5fw['INPUTS']['Momenta']['btag'][:110000],
-                    h5fw['INPUTS']['Momenta']['qtag'][:110000],
-                    h5fw['INPUTS']['Momenta']['etag'][:110000]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
-    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:110000]).astype(bool)
+    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:],
+                    h5fw['INPUTS']['Momenta']['pt'][:],
+                    h5fw['INPUTS']['Momenta']['eta'][:],
+                    h5fw['INPUTS']['Momenta']['phi'][:],
+                    h5fw['INPUTS']['Momenta']['btag'][:],
+                    h5fw['INPUTS']['Momenta']['qtag'][:],
+                    h5fw['INPUTS']['Momenta']['etag'][:]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
+    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:]).astype(bool)
 
-    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:110000],
-                    h5fw['INPUTS']['Met']['METsig'][:110000],
-                    h5fw['INPUTS']['Met']['METphi'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Soft'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Jet'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Ele'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Muon'][:110000],
-                    h5fw['INPUTS']['Met']['mT_METl'][:110000],
-                    h5fw['INPUTS']['Met']['dR_bb'][:110000],
-                    h5fw['INPUTS']['Met']['dphi_METl'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_bb'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_min'][:110000],
-                    h5fw['INPUTS']['Met']['HT'][:110000],
-                    h5fw['INPUTS']['Met']['nbjet'][:110000],
-                    h5fw['INPUTS']['Met']['nljet'][:110000],
-                    h5fw['INPUTS']['Met']['nVx'][:110000],
-                    h5fw['INPUTS']['Met']['M1'][:110000],
-                    h5fw['INPUTS']['Met']['M2'][:110000],]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
+    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:],
+                    h5fw['INPUTS']['Met']['METsig'][:],
+                    h5fw['INPUTS']['Met']['METphi'][:],
+                    h5fw['INPUTS']['Met']['MET_Soft'][:],
+                    h5fw['INPUTS']['Met']['MET_Jet'][:],
+                    h5fw['INPUTS']['Met']['MET_Ele'][:],
+                    h5fw['INPUTS']['Met']['MET_Muon'][:],
+                    h5fw['INPUTS']['Met']['mT_METl'][:],
+                    h5fw['INPUTS']['Met']['dR_bb'][:],
+                    h5fw['INPUTS']['Met']['dphi_METl'][:],
+                    h5fw['INPUTS']['Met']['MT2_bb'][:],
+                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:],
+                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:],
+                    h5fw['INPUTS']['Met']['MT2_min'][:],
+                    h5fw['INPUTS']['Met']['HT'][:],
+                    h5fw['INPUTS']['Met']['nbjet'][:],
+                    h5fw['INPUTS']['Met']['nljet'][:],
+                    h5fw['INPUTS']['Met']['nVx'][:],
+                    h5fw['INPUTS']['Met']['M1'][:],
+                    h5fw['INPUTS']['Met']['M2'][:],]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
     Met_mask = np.ones((len(Momenta_mask),1)).astype(bool)
 
-    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:110000]
-
-with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :      
-    Met_data_base = np.array([h5fw['INPUTS']['Met']['MET'][:110000],
-                    h5fw['INPUTS']['Met']['METsig'][:110000],
-                    h5fw['INPUTS']['Met']['METphi'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Soft'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Jet'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Ele'][:110000],
-                    h5fw['INPUTS']['Met']['MET_Muon'][:110000],
-                    h5fw['INPUTS']['Met']['mT_METl'][:110000],
-                    h5fw['INPUTS']['Met']['dR_bb'][:110000],
-                    h5fw['INPUTS']['Met']['dphi_METl'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_bb'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:110000],
-                    h5fw['INPUTS']['Met']['MT2_min'][:110000],
-                    h5fw['INPUTS']['Met']['HT'][:110000],
-                    h5fw['INPUTS']['Met']['nbjet'][:110000],
-                    h5fw['INPUTS']['Met']['nljet'][:110000],
-                    h5fw['INPUTS']['Met']['nVx'][:110000],]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
-print('Momenta_data : ', Momenta_data.shape)  
-print('Momenta_mask : ', Momenta_mask.shape)  
-print('Met_data : ', Met_data.shape)    
-print('Met_mask : ', Met_mask.shape)    
-
-inputs = {}
-inputs['Met_data'] = {}
-inputs['Momenta_data'] = np.copy(Momenta_data)
-inputs['Momenta_mask'] = np.copy(Momenta_mask)
-inputs['Met_data']['1000_100'] = np.copy(Met_data)
-inputs['Met_data']['1000_200'] = np.copy(Met_data)
-inputs['Met_data']['1000_300'] = np.copy(Met_data)
-inputs['Met_data']['1000_400'] = np.copy(Met_data)
-inputs['Met_data']['1000_500'] = np.copy(Met_data)
-inputs['Met_data']['1000_600'] = np.copy(Met_data)
-inputs['Met_data']['1000_700'] = np.copy(Met_data)
-inputs['Met_data']['1000_800'] = np.copy(Met_data)
-inputs['Met_mask'] = np.copy(Met_mask)
-(inputs['Met_data']['1000_100'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  100.]
-(inputs['Met_data']['1000_200'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  200.]
-(inputs['Met_data']['1000_300'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  300.]
-(inputs['Met_data']['1000_400'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  400.]
-(inputs['Met_data']['1000_500'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  500.]
-(inputs['Met_data']['1000_600'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  600.]
-(inputs['Met_data']['1000_700'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  700.]
-(inputs['Met_data']['1000_800'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=[1000.,  800.]
-
-inputs_base = {}
-inputs_base['Momenta_data'] = np.copy(Momenta_data)
-inputs_base['Momenta_mask'] = np.copy(Momenta_mask)
-inputs_base['Met_data']= np.copy(Met_data_base)
-inputs_base['Met_mask'] = np.copy(Met_mask)
+    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
 
 
-ort_sess_base = ort.InferenceSession("/Users/matthiasvigl/Documents/Physics/Stop/TopReco/SPANet_stop1L/spanet_v2_log_norm.onnx")
-outputs_base = ort_sess_base.run(None, {'Momenta_data': inputs_base['Momenta_data'],
-                              'Momenta_mask': inputs_base['Momenta_mask'],
-                              'Met_data': inputs_base['Met_data'],
-                              'Met_mask': inputs_base['Met_mask']})
+def run_in_batches(model_path, Momenta_data,Momenta_mask,Met_data,Met_mask, batch_size, masses,masses_slice):
+    ort_sess = ort.InferenceSession(model_path)
+    
+    outputs = {}
+    num_batches = len(Met_data) // batch_size
+    if len(Met_data) % batch_size != 0:
+        num_batches += 1
+    print('num batches : ',num_batches)
+    for i in range(num_batches):
+        start_idx = i * batch_size
+        end_idx = min((i + 1) * batch_size, len(Met_data))
+        print('batch : ',i,'/',num_batches)
+        for j,mass in enumerate(masses):
+            batch_inputs = {
+                'Momenta_data': Momenta_data[start_idx:end_idx],
+                'Momenta_mask': Momenta_mask[start_idx:end_idx],
+                'Met_data': Met_data[start_idx:end_idx],
+                'Met_mask': Met_mask[start_idx:end_idx]
+            }
+            (batch_inputs['Met_data'][:,:,-2:])[np.sum(Met_data[:,:,-2:]==[-1,-1],axis=-1)==2]=masses_slice[j]
+            outputs[mass] = ort_sess.run(None, {'Momenta_data': batch_inputs['Momenta_data'],
+                              'Momenta_mask': batch_inputs['Momenta_mask'],
+                              'Met_data': batch_inputs['Met_data'],
+                              'Met_mask': batch_inputs['Met_mask']})
+        
+        with open(f'evals_param_batch_{i}.pkl', 'wb') as pickle_file:
+            pickle.dump(outputs, pickle_file)    
+    return outputs
 
 
-ort_sess = ort.InferenceSession("/Users/matthiasvigl/Documents/Physics/Stop/TopReco/SPANet_stop1L/spanet_param_log_norm.onnx")
-outputs = {}
-for masses in ['1000_100','1000_200','1000_300','1000_400','1000_500','1000_600','1000_700','1000_800']:
-    outputs[masses] = ort_sess.run(None, {'Momenta_data': inputs['Momenta_data'],
-                              'Momenta_mask': inputs['Momenta_mask'],
-                              'Met_data': inputs['Met_data'][masses],
-                              'Met_mask': inputs['Met_mask']})
+batch_size = 100000  # Adjust batch size based on your memory constraints
+
+masses = ['500_1','500_100','500_200','500_300',
+          '600_1','600_100','600_200','600_300','600_400',
+          '700_1','700_100','700_200','700_300','700_400','700_500',
+          '800_1','800_100','800_200','800_300','800_400','800_500','800_600',
+          '900_1','900_100','900_200','900_300','900_400','900_500','900_600','900_700',
+          '1000_1','1000_100','1000_200','1000_300','1000_400','1000_500','1000_600','1000_700','1000_800',
+          '1100_1','1100_100','1100_200','1100_300','1100_400','1100_500','1100_600','1100_700','1100_800',
+          '1200_1','1200_100','1200_200','1200_300','1200_400','1200_500','1200_600','1200_700','1200_800',
+          '1300_1','1300_100','1300_200','1300_300','1300_400','1300_500','1300_600','1300_700','1300_800',
+          '1400_1','1400_100','1400_200','1400_300','1400_400','1400_500','1400_600','1400_700','1400_800',
+          '1500_1','1500_100','1500_200','1500_300','1500_400','1500_500','1500_600','1500_700','1500_800',
+          '1600_1','1600_100','1600_200','1600_300','1600_400','1600_500','1600_600','1600_700','1600_800']
+masses_slice = [[500,1],[500,100],[500,200],[500,300],
+                [600,1],[600,100],[600,200],[600,300],[600,400],
+                [700,1],[700,100],[700,200],[700,300],[700,400],[700,500],
+                [800,1],[800,100],[800,200],[800,300],[800,400],[800,500],[800,600],
+                [900,1],[900,100],[900,200],[900,300],[900,400],[900,500],[900,600],[900,700],
+                [1000,1],[1000,100],[1000,200],[1000,300],[1000,400],[1000,500],[1000,600],[1000,700],[1000,800],
+                [1100,1],[1100,100],[1100,200],[1100,300],[1100,400],[1100,500],[1100,600],[1100,700],[1100,800],
+                [1200,1],[1200,100],[1200,200],[1200,300],[1200,400],[1200,500],[1200,600],[1200,700],[1200,800],
+                [1300,1],[1300,100],[1300,200],[1300,300],[1300,400],[1300,500],[1300,600],[1300,700],[1300,800],
+                [1400,1],[1400,100],[1400,200],[1400,300],[1400,400],[1400,500],[1400,600],[1400,700],[1400,800],
+                [1500,1],[1500,100],[1500,200],[1500,300],[1500,400],[1500,500],[1500,600],[1500,700],[1500,800],
+                [1600,1],[1600,100],[1600,200],[1600,300],[1600,400],[1600,500],[1600,600],[1600,700],[1600,800]]
+outputs = run_in_batches("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx", Momenta_data,Momenta_mask,Met_data,Met_mask,batch_size,masses,masses_slice)
 
 if __name__ == "__main__":
 
-    masses = ['1000_100','1000_200','1000_300','1000_400','1000_500','1000_600','1000_700','1000_800']
-    masses_slice = [[1000,100],[1000,200],[1000,300],[1000,400],[1000,500],[1000,600],[1000,700],[1000,800]]
-    auc_base = np.zeros(len(masses))
-    auc_par = np.zeros(len(masses))
-    for i,m in enumerate(masses):
-        b = np.linspace(0,1,30)
-        param_filter = (np.sum(inputs['Met_data'][m][:,:,-2:]==masses_slice[i],axis=-1)==2).reshape(-1)
-        plt.hist(outputs[m][4][:,1],weights=1*(y==1)*param_filter,histtype='step',label=f'sig {m}',density=True,bins=b)
-        plt.hist(outputs[m][4][:,1],weights=1*(y==0)*param_filter,histtype='step',label=f'bkg {m}',density=True,bins=b)
-        plt.hist(outputs_base[4][:,1],weights=1*(y==1)*param_filter,histtype='step',label=f'sig',density=True,bins=b)
-        plt.hist(outputs_base[4][:,1],weights=1*(y==0)*param_filter,histtype='step',label=f'bkg',density=True,bins=b)
-        fpr_sig, tpr_sig, thresholds_sig = roc_curve((y[param_filter]),outputs[m][4][param_filter,1])
-        Auc_sig = auc(fpr_sig,tpr_sig)
-        fpr_sig, tpr_sig, thresholds_sig = roc_curve((y[param_filter]),outputs_base[4][param_filter,1])
-        Auc_sig_nonPar = auc(fpr_sig,tpr_sig)
-        plt.title(f'auc par : {Auc_sig:.3f}   ,   auc base : {Auc_sig_nonPar:.3f}')
-        plt.legend()
-        plt.semilogy()
-        plt.savefig(f'{m}.pdf')
-        auc_par[i]=Auc_sig
-        auc_base[i]=Auc_sig_nonPar
+   outputs = run_in_batches("/raven/u/mvigl/TopReco/SPANet/spanet_param_log_norm.onnx", Momenta_data,Momenta_mask,Met_data,Met_mask,batch_size,masses,masses_slice)
