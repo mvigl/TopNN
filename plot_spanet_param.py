@@ -99,12 +99,12 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_input
 def run_in_batches(model_path, Momenta_data,Momenta_mask,Met_data,Met_mask, batch_size, masses,masses_slice):
     ort_sess = ort.InferenceSession(model_path)
     
-    outputs = {}
     num_batches = len(Met_data) // batch_size
     if len(Met_data) % batch_size != 0:
         num_batches += 1
     print('num batches : ',num_batches)
     for i in range(num_batches):
+        outputs = {}
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, len(Met_data))
         print('batch : ',i,'/',num_batches)
