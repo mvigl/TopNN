@@ -250,10 +250,12 @@ def get_observable(pt,phi,eta,mass,predictions,mask_predictions=None,cut_prob=No
         return 0
     if obs=='mass': observable = obj.mass
     elif obs=='pt': observable = obj.pt
+    elif obs=='eta': observable = obj.eta
+    elif obs=='phi': observable = obj.phi
     else: 
         print('choose observable: mass')
         return 0
-    return observable
+    return obj#observable
 
 def get_observable_leptop(pt,phi,eta,mass,predictions,mask_predictions=None,detection_probabilities=None,thr=0.,reco='top',obs='mass'):
     pt = pt[np.arange(len(predictions))[:, np.newaxis], predictions]
@@ -284,7 +286,7 @@ def get_observable_leptop(pt,phi,eta,mass,predictions,mask_predictions=None,dete
     obj = (b+l)
     if obs=='mass': observable = obj.mass
     elif obs=='pt': observable = obj.pt
-    return observable
+    return obj#observable
 
 session = onnxruntime.InferenceSession(
     "/raven/u/mvigl/TopReco/SPANet/spanet_log_norm.onnx", 
@@ -416,7 +418,7 @@ def get_observable_baseline(baseline_preds,reco='top',obs='mass'):
     else: 
         print('choose observable: mass')
         return 0
-    return observable
+    return obj#observable
 
 
 def get_best(outputs):
@@ -540,6 +542,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     elif obs=='truth_top_pt': b=np.linspace(0,1000,40)
     elif obs=='truth_top_min_dR_m': b=np.linspace(0,400,40)
     elif obs=='pt': b=np.linspace(0,1000,40)
+    elif obs=='eta': b=np.linspace(-3.5,3.5,40)
+    elif obs=='phi': b=np.linspace(-3.5,3.5,40)
     fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
     plt.title(f'{algo} {matching[category]} {sample}')
     if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
@@ -679,31 +683,72 @@ if __name__ == "__main__":
         for sample in ['all','sig','bkg']:
             for category in [6,3,5]:
                 for obj in ['top','W']:
-                    for obs in ['mass']:#,'pt']:
-                        if (obj=='W' and obs=='pt'): continue
-                        if (obj=='leptop' and category!=6): continue
-                        plot_single_categories(had_top_mass_0,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
-                                               w_mass_0,w_mass_min,max_idxs_multi_w_mass,w,target_w,
-                                               lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
-                                               baseline_top_mass,baseline_W_mass,targets_lt,
-                                                sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_0')  
-                        plot_single_categories(had_top_mass_1,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
-                                               w_mass_1,w_mass_min,max_idxs_multi_w_mass,w,target_w,
-                                               lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
-                                               baseline_top_mass,baseline_W_mass,targets_lt,
-                                                sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_all')  
+                    if (obj=='leptop' and category!=6): continue
+                    plot_single_categories(had_top_mass_0.mass,had_top_mass_min.mass,max_idxs_multi_had_top_mass.mass,top.mass,target_top.mass,
+                                           w_mass_0.mass,w_mass_min.mass,max_idxs_multi_w_mass.mass,w.mass,target_w.mass,
+                                           lep_top_mass.mass,lep_top_mass_min.mass,max_idxs_multi_lep_top_mass.mass,ltop.mass,target_ltop.mass,
+                                           baseline_top_mass.mass,baseline_W_mass.mass,targets_lt.mass,
+                                            sample=sample,out=out,y=y,obj=obj,obs='mass',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_0')  
+                    plot_single_categories(had_top_mass_1.mass,had_top_mass_min.mass,max_idxs_multi_had_top_mass.mass,top.mass,target_top.mass,
+                                           w_mass_1.mass,w_mass_min.mass,max_idxs_multi_w_mass.mass,w.mass,target_w.mass,
+                                           lep_top_mass.mass,lep_top_mass_min.mass,max_idxs_multi_lep_top_mass.mass,ltop.mass,target_ltop.mass,
+                                           baseline_top_mass.mass,baseline_W_mass.mass,targets_lt.mass,
+                                            sample=sample,out=out,y=y,obj=obj,obs='mass',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_all')  
+                    plot_single_categories(had_top_mass_0.pt,had_top_mass_min.pt,max_idxs_multi_had_top_mass.pt,top.pt,target_top.pt,
+                                           w_mass_0.pt,w_mass_min.pt,max_idxs_multi_w_mass.pt,w.pt,target_w.pt,
+                                           lep_top_mass.pt,lep_top_mass_min.pt,max_idxs_multi_lep_top_mass.pt,ltop.pt,target_ltop.pt,
+                                           baseline_top_mass.pt,baseline_W_mass.pt,targets_lt.pt,
+                                            sample=sample,out=out,y=y,obj=obj,obs='pt',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_0')  
+                    plot_single_categories(had_top_mass_1.pt,had_top_mass_min.pt,max_idxs_multi_had_top_mass.pt,top.pt,target_top.pt,
+                                           w_mass_1.pt,w_mass_min.pt,max_idxs_multi_w_mass.pt,w.pt,target_w.pt,
+                                           lep_top_mass.pt,lep_top_mass_min.pt,max_idxs_multi_lep_top_mass.pt,ltop.pt,target_ltop.pt,
+                                           baseline_top_mass.pt,baseline_W_mass.pt,targets_lt.pt,
+                                            sample=sample,out=out,y=y,obj=obj,obs='pt',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_all')  
+                    plot_single_categories(had_top_mass_0.eta,had_top_mass_min.eta,max_idxs_multi_had_top_mass.eta,top.eta,target_top.eta,
+                                           w_mass_0.eta,w_mass_min.eta,max_idxs_multi_w_mass.eta,w.eta,target_w.eta,
+                                           lep_top_mass.eta,lep_top_mass_min.eta,max_idxs_multi_lep_top_mass.eta,ltop.eta,target_ltop.eta,
+                                           baseline_top_mass.eta,baseline_W_mass.eta,targets_lt.eta,
+                                            sample=sample,out=out,y=y,obj=obj,obs='eta',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_0')  
+                    plot_single_categories(had_top_mass_1.eta,had_top_mass_min.eta,max_idxs_multi_had_top_mass.eta,top.eta,target_top.eta,
+                                           w_mass_1.eta,w_mass_min.eta,max_idxs_multi_w_mass.eta,w.eta,target_w.eta,
+                                           lep_top_mass.eta,lep_top_mass_min.eta,max_idxs_multi_lep_top_mass.eta,ltop.eta,target_ltop.eta,
+                                           baseline_top_mass.eta,baseline_W_mass.eta,targets_lt.eta,
+                                            sample=sample,out=out,y=y,obj=obj,obs='eta',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_all')  
+                    plot_single_categories(had_top_mass_0.phi,had_top_mass_min.phi,max_idxs_multi_had_top_mass.phi,top.phi,target_top.phi,
+                                           w_mass_0.phi,w_mass_min.phi,max_idxs_multi_w_mass.phi,w.phi,target_w.phi,
+                                           lep_top_mass.phi,lep_top_mass_min.phi,max_idxs_multi_lep_top_mass.phi,ltop.phi,target_ltop.phi,
+                                           baseline_top_mass.phi,baseline_W_mass.phi,targets_lt.phi,
+                                            sample=sample,out=out,y=y,obj=obj,obs='phi',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_0')  
+                    plot_single_categories(had_top_mass_1.phi,had_top_mass_min.phi,max_idxs_multi_had_top_mass.phi,top.phi,target_top.phi,
+                                           w_mass_1.phi,w_mass_min.phi,max_idxs_multi_w_mass.phi,w.phi,target_w.phi,
+                                           lep_top_mass.phi,lep_top_mass_min.phi,max_idxs_multi_lep_top_mass.phi,ltop.phi,target_ltop.phi,
+                                           baseline_top_mass.phi,baseline_W_mass.phi,targets_lt.phi,
+                                            sample=sample,out=out,y=y,obj=obj,obs='phi',algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_all')  
 
         
-        #for sample in ['all','sig','bkg']:
-        #    for category in [6,3,0,1,2,4,5]:
-        #        for obj in ['top','W','leptop']:
-        #            for obs in ['mass']:#,'pt']:
-        #                if (obj=='W' and obs=='pt'): continue
-        #                if (obj=='leptop' and category!=6): continue
-        #                plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
-        #                                       w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
-        #                                       lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
-        #                                       baseline_top_mass,baseline_W_mass,targets_lt,
-        #                                        sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
+        for sample in ['all','sig','bkg']:
+            for category in [6,3,0,1,2,4,5]:
+                for obj in ['top','W','leptop']:
+                    if (obj=='leptop' and category!=6): continue
+                    plot_single_categories(had_top_mass.mass,had_top_mass_min.mass,max_idxs_multi_had_top_mass.mass,top.mass,target_top.mass,
+                                               w_mass.mass,w_mass_min.mass,max_idxs_multi_w_mass.mass,w.mass,target_w.mass,
+                                               lep_top_mass.mass,lep_top_mass_min.mass,max_idxs_multi_lep_top_mass.mass,ltop.mass,target_ltop.mass,
+                                               baseline_top_mass.mass,baseline_W_mass.mass,targets_lt.mass,
+                                                sample=sample,out=out,y=y,obj=obj,obs='mass',algo='SPANet',thr=0,category=category,colors=colors) 
+                    plot_single_categories(had_top_mass.pt,had_top_mass_min.pt,max_idxs_multi_had_top_mass.pt,top.pt,target_top.pt,
+                                               w_mass.pt,w_mass_min.pt,max_idxs_multi_w_mass.pt,w.pt,target_w.pt,
+                                               lep_top_mass.pt,lep_top_mass_min.pt,max_idxs_multi_lep_top_mass.pt,ltop.pt,target_ltop.pt,
+                                               baseline_top_mass.pt,baseline_W_mass.pt,targets_lt.pt,
+                                                sample=sample,out=out,y=y,obj=obj,obs='pt',algo='SPANet',thr=0,category=category,colors=colors) 
+                    plot_single_categories(had_top_mass.eta,had_top_mass_min.eta,max_idxs_multi_had_top_mass.eta,top.eta,target_top.eta,
+                                               w_mass.eta,w_mass_min.eta,max_idxs_multi_w_mass.eta,w.eta,target_w.eta,
+                                               lep_top_mass.eta,lep_top_mass_min.eta,max_idxs_multi_lep_top_mass.eta,ltop,target_ltop.eta,
+                                               baseline_top_mass.eta,baseline_W_mass.eta,targets_lt.eta,
+                                                sample=sample,out=out,y=y,obj=obj,obs='eta',algo='SPANet',thr=0,category=category,colors=colors) 
+                    plot_single_categories(had_top_mass.phi,had_top_mass_min.phi,max_idxs_multi_had_top_mass.phi,top.phi,target_top.phi,
+                                               w_mass.phi,w_mass_min.phi,max_idxs_multi_w_mass.phi,w.phi,target_w.phi,
+                                               lep_top_mass.phi,lep_top_mass_min.phi,max_idxs_multi_lep_top_mass.phi,ltop.phi,target_ltop.phi,
+                                               baseline_top_mass.phi,baseline_W_mass.phi,targets_lt.phi,
+                                                sample=sample,out=out,y=y,obj=obj,obs='phi',algo='SPANet',thr=0,category=category,colors=colors) 
 
    
