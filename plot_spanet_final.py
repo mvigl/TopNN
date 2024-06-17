@@ -207,15 +207,16 @@ def extract_predictions(predictions: List[TArray]):
     return [result[:, :partons] for result, partons in zip(results, num_partons)]
 
 
-def get_observable(pt,phi,eta,mass,predictions,mask_predictions=None,detection_probabilities=None,thr=0.2,reco='top',obs='mass'):
+def get_observable(pt,phi,eta,mass,predictions,mask_predictions=None,cut_prob=None,thr=0.,reco='top',obs='mass'):
     pt = pt[np.arange(len(predictions))[:, np.newaxis], predictions]
     phi = phi[np.arange(len(predictions))[:, np.newaxis], predictions]
     eta = eta[np.arange(len(predictions))[:, np.newaxis], predictions]
     mass = mass[np.arange(len(predictions))[:, np.newaxis], predictions]
     mask = mask_predictions[np.arange(len(predictions))[:, np.newaxis], predictions]
-    #for v in [pt,phi,eta,mass]:
-        #v[mask==False] = 0.
-        #v[detection_probabilities<thr,2] = 0
+    if cut_prob is not None:
+        for v in [pt,phi,eta,mass]:
+            #v[mask==False] = 0.
+            v[cut_prob>thr,2] = 0
     b= vector.array(
         {
             "pt": pt[:,0],
@@ -254,7 +255,7 @@ def get_observable(pt,phi,eta,mass,predictions,mask_predictions=None,detection_p
         return 0
     return observable
 
-def get_observable_leptop(pt,phi,eta,mass,predictions,mask_predictions=None,detection_probabilities=None,thr=0.2,reco='top',obs='mass'):
+def get_observable_leptop(pt,phi,eta,mass,predictions,mask_predictions=None,detection_probabilities=None,thr=0.,reco='top',obs='mass'):
     pt = pt[np.arange(len(predictions))[:, np.newaxis], predictions]
     phi = phi[np.arange(len(predictions))[:, np.newaxis], predictions]
     eta = eta[np.arange(len(predictions))[:, np.newaxis], predictions]
@@ -362,6 +363,9 @@ with h5py.File("/raven//u/mvigl/Stop/run/pre/H5_samples_test/multiplets_test.h5"
 
 ort_sess_baseline = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/baseline.onnx")
 outputs_baseline = ort_sess_baseline.run(None, {'l_x_': multiplets})   
+
+with open('evals_baseline_test.pkl', 'wb') as pickle_file:
+    pickle.dump(outputs_baseline, pickle_file)   
 
 multiplets_evt = (ak.unflatten(multiplets, counts.astype(int)))
 labels_evt = ((ak.unflatten(ak.Array(labels), counts.astype(int)))[:,0]==1)
@@ -521,7 +525,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
                                      '#e377c2',
                                      '#7f7f7f',
                                      '#bcbd22',
-                                     '#17becf']):
+                                     '#17becf'],
+                                     mess=''):
     
     if obj=='top': b=np.linspace(50,400,60)
     elif obj=='leptop': b=np.linspace(0,400,60)
@@ -585,8 +590,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     out_dir = f'Categories/Single_Categories/{obj}/{obs}/{sample}'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-    if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}.png')
-    else: fig.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}.png')
+    if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
+    else: fig.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}{mess}.png')
 
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
@@ -647,6 +652,7 @@ if __name__ == "__main__":
         target_top = get_observable(pt,phi,eta,mass,targets,masks,thr=0.,reco='top',obs='mass')
         baseline_top_mass = get_observable_baseline(baseline_preds,reco='top',obs='mass')
 
+
         w_mass = get_observable(pt,phi,eta,mass,had_top,masks,thr=0.,reco='W',obs='mass')
         w_mass_min = get_observable(pt,phi,eta,mass,had_top_min,masks,thr=0.,reco='W',obs='mass')
         max_idxs_multi_w_mass = get_observable(pt,phi,eta,mass,max_idxs_multi_had_top,masks,thr=0.,reco='W',obs='mass')
@@ -660,16 +666,31 @@ if __name__ == "__main__":
         ltop = get_observable_leptop(pt,phi,eta,mass,np.concatenate((out[0],np.ones(len(out[0])).reshape(len(out[0]),-1)*7),axis=-1).astype(int),masks,thr=0.,reco='top',obs='mass')
         target_ltop = get_observable_leptop(pt,phi,eta,mass,targets_lt,masks,thr=0.,reco='top',obs='mass')
 
+
+        had_top_mass_0 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=0.,reco='top',obs='mass')
         for sample in ['all','sig','bkg']:
-            for category in [6,3,0,1,2,4,5]:
-                for obj in ['top','W','leptop']:
+            for category in [6,3,5]:
+                for obj in ['top','W']:
                     for obs in ['mass']:#,'pt']:
                         if (obj=='W' and obs=='pt'): continue
                         if (obj=='leptop' and category!=6): continue
-                        plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
+                        plot_single_categories(had_top_mass_0,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                                                w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
                                                lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
                                                baseline_top_mass,baseline_W_mass,targets_lt,
-                                                sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
+                                                sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors,mess='_cut_0')  
+
+        
+        #for sample in ['all','sig','bkg']:
+        #    for category in [6,3,0,1,2,4,5]:
+        #        for obj in ['top','W','leptop']:
+        #            for obs in ['mass']:#,'pt']:
+        #                if (obj=='W' and obs=='pt'): continue
+        #                if (obj=='leptop' and category!=6): continue
+        #                plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
+        #                                       w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
+        #                                       lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
+        #                                       baseline_top_mass,baseline_W_mass,targets_lt,
+        #                                        sample=sample,out=out,y=y,obj=obj,obs=obs,algo='SPANet',thr=0,category=category,colors=colors)  
 
    
