@@ -671,10 +671,10 @@ if __name__ == "__main__":
 
 
         had_top_mass_0 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=0.,reco='top',obs='mass')
-        w_mass_0 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=0.,reco='top',obs='mass')
+        w_mass_0 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=0.,reco='W',obs='mass')
 
         had_top_mass_1 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=-1.,reco='top',obs='mass')
-        w_mass_1 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=-1.,reco='top',obs='mass')
+        w_mass_1 = get_observable(pt,phi,eta,mass,had_top,masks,cut_prob=(outputs[-1][:,-2]-(outputs[-1][:,-1])),thr=-1.,reco='W',obs='mass')
 
         for sample in ['all','sig','bkg']:
             for category in [6,3,5]:
