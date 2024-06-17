@@ -10,6 +10,7 @@ import argparse
 import awkward as ak
 import onnxruntime
 from sklearn.metrics import roc_curve,auc
+import pickle
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--data', help='data',default='data/root/list_sig_FS_testing.txt')
@@ -301,59 +302,53 @@ onnx.checker.check_model(onnx_model)
 
 with h5py.File("/raven//u/mvigl/Stop/run/pre/SPANet_all_8_cat_final/spanet_inputs_test.h5",'r') as h5fw :   
     #y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
-    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:40689]
-    pt = h5fw['INPUTS']['Momenta']['pt'][:40689]
-    eta = h5fw['INPUTS']['Momenta']['eta'][:40689]
-    phi = h5fw['INPUTS']['Momenta']['phi'][:40689]
-    mass = h5fw['INPUTS']['Momenta']['mass'][:40689]
-    masks = h5fw['INPUTS']['Momenta']['MASK'][:40689]
-    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:40689],h5fw['TARGETS']['ht']['q1'][:40689],h5fw['TARGETS']['ht']['q2'][:40689]))
-    targets_lt = h5fw['TARGETS']['lt']['b'][:40689]
+    y = h5fw['CLASSIFICATIONS']['EVENT']['signal'][:]
+    pt = h5fw['INPUTS']['Momenta']['pt'][:]
+    eta = h5fw['INPUTS']['Momenta']['eta'][:]
+    phi = h5fw['INPUTS']['Momenta']['phi'][:]
+    mass = h5fw['INPUTS']['Momenta']['mass'][:]
+    masks = h5fw['INPUTS']['Momenta']['MASK'][:]
+    targets = np.column_stack((h5fw['TARGETS']['ht']['b'][:],h5fw['TARGETS']['ht']['q1'][:],h5fw['TARGETS']['ht']['q2'][:]))
+    targets_lt = h5fw['TARGETS']['lt']['b'][:]
     targets_lt = targets_lt.reshape((len(targets_lt),-1))
     targets_lt = np.concatenate((targets_lt,np.ones(len(targets_lt)).reshape(len(targets_lt),-1)*7),axis=-1).astype(int)
-    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:40689]
-    nbs = h5fw['truth_info']['nbjet'][:40689]
-    is_matched = h5fw['truth_info']['is_matched'][:40689]
+    match_label = h5fw['CLASSIFICATIONS']['EVENT']['match'][:]
+    nbs = h5fw['truth_info']['nbjet'][:]
+    is_matched = h5fw['truth_info']['is_matched'][:]
      
-    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:40689],
-                    h5fw['INPUTS']['Momenta']['pt'][:40689],
-                    h5fw['INPUTS']['Momenta']['eta'][:40689],
-                    h5fw['INPUTS']['Momenta']['phi'][:40689],
-                    h5fw['INPUTS']['Momenta']['btag'][:40689],
-                    h5fw['INPUTS']['Momenta']['qtag'][:40689],
-                    h5fw['INPUTS']['Momenta']['etag'][:40689]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
-    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:40689]).astype(bool)
+    Momenta_data = np.array([h5fw['INPUTS']['Momenta']['mass'][:],
+                    h5fw['INPUTS']['Momenta']['pt'][:],
+                    h5fw['INPUTS']['Momenta']['eta'][:],
+                    h5fw['INPUTS']['Momenta']['phi'][:],
+                    h5fw['INPUTS']['Momenta']['btag'][:],
+                    h5fw['INPUTS']['Momenta']['qtag'][:],
+                    h5fw['INPUTS']['Momenta']['etag'][:]]).astype(np.float32).swapaxes(0,1).swapaxes(1,2)
+    Momenta_mask = np.array(h5fw['INPUTS']['Momenta']['MASK'][:]).astype(bool)
 
-    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:40689],
-                    h5fw['INPUTS']['Met']['METsig'][:40689],
-                    h5fw['INPUTS']['Met']['METphi'][:40689],
-                    h5fw['INPUTS']['Met']['MET_Soft'][:40689],
-                    h5fw['INPUTS']['Met']['MET_Jet'][:40689],
-                    h5fw['INPUTS']['Met']['MET_Ele'][:40689],
-                    h5fw['INPUTS']['Met']['MET_Muon'][:40689],
-                    h5fw['INPUTS']['Met']['mT_METl'][:40689],
-                    h5fw['INPUTS']['Met']['dR_bb'][:40689],
-                    h5fw['INPUTS']['Met']['dphi_METl'][:40689],
-                    h5fw['INPUTS']['Met']['MT2_bb'][:40689],
-                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:40689],
-                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:40689],
-                    h5fw['INPUTS']['Met']['MT2_min'][:40689],
-                    h5fw['INPUTS']['Met']['HT'][:40689],
-                    h5fw['INPUTS']['Met']['nbjet'][:40689],
-                    h5fw['INPUTS']['Met']['nljet'][:40689],
-                    h5fw['INPUTS']['Met']['nVx'][:40689]]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
+    Met_data = np.array([h5fw['INPUTS']['Met']['MET'][:],
+                    h5fw['INPUTS']['Met']['METsig'][:],
+                    h5fw['INPUTS']['Met']['METphi'][:],
+                    h5fw['INPUTS']['Met']['MET_Soft'][:],
+                    h5fw['INPUTS']['Met']['MET_Jet'][:],
+                    h5fw['INPUTS']['Met']['MET_Ele'][:],
+                    h5fw['INPUTS']['Met']['MET_Muon'][:],
+                    h5fw['INPUTS']['Met']['mT_METl'][:],
+                    h5fw['INPUTS']['Met']['dR_bb'][:],
+                    h5fw['INPUTS']['Met']['dphi_METl'][:],
+                    h5fw['INPUTS']['Met']['MT2_bb'][:],
+                    h5fw['INPUTS']['Met']['MT2_b1l1_b2'][:],
+                    h5fw['INPUTS']['Met']['MT2_b2l1_b1'][:],
+                    h5fw['INPUTS']['Met']['MT2_min'][:],
+                    h5fw['INPUTS']['Met']['HT'][:],
+                    h5fw['INPUTS']['Met']['nbjet'][:],
+                    h5fw['INPUTS']['Met']['nljet'][:],
+                    h5fw['INPUTS']['Met']['nVx'][:]]).astype(np.float32).swapaxes(0,1)[:,np.newaxis,:]
     Met_mask = np.ones((len(Momenta_mask),1)).astype(bool)
 
 print('Momenta_data : ', Momenta_data.shape)  
 print('Momenta_mask : ', Momenta_mask.shape)  
 print('Met_data : ', Met_data.shape)    
 print('Met_mask : ', Met_mask.shape)   
-
-inputs = {}
-inputs['Momenta_data'] = Momenta_data
-inputs['Momenta_mask'] = Momenta_mask
-inputs['Met_data'] = Met_data
-inputs['Met_mask'] = Met_mask
 
 def baseline_target_vars(pt,targets):
     pt = pt[np.arange(len(targets))[:, np.newaxis], targets]
@@ -421,13 +416,41 @@ def get_best(outputs):
 
     return had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min
 
-ort_sess = ort.InferenceSession("/raven/u/mvigl/TopReco/SPANet/spanet_v2_log_norm.onnx")
 
-outputs = ort_sess.run(None, {'Momenta_data': Momenta_data,
-                              'Momenta_mask': Momenta_mask,
-                              'Met_data': Met_data,
-                              'Met_mask': Met_mask})
 
+def run_in_batches(model_path, Momenta_data,Momenta_mask,Met_data,Met_mask, batch_size):
+    ort_sess = ort.InferenceSession(model_path)
+    
+    outputs = []
+    num_batches = len(Met_data) // batch_size
+    if len(Met_data) % batch_size != 0:
+        num_batches += 1
+    print('num batches : ',num_batches)
+    for i in range(num_batches):
+        start_idx = i * batch_size
+        end_idx = min((i + 1) * batch_size, len(Met_data))
+        print('batch : ',i,'/',num_batches)
+        batch_inputs = {
+            'Momenta_data': Momenta_data[start_idx:end_idx],
+            'Momenta_mask': Momenta_mask[start_idx:end_idx],
+            'Met_data': Met_data[start_idx:end_idx],
+            'Met_mask': Met_mask[start_idx:end_idx]
+        }
+        
+        batch_outputs = ort_sess.run(None, batch_inputs)
+        if i == 0: outputs = batch_outputs
+        else: 
+            for j in range(len(outputs)):
+                outputs[j]=np.concatenate((outputs[j],batch_outputs[j]),axis=0)
+    
+    return outputs
+
+
+
+batch_size = 200000  # Adjust batch size based on your memory constraints
+outputs = run_in_batches("/raven/u/mvigl/TopReco/SPANet/spanet_v2_log_norm.onnx", Momenta_data,Momenta_mask,Met_data,Met_mask, batch_size)
+with open('evals_test.pkl', 'wb') as pickle_file:
+    pickle.dump(outputs, pickle_file)    
 out = extract_predictions(outputs[:2])
 
 matching= {
@@ -527,28 +550,30 @@ colors = prop_cycle.by_key()['color']
 def get_auc(targets,predictions,title):
     fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets).reshape(-1),predictions.reshape(-1))
     Auc_sig = auc(fpr_sig,tpr_sig)
-    plt.plot(fpr_sig,tpr_sig,label=f'auc : {Auc_sig:.2f}')
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
+    ax.plot(fpr_sig,tpr_sig,label=f'auc : {Auc_sig:.2f}')
     plt.title(f'{title}')
-    plt.legend()
-    plt.savefig(f'{title}.pdf')
+    ax.legend()
+    fig.savefig(f'{title}.pdf')
 
 def get_auc_vs(targets_spanet,predictions_spanet,targets_base,predictions_base,title):
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
     fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_spanet),predictions_spanet)
     Auc_sig_spanet = auc(fpr_sig,tpr_sig)
-    plt.plot(fpr_sig,tpr_sig,label=f'spanet auc : {Auc_sig_spanet:.2f}')
+    ax.plot(fpr_sig,tpr_sig,label=f'spanet auc : {Auc_sig_spanet:.2f}')
     fpr_sig, tpr_sig, thresholds_sig = roc_curve((targets_base),predictions_base)
     Auc_sig_base = auc(fpr_sig,tpr_sig)
-    plt.plot(fpr_sig,tpr_sig,label=f'baseline auc : {Auc_sig_base:.2f}')
+    ax.plot(fpr_sig,tpr_sig,label=f'baseline auc : {Auc_sig_base:.2f}')
     plt.title(f'{title}')
-    plt.legend()
-    plt.savefig(f'{title}.pdf')
+    ax.legend()
+    fig.savefig(f'{title}.pdf')
 
 if __name__ == "__main__":
 
     get_auc(labels,outputs_baseline[0],'baseline_auc')
     get_auc_vs(np.array(labels_evt).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2])),labels_evt,max_baseline,'tagging_5_6_spanet_vs_baseline')
     get_auc_vs(np.array(labels_evt[y==1]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==1],np.array(labels_evt[y==1]).astype(int),max_baseline[y==1],'tagging_5_6_spanet_vs_baseline_sig')
-    #get_auc_vs(np.array(labels_evt[y==0]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==0],np.array(labels_evt[y==0]).astype(int),max_baseline[y==0],'tagging_5_6_spanet_vs_baseline_bkg')
+    get_auc_vs(np.array(labels_evt[y==0]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==0],np.array(labels_evt[y==0]).astype(int),max_baseline[y==0],'tagging_5_6_spanet_vs_baseline_bkg')
 
     print('baseline accuracy on pairs : ', np.sum((np.sum(target_pt_baseline[(match_label==5)][:,:2]==(np.array(multiplets_evt[max_baseline_idx][:,:,:2]).reshape(-1,2)[(match_label==5)]),axis=-1)==2)*pair_baseline[(match_label==5)])/np.sum(match_label==5))
     print('baseline accuracy on triplets : ', np.sum(
