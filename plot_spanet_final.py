@@ -375,26 +375,26 @@ baseline_preds = multiplets_evt[max_baseline_idx]
 def get_observable_baseline(baseline_preds,reco='top',obs='mass'):
     b= vector.array(
         {
-            "pt": baseline_preds[:,:,inputs_baseline.index('bjet_pT')],
-            "phi": baseline_preds[:,:,inputs_baseline.index('bjet_phi')],
-            "eta": baseline_preds[:,:,inputs_baseline.index('bjet_eta')],
-            "M": baseline_preds[:,:,inputs_baseline.index('bjet_M')],
+            "pt": np.array(baseline_preds[:,:,inputs_baseline.index('bjet_pT')]).reshape(-1),
+            "phi": np.array(baseline_preds[:,:,inputs_baseline.index('bjet_phi')]).reshape(-1),
+            "eta": np.array(baseline_preds[:,:,inputs_baseline.index('bjet_eta')]).reshape(-1),
+            "M": np.array(baseline_preds[:,:,inputs_baseline.index('bjet_M')]).reshape(-1),
         }
     )
     j1 = vector.array(
         {
-            "pt": baseline_preds[:,:,inputs_baseline.index('jet1_pT')],
-            "phi": baseline_preds[:,:,inputs_baseline.index('jet1_phi')],
-            "eta": baseline_preds[:,:,inputs_baseline.index('jet1_eta')],
-            "M":baseline_preds[:,:,inputs_baseline.index('jet1_M')],
+            "pt": np.array(baseline_preds[:,:,inputs_baseline.index('jet1_pT')]).reshape(-1),
+            "phi": np.array(baseline_preds[:,:,inputs_baseline.index('jet1_phi')]).reshape(-1),
+            "eta": np.array(baseline_preds[:,:,inputs_baseline.index('jet1_eta')]).reshape(-1),
+            "M": np.array(baseline_preds[:,:,inputs_baseline.index('jet1_M')]).reshape(-1),
         }
     )
     j2 = vector.array(
         {
-            "pt": baseline_preds[:,:,inputs_baseline.index('jet2_pT')],
-            "phi": baseline_preds[:,:,inputs_baseline.index('jet2_phi')],
-            "eta": baseline_preds[:,:,inputs_baseline.index('jet2_eta')],
-            "M":baseline_preds[:,:,inputs_baseline.index('jet2_M')],
+            "pt": np.array(baseline_preds[:,:,inputs_baseline.index('jet2_pT')]).reshape(-1),
+            "phi": np.array(baseline_preds[:,:,inputs_baseline.index('jet2_phi')]).reshape(-1),
+            "eta": np.array(baseline_preds[:,:,inputs_baseline.index('jet2_eta')]).reshape(-1),
+            "M": np.array(baseline_preds[:,:,inputs_baseline.index('jet2_M')]).reshape(-1),
         }
     )
     if reco == 'top': obj = b+(j1+j2)
