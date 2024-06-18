@@ -636,17 +636,17 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
     label_bkg = (y==0)
 
     if obj == 'top':  
-        ax.hist(had_top_mass,weights=1*(label_sig),label='Sig Reco (priority from detection prob)',density=True,bins=b,alpha=0.5,color=colors[1])
-        ax.hist(baseline_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,alpha=0.5,color=colors[5])
+        ax.hist(had_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,color=colors[5])
 
-        ax.hist(had_top_mass,weights=1*(label_bkg),label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(had_top_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_top_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
 
     elif obj == 'W':  
-        ax.hist(w_mass,weights=1*(label_sig),label='Sig Reco (priority from detection prob)',density=True,bins=b,alpha=0.5,color=colors[1])
-        ax.hist(baseline_W_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,alpha=0.5,color=colors[5])
+        ax.hist(w_mass,weights=1*(label_sig),histtype='step',label='Sig Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_W_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,color=colors[5])
 
-        ax.hist(w_mass,weights=1*(label_bkg),label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(w_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_W_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
     else: 
         return    
