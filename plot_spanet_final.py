@@ -768,23 +768,23 @@ if __name__ == "__main__":
 
 
         for obj in ['top','W']:
-            plot_all_categories(had_top_mass_0.mass,had_top_mass_min.mass,max_idxs_multi_had_top_mass.mass,top.mass,target_top.mass,
-                                           w_mass_0.mass,w_mass_min.mass,max_idxs_multi_w_mass.mass,w.mass,target_w.mass,
+            plot_all_categories(had_top_mass.mass,had_top_mass_min.mass,max_idxs_multi_had_top_mass.mass,top.mass,target_top.mass,
+                                           w_mass.mass,w_mass_min.mass,max_idxs_multi_w_mass.mass,w.mass,target_w.mass,
                                            lep_top_mass.mass,lep_top_mass_min.mass,max_idxs_multi_lep_top_mass.mass,ltop.mass,target_ltop.mass,
                                            baseline_top_mass.mass,baseline_W_mass.mass,targets_lt,
                                             sample='all',out=out,y=y,obj=obj,obs='mass',algo='SPANet',thr=0,category=6,colors=colors) 
-            plot_all_categories(had_top_mass_0.pt,had_top_mass_min.pt,max_idxs_multi_had_top_mass.pt,top.pt,target_top.pt,
-                                           w_mass_0.pt,w_mass_min.pt,max_idxs_multi_w_mass.pt,w.pt,target_w.pt,
+            plot_all_categories(had_top_mass.pt,had_top_mass_min.pt,max_idxs_multi_had_top_mass.pt,top.pt,target_top.pt,
+                                           w_mass.pt,w_mass_min.pt,max_idxs_multi_w_mass.pt,w.pt,target_w.pt,
                                            lep_top_mass.pt,lep_top_mass_min.pt,max_idxs_multi_lep_top_mass.pt,ltop.pt,target_ltop.pt,
                                            baseline_top_mass.pt,baseline_W_mass.pt,targets_lt,
                                             sample='all',out=out,y=y,obj=obj,obs='pt',algo='SPANet',thr=0,category=6,colors=colors) 
-            plot_all_categories(had_top_mass_0.eta,had_top_mass_min.eta,max_idxs_multi_had_top_mass.eta,top.eta,target_top.eta,
-                                           w_mass_0.eta,w_mass_min.eta,max_idxs_multi_w_mass.eta,w.eta,target_w.eta,
+            plot_all_categories(had_top_mass.eta,had_top_mass_min.eta,max_idxs_multi_had_top_mass.eta,top.eta,target_top.eta,
+                                           w_mass.eta,w_mass_min.eta,max_idxs_multi_w_mass.eta,w.eta,target_w.eta,
                                            lep_top_mass.eta,lep_top_mass_min.eta,max_idxs_multi_lep_top_mass.eta,ltop.eta,target_ltop.eta,
                                            baseline_top_mass.eta,baseline_W_mass.eta,targets_lt,
                                             sample='all',out=out,y=y,obj=obj,obs='eta',algo='SPANet',thr=0,category=6,colors=colors) 
-            plot_all_categories(had_top_mass_0.phi,had_top_mass_min.phi,max_idxs_multi_had_top_mass.phi,top.phi,target_top.phi,
-                                           w_mass_0.phi,w_mass_min.phi,max_idxs_multi_w_mass.phi,w.phi,target_w.phi,
+            plot_all_categories(had_top_mass.phi,had_top_mass_min.phi,max_idxs_multi_had_top_mass.phi,top.phi,target_top.phi,
+                                           w_mass.phi,w_mass_min.phi,max_idxs_multi_w_mass.phi,w.phi,target_w.phi,
                                            lep_top_mass.phi,lep_top_mass_min.phi,max_idxs_multi_lep_top_mass.phi,ltop.phi,target_ltop.phi,
                                            baseline_top_mass.phi,baseline_W_mass.phi,targets_lt,
                                             sample='all',out=out,y=y,obj=obj,obs='phi',algo='SPANet',thr=0,category=6,colors=colors) 
