@@ -629,6 +629,7 @@ def plot_cat_cut(outputs,match_label):
     b=np.linspace(-1,1,100)
     ax.hist(outputs[-1][:,-2]-outputs[-1][:,-1],weights=1*(match_label==6),histtype='step',bins=b,density=True,label='cat 6')
     ax.hist(outputs[-1][:,-2]-outputs[-1][:,-1],weights=1*(match_label==5),histtype='step',bins=b,density=True,label='cat 5')
+    fig.savefig(f'cat6_vs_5.pdf')
     ax.legend()    
 
 if __name__ == "__main__":
