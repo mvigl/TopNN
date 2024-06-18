@@ -639,15 +639,15 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
         ax.hist(had_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,color=colors[5])
 
-        ax.hist(had_top_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
-        ax.hist(baseline_top_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
+        ax.hist(had_top_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_top_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
 
     elif obj == 'W':  
         ax.hist(w_mass,weights=1*(label_sig),histtype='step',label='Sig Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_W_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,color=colors[5])
 
-        ax.hist(w_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
-        ax.hist(baseline_W_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
+        ax.hist(w_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_W_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
     else: 
         return    
     ax.set_ylabel('Events (a.u.)')
@@ -675,6 +675,86 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
     else: fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')    
+
+def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
+                            w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
+                            lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
+                            baseline_top_mass,baseline_W_mass,targets_lt,
+                            match=match_label,out=out,y=y,sample='all',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
+                           colors=[  '#1f77b4',
+                                     '#ff7f0e',
+                                     '#2ca02c',
+                                     '#d62728',
+                                     '#9467bd',
+                                     '#8c564b',
+                                     '#e377c2',
+                                     '#7f7f7f',
+                                     '#bcbd22',
+                                     '#17becf'],
+                                     mess=''):
+    
+    if obj=='top': b=np.linspace(50,400,60)
+    elif obj=='leptop': b=np.linspace(0,400,60)
+    elif obj=='W': b=np.linspace(0,200,40)
+    elif obj=='top_pair': b=np.linspace(0,400,40)
+    elif obj=='W_pair': b=np.linspace(0,140,40)
+    if obs=='TopNN_score': b=np.linspace(0,1,40)
+    elif obs=='truth_top_pt': b=np.linspace(0,1000,40)
+    elif obs=='truth_top_min_dR_m': b=np.linspace(0,400,40)
+    elif obs=='pt': b=np.linspace(0,1000,40)
+    elif obs=='eta': b=np.linspace(-3.5,3.5,40)
+    elif obs=='phi': b=np.linspace(-3.5,3.5,40)
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
+    plt.title(f'{algo} full events {sample}')
+    if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
+
+    label_sig = (y==1)*(match>4)
+    label_bkg = (y==0)*(match>4)
+
+    if obj == 'top':  
+        ax.hist(target_top,weights=1*(label_sig),histtype='step',label='Sig Truth matched',density=True,bins=b,color=colors[0],lw=2)
+        ax.hist(had_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,color=colors[5])
+
+        ax.hist(target_top,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Truth matched',density=True,bins=b,color=colors[0],lw=2)
+        ax.hist(had_top_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_top_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
+
+    elif obj == 'W':  
+        ax.hist(target_w,weights=1*(label_sig),histtype='step',label='Sig Truth matched',density=True,bins=b,color=colors[0],lw=2)
+        ax.hist(w_mass,weights=1*(label_sig),histtype='step',label='Sig Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_W_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,color=colors[5])
+
+        ax.hist(target_w,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Truth matched',density=True,bins=b,color=colors[0],lw=2)
+        ax.hist(w_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_W_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
+    else: 
+        return    
+    ax.set_ylabel('Events (a.u.)')
+    if obj=='top': ax.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
+    elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
+    elif obj=='leptop': ax.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
+    elif obs=='TopNN_score': ax.set_xlabel('top cand score',loc='right')
+    elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
+    elif obs=='truth_top_min_dR_m': ax.set_xlabel('true top Mass [GeV]',loc='right')
+    if obs=='TopNN_score': ax.legend(fontsize=8,loc='upper left')
+    else: ax.legend(fontsize=8,loc='upper right')
+    if obs in ['detection_probability','prediction_probability','prediction_probability_lt','detection_probability_lt']: 
+        ax.semilogy()
+    #ax.semilogy()    
+
+    out_dir = f'Categories'
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+    out_dir = f'Categories/Truth_Categories'
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+    out_dir = f'Categories/Truth_Categories/{obj}'
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+    out_dir = f'Categories/Truth_Categories/{obj}/{obs}'
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+    out_dir = f'Categories/Truth_Categories/{obj}/{obs}/{sample}'
+    if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
+    if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
+    else: fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')   
 
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
@@ -784,6 +864,26 @@ if __name__ == "__main__":
                                            baseline_top_mass.eta,baseline_W_mass.eta,targets_lt,
                                             sample='all',out=out,y=y,obj=obj,obs='eta',algo='SPANet',thr=0,category=6,colors=colors) 
             plot_all_categories(had_top_mass.phi,had_top_mass_min.phi,max_idxs_multi_had_top_mass.phi,top.phi,target_top.phi,
+                                           w_mass.phi,w_mass_min.phi,max_idxs_multi_w_mass.phi,w.phi,target_w.phi,
+                                           lep_top_mass.phi,lep_top_mass_min.phi,max_idxs_multi_lep_top_mass.phi,ltop.phi,target_ltop.phi,
+                                           baseline_top_mass.phi,baseline_W_mass.phi,targets_lt,
+                                            sample='all',out=out,y=y,obj=obj,obs='phi',algo='SPANet',thr=0,category=6,colors=colors) 
+            plot_all_truth_categories(had_top_mass.mass,had_top_mass_min.mass,max_idxs_multi_had_top_mass.mass,top.mass,target_top.mass,
+                                           w_mass.mass,w_mass_min.mass,max_idxs_multi_w_mass.mass,w.mass,target_w.mass,
+                                           lep_top_mass.mass,lep_top_mass_min.mass,max_idxs_multi_lep_top_mass.mass,ltop.mass,target_ltop.mass,
+                                           baseline_top_mass.mass,baseline_W_mass.mass,targets_lt,
+                                            sample='all',out=out,y=y,obj=obj,obs='mass',algo='SPANet',thr=0,category=6,colors=colors) 
+            plot_all_truth_categories(had_top_mass.pt,had_top_mass_min.pt,max_idxs_multi_had_top_mass.pt,top.pt,target_top.pt,
+                                           w_mass.pt,w_mass_min.pt,max_idxs_multi_w_mass.pt,w.pt,target_w.pt,
+                                           lep_top_mass.pt,lep_top_mass_min.pt,max_idxs_multi_lep_top_mass.pt,ltop.pt,target_ltop.pt,
+                                           baseline_top_mass.pt,baseline_W_mass.pt,targets_lt,
+                                            sample='all',out=out,y=y,obj=obj,obs='pt',algo='SPANet',thr=0,category=6,colors=colors) 
+            plot_all_truth_categories(had_top_mass.eta,had_top_mass_min.eta,max_idxs_multi_had_top_mass.eta,top.eta,target_top.eta,
+                                           w_mass.eta,w_mass_min.eta,max_idxs_multi_w_mass.eta,w.eta,target_w.eta,
+                                           lep_top_mass.eta,lep_top_mass_min.eta,max_idxs_multi_lep_top_mass.eta,ltop.eta,target_ltop.eta,
+                                           baseline_top_mass.eta,baseline_W_mass.eta,targets_lt,
+                                            sample='all',out=out,y=y,obj=obj,obs='eta',algo='SPANet',thr=0,category=6,colors=colors) 
+            plot_all_truth_categories(had_top_mass.phi,had_top_mass_min.phi,max_idxs_multi_had_top_mass.phi,top.phi,target_top.phi,
                                            w_mass.phi,w_mass_min.phi,max_idxs_multi_w_mass.phi,w.phi,target_w.phi,
                                            lep_top_mass.phi,lep_top_mass_min.phi,max_idxs_multi_lep_top_mass.phi,ltop.phi,target_ltop.phi,
                                            baseline_top_mass.phi,baseline_W_mass.phi,targets_lt,
