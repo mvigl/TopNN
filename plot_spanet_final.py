@@ -636,30 +636,18 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
     label_bkg = (y==0)
 
     if obj == 'top':  
-        ax.hist(had_top_mass,weights=1*(label_sig),label='Sig Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
-        ax.hist(top,weights=1*(label_sig),histtype='step',label='Sig Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
-        ax.hist(max_idxs_multi_had_top_mass,weights=1*(label_sig),label='Sig Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
-        ax.hist(had_top_mass_min,weights=1*(label_sig),histtype='step',label='Sig Reco (priority to lep top)',density=False,bins=b,color=colors[4])
-        ax.hist(baseline_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=False,bins=b,color=colors[5])
+        ax.hist(had_top_mass,weights=1*(label_sig),label='Sig Reco (priority from detection prob)',density=True,bins=b,alpha=0.5,color=colors[1])
+        ax.hist(baseline_top_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,alpha=0.5,color=colors[5])
 
-        ax.hist(had_top_mass,weights=1*(label_bkg),label='Bkg Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[0])
-        ax.hist(top,weights=1*(label_bkg),histtype='step',label='Bkg Reco default (based on assignment prob only)',density=False,bins=b,color=colors[6])
-        ax.hist(max_idxs_multi_had_top_mass,weights=1*(label_bkg),label='Bkg Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[7])
-        ax.hist(had_top_mass_min,weights=1*(label_bkg),histtype='step',label='Bkg Reco (priority to lep top)',density=False,bins=b,color=colors[8])
-        ax.hist(baseline_top_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=False,bins=b,color=colors[9])
+        ax.hist(had_top_mass,weights=1*(label_bkg),label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_top_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
 
     elif obj == 'W':  
-        ax.hist(w_mass,weights=1*(label_sig),label='Sig Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
-        ax.hist(w,weights=1*(label_sig),histtype='step',label='Sig Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
-        ax.hist(max_idxs_multi_w_mass,weights=1*(label_sig),label='Sig Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
-        ax.hist(w_mass_min,weights=1*(label_sig),histtype='step',label='Sig Reco (priority to lep top)',density=False,bins=b,color=colors[4])
-        ax.hist(baseline_W_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=False,bins=b,color=colors[5])
+        ax.hist(w_mass,weights=1*(label_sig),label='Sig Reco (priority from detection prob)',density=True,bins=b,alpha=0.5,color=colors[1])
+        ax.hist(baseline_W_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,alpha=0.5,color=colors[5])
 
-        ax.hist(w_mass,weights=1*(label_bkg),label='Bkg Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[0])
-        ax.hist(w,weights=1*(label_bkg),histtype='step',label='Bkg Reco default (based on assignment prob only)',density=False,bins=b,color=colors[6])
-        ax.hist(max_idxs_multi_w_mass,weights=1*(label_bkg),label='Bkg Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[7])
-        ax.hist(w_mass_min,weights=1*(label_bkg),histtype='step',label='Bkg Reco (priority to lep top)',density=False,bins=b,color=colors[8])
-        ax.hist(baseline_W_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=False,bins=b,color=colors[9])
+        ax.hist(w_mass,weights=1*(label_bkg),label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
+        ax.hist(baseline_W_mass,weights=1*(label_bkg),histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
     else: 
         return    
     ax.set_ylabel('Events (a.u.)')
