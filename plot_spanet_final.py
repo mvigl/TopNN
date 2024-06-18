@@ -604,7 +604,7 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
                             w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
                             lep_top_mass,lep_top_mass_min,max_idxs_multi_lep_top_mass,ltop,target_ltop,
                             baseline_top_mass,baseline_W_mass,targets_lt,
-                            match=match_label,out=out,y=y,sample='sig',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
+                            match=match_label,out=out,y=y,sample='all',obj='top',obs='mass',algo='SPANet',thr=0.,category=5,
                            colors=[  '#1f77b4',
                                      '#ff7f0e',
                                      '#2ca02c',
@@ -629,7 +629,7 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
     elif obs=='eta': b=np.linspace(-3.5,3.5,40)
     elif obs=='phi': b=np.linspace(-3.5,3.5,40)
     fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
-    plt.title(f'{algo} {matching[category]} {sample}')
+    plt.title(f'{algo} full events {sample}')
     if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
 
     label_sig = (y==1)
