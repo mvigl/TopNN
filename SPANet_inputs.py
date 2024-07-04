@@ -9,7 +9,7 @@ import yaml
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--filelist', help='data',default='data/root/list_all.txt')
-parser.add_argument('--split', help='train,test,val',default='train')
+parser.add_argument('--split', help='train,test,val,even,odd',default='odd')
 parser.add_argument('--out_dir', help='out_dir',default='SPANet_all_8_cat_final')
 parser.add_argument('--combine',  action='store_true', help='combine', default=True)
 parser.add_argument('--bkg_targets',  action='store_true', help='bkg_targets', default=True)
@@ -95,19 +95,23 @@ Features = ['multiplets',
             'EventNumber',
             ]
 
-def split_data(length,array,dataset='test'):
-    idx_train = int(length*0.95)
-    if dataset=='train': return array[:idx_train] 
-    if dataset=='test': return array[idx_train:]    
-    if dataset=='full': return array[:]  
-    else:       
-        print('choose: train, val, test')
-        return 0       
+def split_data(length,array,rnum_array,dataset='test'):
+    if dataset == 'odd': return array[rnum_array%2==1]
+    elif dataset == 'even': return array[rnum_array%2==0]
+    else: 
+        idx_train = int(length*0.95)
+        if dataset=='train': return array[:idx_train] 
+        if dataset=='test': return array[idx_train:]    
+        if dataset=='full': return array[:]  
+        else:       
+            print('choose: train, val, test')
+            return 0       
 
 def idxs_to_var(branches,dataset,sig,bkg_targets=False):
 
     # dummy filter, here is all events
     filter = (ak.Array(branches['multiplets'])[:,0,-1] > -100)
+    rnum_array = (ak.Array(branches['EventNumber'])[:])
 
     # no good had-top triplet/doublet
     not_matched =  (ak.Array(branches['multiplets'])[filter,0,-1]!=1)
@@ -126,18 +130,18 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
             inputs[var][:,0] += 1
             inputs[var][:,1] += 1
             inputs[var][:,6] += 1
-            inputs[var] = split_data(length,inputs[var],dataset=dataset)
+            inputs[var] = split_data(length,inputs[var],rnum_array=rnum_array,dataset=dataset)
         elif var == 'qtag':
             inputs[var] = np.zeros((length,10))
             inputs[var][:,2] += 1
             inputs[var][:,3] += 1
             inputs[var][:,4] += 1
             inputs[var][:,5] += 1  
-            inputs[var] = split_data(length,inputs[var],dataset=dataset)
+            inputs[var] = split_data(length,inputs[var],rnum_array=rnum_array,dataset=dataset)
         elif var == 'etag':
             inputs[var] = np.zeros((length,10))
             inputs[var][:,7] += 1
-            inputs[var] = split_data(length,inputs[var],dataset=dataset)
+            inputs[var] = split_data(length,inputs[var],rnum_array=rnum_array,dataset=dataset)
         else:
             inputs[var] = np.zeros((length,10))
             inputs[var][:,0] += ak.Array(branches['bjet1'+var][filter]).to_numpy()
@@ -150,7 +154,7 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
             inputs[var][:,6] += ak.Array(branches['bjet3'+var][filter]).to_numpy()
             (inputs[var])[inputs[var]==-999]=0.
             (inputs[var])[inputs[var]==-10]=0.
-            inputs[var] = split_data(length,inputs[var],dataset=dataset)
+            inputs[var] = split_data(length,inputs[var],rnum_array=rnum_array,dataset=dataset)
     mask = (inputs['pT']>0)
     inputs['btag'][mask==False]=0.
     inputs['qtag'][mask==False]=0.
@@ -165,11 +169,11 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
         targets['q2'] = -np.ones((length))
         targets['ltb'] = -np.ones((length))
         targets['ltl'] = -np.ones((length))
-        targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
-        targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
-        targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
-        targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
-        targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
+        targets['htb'] = split_data(length,targets['htb'],rnum_array=rnum_array,dataset=dataset)
+        targets['q1'] = split_data(length,targets['q1'],rnum_array=rnum_array,dataset=dataset)
+        targets['q2'] = split_data(length,targets['q2'],rnum_array=rnum_array,dataset=dataset)
+        targets['ltb'] = split_data(length,targets['ltb'],rnum_array=rnum_array,dataset=dataset)
+        targets['ltl'] = split_data(length,targets['ltl'],rnum_array=rnum_array,dataset=dataset)
     else:
         targets['htb'] = -np.ones((length))
         targets['q1'] = -np.ones((length))
@@ -205,70 +209,70 @@ def idxs_to_var(branches,dataset,sig,bkg_targets=False):
         (targets['ltb'])[not_matched] = -1 # if no had-top then don't reconstruct the lep-top (truth matching not well defined!!!!)
         (targets['ltl'])[not_matched] = -1 # if no had-top then don't reconstruct the lep-top (truth matching not well defined!!!!)
 
-        targets['htb'] = split_data(length,targets['htb'],dataset=dataset)
-        targets['q1'] = split_data(length,targets['q1'],dataset=dataset)
-        targets['q2'] = split_data(length,targets['q2'],dataset=dataset)
-        targets['ltb'] = split_data(length,targets['ltb'],dataset=dataset)
+        targets['htb'] = split_data(length,targets['htb'],rnum_array=rnum_array,dataset=dataset)
+        targets['q1'] = split_data(length,targets['q1'],rnum_array=rnum_array,dataset=dataset)
+        targets['q2'] = split_data(length,targets['q2'],rnum_array=rnum_array,dataset=dataset)
+        targets['ltb'] = split_data(length,targets['ltb'],rnum_array=rnum_array,dataset=dataset)
         single_b = ((mask[:,0]*mask[:,1])==False)
         (targets['ltb'])[single_b*(targets['htb']!=-1)]=-1
-        targets['ltl'] = split_data(length,targets['ltl'],dataset=dataset)
+        targets['ltl'] = split_data(length,targets['ltl'],rnum_array=rnum_array,dataset=dataset)
         targets['ltl'][(mask[:,7]==False)]=-1
 
     # fill the global features
     met = {
-        'MET': split_data(length,branches['MET'][filter].to_numpy(),dataset=dataset),
-        'METsig': split_data(length,branches['METsig'][filter].to_numpy(),dataset=dataset),
-        'METphi': split_data(length,branches['METphi'][filter].to_numpy(),dataset=dataset),
-        'MET_Soft': split_data(length,branches['MET_Soft'][filter].to_numpy(),dataset=dataset),
-        'MET_Jet': split_data(length,branches['MET_Jet'][filter].to_numpy(),dataset=dataset),
-        'MET_Ele': split_data(length,branches['MET_Ele'][filter].to_numpy(),dataset=dataset),
-        'MET_Muon': split_data(length,branches['MET_Muon'][filter].to_numpy(),dataset=dataset),
-        'mT_METl': split_data(length,branches['mT_METl'][filter].to_numpy(),dataset=dataset),
-        'dR_bb': split_data(length,branches['dR_bb'][filter].to_numpy(),dataset=dataset),
-        'dphi_METl': split_data(length,branches['dphi_METl'][filter].to_numpy(),dataset=dataset),
-        'MT2_bb': split_data(length,branches['MT2_bb'][filter].to_numpy(),dataset=dataset),
-        'MT2_b1l1_b2': split_data(length,branches['MT2_b1l1_b2'][filter].to_numpy(),dataset=dataset),
-        'MT2_b2l1_b1': split_data(length,branches['MT2_b2l1_b1'][filter].to_numpy(),dataset=dataset),
-        'MT2_min': split_data(length,branches['MT2_min'][filter].to_numpy(),dataset=dataset),
-        'HT': split_data(length,branches['HT'][filter].to_numpy(),dataset=dataset),
-        'nbjet': split_data(length,branches['nbjet'][filter].to_numpy(),dataset=dataset),
-        'nljet': split_data(length,branches['nljet'][filter].to_numpy(),dataset=dataset),
-        'nVx': split_data(length,branches['nVx'][filter].to_numpy(),dataset=dataset),
+        'MET': split_data(length,branches['MET'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'METsig': split_data(length,branches['METsig'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'METphi': split_data(length,branches['METphi'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MET_Soft': split_data(length,branches['MET_Soft'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MET_Jet': split_data(length,branches['MET_Jet'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MET_Ele': split_data(length,branches['MET_Ele'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MET_Muon': split_data(length,branches['MET_Muon'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'mT_METl': split_data(length,branches['mT_METl'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'dR_bb': split_data(length,branches['dR_bb'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'dphi_METl': split_data(length,branches['dphi_METl'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MT2_bb': split_data(length,branches['MT2_bb'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MT2_b1l1_b2': split_data(length,branches['MT2_b1l1_b2'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MT2_b2l1_b1': split_data(length,branches['MT2_b2l1_b1'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'MT2_min': split_data(length,branches['MT2_min'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'HT': split_data(length,branches['HT'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'nbjet': split_data(length,branches['nbjet'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'nljet': split_data(length,branches['nljet'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'nVx': split_data(length,branches['nVx'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
     }
 
     # fill some aux info
     truth_info = {
-        'truth_top_min_dR': split_data(length,branches['truth_top_min_dR'][filter].to_numpy(),dataset=dataset),
-        'truth_top_min_dR_m': split_data(length,branches['truth_top_min_dR_m'][filter].to_numpy(),dataset=dataset),
-        'truth_top_min_dR_jj': split_data(length,branches['truth_top_min_dR_jj'][filter].to_numpy(),dataset=dataset),
-        'truth_top_min_dR_m_jj': split_data(length,branches['truth_top_min_dR_m_jj'][filter].to_numpy(),dataset=dataset),
-        'truth_topp_match': split_data(length,branches['truth_topp_match'][filter].to_numpy(),dataset=dataset),
-        'truth_topm_match': split_data(length,branches['truth_topm_match'][filter].to_numpy(),dataset=dataset),
-        'truth_topp_pt': split_data(length,branches['truth_topp_pt'][filter].to_numpy(),dataset=dataset),
-        'truth_topm_pt': split_data(length,branches['truth_topm_pt'][filter].to_numpy(),dataset=dataset),
-        'truth_Wp_pt': split_data(length,branches['truth_Wp_pt'][filter].to_numpy(),dataset=dataset),
-        'truth_Wm_pt': split_data(length,branches['truth_Wm_pt'][filter].to_numpy(),dataset=dataset),
-        'WeightEvents': split_data(length,branches['WeightEvents'][filter].to_numpy(),dataset=dataset),
-        'WeightEventsbTag': split_data(length,branches['WeightEventsbTag'][filter].to_numpy(),dataset=dataset),
-        'WeightEventselSF': split_data(length,branches['WeightEventselSF'][filter].to_numpy(),dataset=dataset),
-        'WeightEventsJVT': split_data(length,branches['WeightEventsJVT'][filter].to_numpy(),dataset=dataset),
-        'WeightEventsmuSF': split_data(length,branches['WeightEventsmuSF'][filter].to_numpy(),dataset=dataset),
-        'WeightEventsPU': split_data(length,branches['WeightEventsPU'][filter].to_numpy(),dataset=dataset),
-        'WeightEventsSF_global': split_data(length,branches['WeightEventsSF_global'][filter].to_numpy(),dataset=dataset),
-        'WeightEvents_trigger_ele_single': split_data(length,branches['WeightEvents_trigger_ele_single'][filter].to_numpy(),dataset=dataset),
-        'WeightEvents_trigger_mu_single': split_data(length,branches['WeightEvents_trigger_mu_single'][filter].to_numpy(),dataset=dataset),
-        'xsec': split_data(length,branches['xsec'][filter].to_numpy(),dataset=dataset),
-        'WeightLumi': split_data(length,branches['WeightLumi'][filter].to_numpy(),dataset=dataset),
-        'nbjet': split_data(length,branches['nbjet'][filter].to_numpy(),dataset=dataset),
-        'nljet': split_data(length,branches['nljet'][filter].to_numpy(),dataset=dataset),
-        'njet': split_data(length,branches['njet'][filter].to_numpy(),dataset=dataset),
-        'nlep': split_data(length,branches['nlep'][filter].to_numpy(),dataset=dataset),
-        'nVx': split_data(length,branches['nVx'][filter].to_numpy(),dataset=dataset),
-        'EventNumber': split_data(length,branches['EventNumber'][filter].to_numpy(),dataset=dataset),
-        'is_matched': split_data(length,(branches['multiplets'][filter,0,-1]==1).to_numpy(),dataset=dataset)
+        'truth_top_min_dR': split_data(length,branches['truth_top_min_dR'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_top_min_dR_m': split_data(length,branches['truth_top_min_dR_m'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_top_min_dR_jj': split_data(length,branches['truth_top_min_dR_jj'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_top_min_dR_m_jj': split_data(length,branches['truth_top_min_dR_m_jj'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_topp_match': split_data(length,branches['truth_topp_match'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_topm_match': split_data(length,branches['truth_topm_match'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_topp_pt': split_data(length,branches['truth_topp_pt'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_topm_pt': split_data(length,branches['truth_topm_pt'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_Wp_pt': split_data(length,branches['truth_Wp_pt'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'truth_Wm_pt': split_data(length,branches['truth_Wm_pt'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEvents': split_data(length,branches['WeightEvents'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEventsbTag': split_data(length,branches['WeightEventsbTag'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEventselSF': split_data(length,branches['WeightEventselSF'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEventsJVT': split_data(length,branches['WeightEventsJVT'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEventsmuSF': split_data(length,branches['WeightEventsmuSF'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEventsPU': split_data(length,branches['WeightEventsPU'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEventsSF_global': split_data(length,branches['WeightEventsSF_global'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEvents_trigger_ele_single': split_data(length,branches['WeightEvents_trigger_ele_single'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightEvents_trigger_mu_single': split_data(length,branches['WeightEvents_trigger_mu_single'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'xsec': split_data(length,branches['xsec'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'WeightLumi': split_data(length,branches['WeightLumi'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'nbjet': split_data(length,branches['nbjet'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'nljet': split_data(length,branches['nljet'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'njet': split_data(length,branches['njet'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'nlep': split_data(length,branches['nlep'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'nVx': split_data(length,branches['nVx'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'EventNumber': split_data(length,branches['EventNumber'][filter].to_numpy(),rnum_array=rnum_array,dataset=dataset),
+        'is_matched': split_data(length,(branches['multiplets'][filter,0,-1]==1).to_numpy(),rnum_array=rnum_array,dataset=dataset)
     }
     truth_info['training_weights'] = np.abs(truth_info['WeightEvents'])
-    for w in ['WeightEventsbTag','WeightEventselSF','WeightEventsJVT','WeightEventsmuSF','WeightEventsPU','WeightEventsSF_global','WeightEvents_trigger_ele_single','WeightEvents_trigger_mu_single']:
+    for w in ['WeightEventsbTag','WeightEventselSF','WeightEventsJVT','WeightEventsmuSF','WeightEventsPU','WeightEvents_trigger_ele_single','WeightEvents_trigger_mu_single']:
         truth_info['training_weights']*=truth_info[w]
     return mask,inputs,targets,truth_info,met
 
