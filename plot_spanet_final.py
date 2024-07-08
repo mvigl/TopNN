@@ -544,7 +544,10 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     elif obs=='pt': b=np.linspace(0,1000,40)
     elif obs=='eta': b=np.linspace(-3.5,3.5,40)
     elif obs=='phi': b=np.linspace(-3.5,3.5,40)
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
+    plt.figure(figsize=(8, 6), dpi=600)
+    ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
+    r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
+    plt.setp(ax.get_xticklabels(), visible=False)
     plt.title(f'{algo} {matching[category]} {sample}')
     if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
     
@@ -559,6 +562,12 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
         ax.hist(max_idxs_multi_had_top_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(had_top_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
         ax.hist(baseline_top_mass,weights=1*(match==category)*(label),histtype='step',label='Reco baseline',density=False,bins=b,color=colors[5])
+        if category > 4: 
+            hist_spanet = np.histogram(had_top_mass, bins=b,weights=1*(match==category)*(label))[0] 
+            hist_baseline = np.histogram(baseline_top_mass, bins=b,weights=1*(match==category)*(label))[0] 
+            hist_truth = np.histogram(target_top, bins=b,weights=1*(match==category)*(label))[0] 
+            r.stairs( np.nan_to_num(hist_spanet/hist_truth,posinf=0),b,linewidth=1,color=colors[1]) 
+            r.stairs( np.nan_to_num(hist_baseline/hist_truth,posinf=0),b,linewidth=1,color=colors[5]) 
     elif obj == 'W':  
         if category > 4: ax.hist(target_w,weights=1*(match==category)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0],lw=2)
         ax.hist(w_mass,weights=1*(match==category)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
@@ -566,21 +575,31 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
         ax.hist(max_idxs_multi_w_mass,weights=1*(match==category)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(w_mass_min,weights=1*(match==category)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
         ax.hist(baseline_W_mass,weights=1*(match==category)*(label),histtype='step',label='Reco baseline',density=False,bins=b,color=colors[5])
+        if category > 4: 
+            hist_spanet = np.histogram(w_mass, bins=b,weights=1*(match==category)*(label))[0] 
+            hist_baseline = np.histogram(baseline_W_mass, bins=b,weights=1*(match==category)*(label))[0] 
+            hist_truth = np.histogram(target_w, bins=b,weights=1*(match==category)*(label))[0] 
+            r.stairs( np.nan_to_num(hist_spanet/hist_truth,posinf=0),b,linewidth=1,color=colors[1]) 
+            r.stairs( np.nan_to_num(hist_baseline/hist_truth,posinf=0),b,linewidth=1,color=colors[5]) 
     elif obj == 'leptop':  
         ax.hist(target_ltop,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Truth matched',density=False,bins=b,color=colors[0],lw=2)
         ax.hist(lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority from detection prob)',density=False,bins=b, alpha=0.5,color=colors[1])
         ax.hist(ltop,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Reco default (based on assignment prob only)',density=False,bins=b,color=colors[2])
         ax.hist(lep_top_mass_min,weights=1*(targets_lt[:,0]!=-1)*(label),label='Reco (priority to had top)',histtype='step',density=False,bins=b,color=colors[3])
         ax.hist(max_idxs_multi_lep_top_mass,weights=1*(targets_lt[:,0]!=-1)*(label),histtype='step',label='Reco (priority to lep top)',density=False,bins=b,color=colors[4])
+        if category > 4: 
+            hist_spanet = np.histogram(lep_top_mass, bins=b,weights=1*(match==category)*(label))[0] 
+            hist_truth = np.histogram(target_ltop, bins=b,weights=1*(match==category)*(label))[0] 
+            r.stairs( np.nan_to_num(hist_spanet/hist_truth,posinf=0),b,linewidth=1,color=colors[1]) 
     else: 
         return    
     ax.set_ylabel('Events (a.u.)')
-    if obj=='top': ax.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
-    elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
-    elif obj=='leptop': ax.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
-    elif obs=='TopNN_score': ax.set_xlabel('top cand score',loc='right')
-    elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
-    elif obs=='truth_top_min_dR_m': ax.set_xlabel('true top Mass [GeV]',loc='right')
+    if obj=='top': r.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
+    elif obj=='W': r.set_xlabel(f'W cand {obs} [GeV]',loc='right')
+    elif obj=='leptop': r.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
+    elif obs=='TopNN_score': r.set_xlabel('top cand score',loc='right')
+    elif obs=='truth_top_pt': r.set_xlabel('true top pT [GeV]',loc='right')
+    elif obs=='truth_top_min_dR_m': r.set_xlabel('true top Mass [GeV]',loc='right')
     if obs=='TopNN_score': ax.legend(fontsize=8,loc='upper left')
     else: ax.legend(fontsize=8,loc='upper right')
     if obs in ['detection_probability','prediction_probability','prediction_probability_lt','detection_probability_lt']: 
@@ -597,8 +616,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     out_dir = f'Categories/Single_Categories/{obj}/{obs}/{sample}'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-    if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
-    else: fig.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}{mess}.png')
+    if obj == 'leptop': plt.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
+    else: plt.savefig(f'{out_dir}/{sample}_cat_{category}_{obj}_{obs}_{algo}{mess}.png')
 
 def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                             w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
@@ -704,7 +723,10 @@ def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_t
     elif obs=='pt': b=np.linspace(0,1000,40)
     elif obs=='eta': b=np.linspace(-3.5,3.5,40)
     elif obs=='phi': b=np.linspace(-3.5,3.5,40)
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
+    plt.figure(figsize=(8, 6), dpi=600)
+    ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
+    r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
+    plt.setp(ax.get_xticklabels(), visible=False)
     plt.title(f'{algo} full events {sample}')
     if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
 
@@ -719,6 +741,20 @@ def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_t
         ax.hist(target_top,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Truth matched',density=True,bins=b,color=colors[0],lw=2)
         ax.hist(had_top_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_top_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
+        
+        hist_spanet = np.histogram(had_top_mass, bins=b,weights=1*(label_sig))[0] 
+        hist_baseline = np.histogram(baseline_top_mass, bins=b,weights=1*(label_sig))[0] 
+        hist_truth = np.histogram(target_top, bins=b,weights=1*(label_sig))[0] 
+
+        hist_spanet_bkg = np.histogram(had_top_mass, bins=b,weights=1*(label_bkg))[0] 
+        hist_baseline_bkg = np.histogram(baseline_top_mass, bins=b,weights=1*(label_bkg))[0] 
+        hist_truth_bkg = np.histogram(target_top, bins=b,weights=1*(label_bkg))[0] 
+
+        r.stairs( np.nan_to_num(hist_spanet/hist_truth,posinf=0),b,linewidth=1,color=colors[1]) 
+        r.stairs( np.nan_to_num(hist_baseline/hist_truth,posinf=0),b,linewidth=1,color=colors[5]) 
+
+        r.stairs( np.nan_to_num(hist_spanet_bkg/hist_truth_bkg,posinf=0),b,linewidth=1,color=colors[1],linestyle='dashed') 
+        r.stairs( np.nan_to_num(hist_baseline_bkg/hist_truth_bkg,posinf=0),b,linewidth=1,color=colors[5],linestyle='dashed') 
 
     elif obj == 'W':  
         ax.hist(target_w,weights=1*(label_sig),histtype='step',label='Sig Truth matched',density=True,bins=b,color=colors[0],lw=2)
@@ -728,15 +764,29 @@ def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_t
         ax.hist(target_w,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Truth matched',density=True,bins=b,color=colors[0],lw=2)
         ax.hist(w_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_W_mass,weights=1*(label_bkg),histtype='step',linestyle='dashed',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
+
+        hist_spanet = np.histogram(w_mass, bins=b,weights=1*(label_sig))[0] 
+        hist_baseline = np.histogram(baseline_W_mass, bins=b,weights=1*(label_sig))[0] 
+        hist_truth = np.histogram(target_w, bins=b,weights=1*(label_sig))[0] 
+
+        hist_spanet_bkg = np.histogram(w_mass, bins=b,weights=1*(label_bkg))[0] 
+        hist_baseline_bkg = np.histogram(baseline_W_mass, bins=b,weights=1*(label_bkg))[0] 
+        hist_truth_bkg = np.histogram(target_w, bins=b,weights=1*(label_bkg))[0] 
+
+        r.stairs( np.nan_to_num(hist_spanet/hist_truth,posinf=0),b,linewidth=1,color=colors[1]) 
+        r.stairs( np.nan_to_num(hist_baseline/hist_truth,posinf=0),b,linewidth=1,color=colors[5]) 
+
+        r.stairs( np.nan_to_num(hist_spanet_bkg/hist_truth_bkg,posinf=0),b,linewidth=1,color=colors[1],linestyle='dashed') 
+        r.stairs( np.nan_to_num(hist_baseline_bkg/hist_truth_bkg,posinf=0),b,linewidth=1,color=colors[5],linestyle='dashed') 
     else: 
         return    
     ax.set_ylabel('Events (a.u.)')
-    if obj=='top': ax.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
-    elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
-    elif obj=='leptop': ax.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
-    elif obs=='TopNN_score': ax.set_xlabel('top cand score',loc='right')
-    elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
-    elif obs=='truth_top_min_dR_m': ax.set_xlabel('true top Mass [GeV]',loc='right')
+    if obj=='top': r.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
+    elif obj=='W': r.set_xlabel(f'W cand {obs} [GeV]',loc='right')
+    elif obj=='leptop': r.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
+    elif obs=='TopNN_score': r.set_xlabel('top cand score',loc='right')
+    elif obs=='truth_top_pt': r.set_xlabel('true top pT [GeV]',loc='right')
+    elif obs=='truth_top_min_dR_m': r.set_xlabel('true top Mass [GeV]',loc='right')
     if obs=='TopNN_score': ax.legend(fontsize=8,loc='upper left')
     else: ax.legend(fontsize=8,loc='upper right')
     if obs in ['detection_probability','prediction_probability','prediction_probability_lt','detection_probability_lt']: 
@@ -753,8 +803,8 @@ def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_t
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     out_dir = f'Categories/Truth_Categories/{obj}/{obs}/{sample}'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-    if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
-    else: fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')   
+    if obj == 'leptop': plt.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
+    else: plt.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')   
 
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors = prop_cycle.by_key()['color']
