@@ -548,8 +548,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
     r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
     plt.setp(ax.get_xticklabels(), visible=False)
-    ax.title(f'{algo} {matching[category]} {sample}')
-    if obj == 'leptop': ax.title(f'{algo} leptonic top {sample}')
+    ax.set_title(f'{algo} {matching[category]} {sample}')
+    if obj == 'leptop': ax.set_title(f'{algo} leptonic top {sample}')
     
     label = np.ones_like(top)
     if sample == 'sig': label = (y==1)
@@ -651,8 +651,8 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
     ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
     r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
     plt.setp(ax.get_xticklabels(), visible=False)
-    ax.title(f'{algo} full events {sample}')
-    if obj == 'leptop': ax.title(f'{algo} leptonic top {sample}')
+    ax.set_title(f'{algo} full events {sample}')
+    if obj == 'leptop': ax.set_title(f'{algo} leptonic top {sample}')
 
     label_sig = (y==1)
     label_bkg = (y==0)
@@ -749,8 +749,8 @@ def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_t
     ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
     r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
     plt.setp(ax.get_xticklabels(), visible=False)
-    ax.title(f'{algo} full events {sample}')
-    if obj == 'leptop': ax.title(f'{algo} leptonic top {sample}')
+    ax.set_title(f'{algo} full events {sample}')
+    if obj == 'leptop': ax.set_title(f'{algo} leptonic top {sample}')
 
     label_sig = (y==1)*(match>4)
     label_bkg = (y==0)*(match>4)
