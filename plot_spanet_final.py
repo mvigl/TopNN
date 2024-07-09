@@ -548,8 +548,8 @@ def plot_single_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_
     ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
     r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
     plt.setp(ax.get_xticklabels(), visible=False)
-    plt.title(f'{algo} {matching[category]} {sample}')
-    if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
+    ax.title(f'{algo} {matching[category]} {sample}')
+    if obj == 'leptop': ax.title(f'{algo} leptonic top {sample}')
     
     label = np.ones_like(top)
     if sample == 'sig': label = (y==1)
@@ -647,9 +647,12 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
     elif obs=='pt': b=np.linspace(0,1000,40)
     elif obs=='eta': b=np.linspace(-3.5,3.5,40)
     elif obs=='phi': b=np.linspace(-3.5,3.5,40)
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=600)
-    plt.title(f'{algo} full events {sample}')
-    if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
+    plt.figure(figsize=(8, 6), dpi=600)
+    ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
+    r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
+    plt.setp(ax.get_xticklabels(), visible=False)
+    ax.title(f'{algo} full events {sample}')
+    if obj == 'leptop': ax.title(f'{algo} leptonic top {sample}')
 
     label_sig = (y==1)
     label_bkg = (y==0)
@@ -661,21 +664,40 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
         ax.hist(had_top_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_top_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
 
+        hist_spanet = np.histogram(had_top_mass, bins=b,weights=1*(label_sig))[0] 
+        hist_baseline = np.histogram(baseline_top_mass, bins=b,weights=1*(label_sig))[0] 
+
+        hist_spanet_bkg = np.histogram(had_top_mass, bins=b,weights=1*(label_bkg))[0] 
+        hist_baseline_bkg = np.histogram(baseline_top_mass, bins=b,weights=1*(label_bkg))[0] 
+
+        r.stairs( np.nan_to_num(hist_spanet/hist_spanet_bkg,posinf=0),b,linewidth=1,color=colors[1]) 
+        r.stairs( np.nan_to_num(hist_baseline/hist_baseline_bkg,posinf=0),b,linewidth=1,color=colors[5]) 
+
     elif obj == 'W':  
         ax.hist(w_mass,weights=1*(label_sig),histtype='step',label='Sig Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_W_mass,weights=1*(label_sig),histtype='step',label='Sig Reco baseline',density=True,bins=b,color=colors[5])
 
         ax.hist(w_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco (priority from detection prob)',density=True,bins=b,color=colors[1])
         ax.hist(baseline_W_mass,weights=1*(label_bkg),linestyle='dashed',histtype='step',label='Bkg Reco baseline',density=True,bins=b,color=colors[5])
+
+        hist_spanet = np.histogram(w_mass, bins=b,weights=1*(label_sig))[0] 
+        hist_baseline = np.histogram(baseline_W_mass, bins=b,weights=1*(label_sig))[0] 
+
+        hist_spanet_bkg = np.histogram(w_mass, bins=b,weights=1*(label_bkg))[0] 
+        hist_baseline_bkg = np.histogram(baseline_W_mass, bins=b,weights=1*(label_bkg))[0] 
+
+        r.stairs( np.nan_to_num(hist_spanet/hist_spanet_bkg,posinf=0),b,linewidth=1,color=colors[1]) 
+        r.stairs( np.nan_to_num(hist_baseline/hist_baseline_bkg,posinf=0),b,linewidth=1,color=colors[5]) 
+
     else: 
         return    
     ax.set_ylabel('Events (a.u.)')
-    if obj=='top': ax.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
-    elif obj=='W': ax.set_xlabel(f'W cand {obs} [GeV]',loc='right')
-    elif obj=='leptop': ax.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
-    elif obs=='TopNN_score': ax.set_xlabel('top cand score',loc='right')
-    elif obs=='truth_top_pt': ax.set_xlabel('true top pT [GeV]',loc='right')
-    elif obs=='truth_top_min_dR_m': ax.set_xlabel('true top Mass [GeV]',loc='right')
+    if obj=='top': r.set_xlabel(f'had top cand {obs} [GeV]',loc='right')
+    elif obj=='W': r.set_xlabel(f'W cand {obs} [GeV]',loc='right')
+    elif obj=='leptop': r.set_xlabel(f'lep top cand {obs} [GeV]',loc='right')
+    elif obs=='TopNN_score': r.set_xlabel('top cand score',loc='right')
+    elif obs=='truth_top_pt': r.set_xlabel('true top pT [GeV]',loc='right')
+    elif obs=='truth_top_min_dR_m': r.set_xlabel('true top Mass [GeV]',loc='right')
     if obs=='TopNN_score': ax.legend(fontsize=8,loc='upper left')
     else: ax.legend(fontsize=8,loc='upper right')
     if obs in ['detection_probability','prediction_probability','prediction_probability_lt','detection_probability_lt']: 
@@ -692,8 +714,8 @@ def plot_all_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mas
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
     out_dir = f'Categories/All_Categories/{obj}/{obs}/{sample}'
     if (not os.path.exists(out_dir)): os.system(f'mkdir {out_dir}')
-    if obj == 'leptop': fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
-    else: fig.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')    
+    if obj == 'leptop': plt.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')
+    else: plt.savefig(f'{out_dir}/{sample}_{obj}_{obs}_{algo}{mess}.png')    
 
 def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_top_mass,top,target_top,
                             w_mass,w_mass_min,max_idxs_multi_w_mass,w,target_w,
@@ -727,8 +749,8 @@ def plot_all_truth_categories(had_top_mass,had_top_mass_min,max_idxs_multi_had_t
     ax = plt.subplot2grid((4, 4), (0, 0), rowspan=3,colspan=4)
     r = plt.subplot2grid((4, 4), (3, 0), colspan=4)
     plt.setp(ax.get_xticklabels(), visible=False)
-    plt.title(f'{algo} full events {sample}')
-    if obj == 'leptop': plt.title(f'{algo} leptonic top {sample}')
+    ax.title(f'{algo} full events {sample}')
+    if obj == 'leptop': ax.title(f'{algo} leptonic top {sample}')
 
     label_sig = (y==1)*(match>4)
     label_bkg = (y==0)*(match>4)
@@ -840,31 +862,31 @@ def plot_cat_cut(outputs,match_label):
 
 if __name__ == "__main__":
 
-    plot_cat_cut(outputs,match_label)
-
-    get_auc(labels,outputs_baseline[0],'baseline_auc')
-    get_auc_vs(np.array(labels_evt).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2])),labels_evt,max_baseline,'tagging_5_6_spanet_vs_baseline')
-    get_auc_vs(np.array(labels_evt[y==1]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==1],np.array(labels_evt[y==1]).astype(int),max_baseline[y==1],'tagging_5_6_spanet_vs_baseline_sig')
-    get_auc_vs(np.array(labels_evt[y==0]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==0],np.array(labels_evt[y==0]).astype(int),max_baseline[y==0],'tagging_5_6_spanet_vs_baseline_bkg')
-
-    print('baseline accuracy on pairs : ', np.sum((np.sum(target_pt_baseline[(match_label==5)][:,:2]==(np.array(multiplets_evt[max_baseline_idx][:,:,:2]).reshape(-1,2)[(match_label==5)]),axis=-1)==2)*pair_baseline[(match_label==5)])/np.sum(match_label==5))
-    print('baseline accuracy on triplets : ', np.sum(
-    ((np.sum(target_pt_baseline[(match_label==6)][:,:3]==(np.array(multiplets_evt[max_baseline_idx][:,:,:3]).reshape(-1,3)[(match_label==6)]),axis=-1)==3)
-    +(np.sum(target_pt_baseline[(match_label==6)][:,[0,2,1]]==(np.array(multiplets_evt[max_baseline_idx][:,:,:3]).reshape(-1,3)[(match_label==6)]),axis=-1)==3))
-    )/np.sum(match_label==6))
+    ##plot_cat_cut(outputs,match_label)
+##
+    ##get_auc(labels,outputs_baseline[0],'baseline_auc')
+    ##get_auc_vs(np.array(labels_evt).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2])),labels_evt,max_baseline,'tagging_5_6_spanet_vs_baseline')
+    ##get_auc_vs(np.array(labels_evt[y==1]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==1],np.array(labels_evt[y==1]).astype(int),max_baseline[y==1],'tagging_5_6_spanet_vs_baseline_sig')
+    ##get_auc_vs(np.array(labels_evt[y==0]).astype(int),(outputs[-1][:,-1]+(outputs[-1][:,-2]))[y==0],np.array(labels_evt[y==0]).astype(int),max_baseline[y==0],'tagging_5_6_spanet_vs_baseline_bkg')
+##
+    ##print('baseline accuracy on pairs : ', np.sum((np.sum(target_pt_baseline[(match_label==5)][:,:2]==(np.array(multiplets_evt[max_baseline_idx][:,:,:2]).reshape(-1,2)[(match_label==5)]),axis=-1)==2)*pair_baseline[(match_label==5)])/np.sum(match_label==5))
+    ##print('baseline accuracy on triplets : ', np.sum(
+    ##((np.sum(target_pt_baseline[(match_label==6)][:,:3]==(np.array(multiplets_evt[max_baseline_idx][:,:,:3]).reshape(-1,3)[(match_label==6)]),axis=-1)==3)
+    ##+(np.sum(target_pt_baseline[(match_label==6)][:,[0,2,1]]==(np.array(multiplets_evt[max_baseline_idx][:,:,:3]).reshape(-1,3)[(match_label==6)]),axis=-1)==3))
+    ##)/np.sum(match_label==6))
 
     had_top, lep_top, max_idxs_multi_had_top, max_idxs_multi_lep_top, had_top_min, lep_top_min = get_best(outputs)
     lep_top = np.concatenate((lep_top,np.ones(len(lep_top)).reshape(len(lep_top),-1)*7),axis=-1).astype(int)
     max_idxs_multi_lep_top = np.concatenate((max_idxs_multi_lep_top,np.ones(len(max_idxs_multi_lep_top)).reshape(len(max_idxs_multi_lep_top),-1)*7),axis=-1).astype(int)
     lep_top_min = np.concatenate((lep_top_min,np.ones(len(lep_top_min)).reshape(len(lep_top_min),-1)*7),axis=-1).astype(int)
     
-    print('spanet accuracy on triplets : ', np.sum((np.sum(had_top[(match_label==6)][:,:3]==(targets[:,:3])[(match_label==6)],axis=-1)==3))/np.sum(match_label==6) )
-    print('spanet accuracy on pairs : ', np.sum((np.sum(had_top[(match_label==5)][:,[0,1]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
-       +(np.sum(had_top[(match_label==5)][:,[1,0]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
-       +(np.sum(had_top[(match_label==5)][:,[0,2]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
-       +(np.sum(had_top[(match_label==5)][:,[2,0]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
-       +(np.sum(had_top[(match_label==5)][:,[1,2]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
-       +(np.sum(had_top[(match_label==5)][:,[2,1]]==(targets[:,:2])[(match_label==5)],axis=-1)==2))/np.sum(match_label==5) )
+    ##print('spanet accuracy on triplets : ', np.sum((np.sum(had_top[(match_label==6)][:,:3]==(targets[:,:3])[(match_label==6)],axis=-1)==3))/np.sum(match_label==6) )
+    ##print('spanet accuracy on pairs : ', np.sum((np.sum(had_top[(match_label==5)][:,[0,1]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+    ##   +(np.sum(had_top[(match_label==5)][:,[1,0]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+    ##   +(np.sum(had_top[(match_label==5)][:,[0,2]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+    ##   +(np.sum(had_top[(match_label==5)][:,[2,0]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+    ##   +(np.sum(had_top[(match_label==5)][:,[1,2]]==(targets[:,:2])[(match_label==5)],axis=-1)==2)
+    ##   +(np.sum(had_top[(match_label==5)][:,[2,1]]==(targets[:,:2])[(match_label==5)],axis=-1)==2))/np.sum(match_label==5) )
 
     if True:
 
