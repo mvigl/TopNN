@@ -103,8 +103,8 @@ def run_in_batches(model_path, Momenta_data,Momenta_mask,Met_data,Met_mask, batc
     if len(Met_data) % batch_size != 0:
         num_batches += 1
     print('num batches : ',num_batches)
+    outputs = {}
     for i in range(num_batches):
-        outputs = {}
         start_idx = i * batch_size
         end_idx = min((i + 1) * batch_size, len(Met_data))
         print('batch : ',i,'/',num_batches)
@@ -121,10 +121,10 @@ def run_in_batches(model_path, Momenta_data,Momenta_mask,Met_data,Met_mask, batc
                               'Met_data': batch_inputs['Met_data'],
                               'Met_mask': batch_inputs['Met_mask']})
         
-        if i == 0: outputs[mass] = batch_outputs
-        else: 
-            for k in range(len(outputs)):
-                outputs[mass][k]=np.concatenate((outputs[mass][k],batch_outputs[k]),axis=0)
+            if i == 0: outputs[mass] = batch_outputs
+            else: 
+                for k in range(len(outputs)):
+                    outputs[mass][k]=np.concatenate((outputs[mass][k],batch_outputs[k]),axis=0)
     with open(f'evals_param.pkl', 'wb') as pickle_file:
         pickle.dump(outputs, pickle_file)    
     return outputs
